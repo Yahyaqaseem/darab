@@ -127,12 +127,18 @@ class ApiService {
     return list.map((e) => RoadQuestionModel.fromJson(e)).toList();
   }
 
-  Future<void> answerQuestion(String questionId, String answer, {double? userLat, double? userLng}) async {
-    await _dio.post('/road-questions/$questionId/answer', data: {
+  Future<RoadQuestionModel> askRoadQuestion(Map<String, dynamic> data) async {
+    final res = await _dio.post('/road-call/ask', data: data);
+    return RoadQuestionModel.fromJson(res.data);
+  }
+
+  Future<bool> answerRoadQuestion(String questionId, String answer, {double? userLat, double? userLng}) async {
+    await _dio.post('/road-call/$questionId/answer', data: {
       'answer': answer,
       if (userLat != null) 'userLat': userLat,
       if (userLng != null) 'userLng': userLng,
     });
+    return true;
   }
 
   // --- Places & Fuel ---
@@ -140,6 +146,11 @@ class ApiService {
     final res = await _dio.get('/fuel/nearby', queryParameters: {'lat': lat, 'lng': lng});
     final list = res.data as List;
     return list.map((e) => FuelStationModel.fromJson(e)).toList();
+  }
+
+  Future<bool> updateFuelReport(String stationId, Map<String, dynamic> data) async {
+    await _dio.post('/fuel/$stationId/report', data: data);
+    return true;
   }
 
   Future<List<PlaceModel>> getNearbyPlaces({double lat = 36.1911, double lng = 44.0091, String? category}) async {
