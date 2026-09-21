@@ -10,6 +10,7 @@ import { FuelModule } from './modules/fuel/fuel.module';
 import { NavigationModule } from './modules/navigation/navigation.module';
 import { PlacesModule } from './modules/places/places.module';
 import { TripsModule } from './modules/trips/trips.module';
+import { RoutingModule } from './modules/routing/routing.module';
 import { GamificationModule } from './modules/gamification/gamification.module';
 import { BusinessModule } from './modules/business/business.module';
 import { AdminModule } from './modules/admin/admin.module';
@@ -30,6 +31,7 @@ import { AdminModule } from './modules/admin/admin.module';
     NavigationModule,
     PlacesModule,
     TripsModule,
+    RoutingModule,
     GamificationModule,
     BusinessModule,
     AdminModule,

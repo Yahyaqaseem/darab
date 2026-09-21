@@ -10,7 +10,7 @@ export class TripsService {
   private memoryTrips = new Map<string, any>();
 
   constructor(private readonly db: DatabaseService) {
-    
+    this.seedDemoTrips();
   }
 
   private seedDemoTrips() {

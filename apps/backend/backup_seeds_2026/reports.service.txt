@@ -14,7 +14,7 @@ export class ReportsService {
     private readonly db: DatabaseService,
     private readonly realtimeGateway: RealtimeGateway,
   ) {
-    
+    this.seedInitialReports();
   }
 
   private seedInitialReports() {

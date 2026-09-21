@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
+
+enum TripState { IDLE, DESTINATION_SELECTED, ROUTE_PREVIEW, NAVIGATING, ARRIVING, COMPLETED, CANCELLED }
 
 class AppState extends ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -16,7 +19,7 @@ class AppState extends ChangeNotifier {
   bool _isAuthenticated = false;
   String _driverUsername = 'سائق_درب';
   String _trustLevel = 'BEGINNER';
-  int _reputationScore = 10;
+  int _reputationScore = 0;
   List<Map<String, dynamic>> _vehicles = [];
   List<Map<String, dynamic>> _badges = [];
 
@@ -24,11 +27,11 @@ class AppState extends ChangeNotifier {
   double _currentLat = 36.191113; // Erbil
   double _currentLng = 44.009167;
   String _currentCity = 'أربيل';
-  double _currentSpeedKmh = 72.0;
+  double _currentSpeedKmh = 0.0;
   List<double> _speedBuffer = [65, 70, 72, 75, 78];
 
   // Navigation State
-  bool _isNavigating = false;
+  TripState _tripState = TripState.IDLE;
   Map<String, dynamic>? _activeRoute;
   String? _destinationName;
   double? _destLat;
@@ -62,7 +65,7 @@ class AppState extends ChangeNotifier {
   double get currentLng => _currentLng;
   String get currentCity => _currentCity;
   double get currentSpeedKmh => _currentSpeedKmh;
-  bool get isNavigating => _isNavigating;
+  TripState get tripState => _tripState;
   Map<String, dynamic>? get activeRoute => _activeRoute;
   String? get destinationName => _destinationName;
   List<RoadReportModel> get reports => _reports;
@@ -116,11 +119,21 @@ class AppState extends ChangeNotifier {
     loadNearbyData();
 
     // Reroute Debouncing: check if navigating and needs recalibration (min 10s gap)
-    if (_isNavigating && _destLat != null && _destLng != null) {
-      final now = DateTime.now();
-      if (_lastRerouteCalculation == null || now.difference(_lastRerouteCalculation!).inSeconds > 10) {
-        _lastRerouteCalculation = now;
-        _recalculateActiveRoute();
+    if (_tripState == TripState.NAVIGATING && _destLat != null && _destLng != null) {
+      final dist = const Distance().as(LengthUnit.Meter, LatLng(lat, lng), LatLng(_destLat!, _destLng!));
+      if (dist < 100) {
+        _tripState = TripState.ARRIVING;
+        notifyListeners();
+        Future.delayed(const Duration(seconds: 3), () {
+          _tripState = TripState.COMPLETED;
+          notifyListeners();
+        });
+      } else {
+        final now = DateTime.now();
+        if (_lastRerouteCalculation == null || now.difference(_lastRerouteCalculation!).inSeconds > 10) {
+          _lastRerouteCalculation = now;
+          _recalculateActiveRoute();
+        }
       }
     }
   }
@@ -165,6 +178,13 @@ class AppState extends ChangeNotifier {
         distanceFilter: 10,
       ),
     ).listen((Position position) {
+      // Calculate speed: position.speed is in m/s, convert to km/h
+      double speedKmh = position.speed * 3.6;
+      if (speedKmh < 0) speedKmh = 0;
+      // Filter out crazy spikes (> 200 km/h) unless they are consistent, but for now just cap/filter:
+      if (speedKmh > 200.0) speedKmh = 0; // Likely a GPS anomaly
+      
+      _currentSpeedKmh = speedKmh;
       updateLocation(position.latitude, position.longitude, 'موقعي الحالي');
     });
   }
@@ -426,18 +446,26 @@ class AppState extends ChangeNotifier {
   }
 
   // Start Driving Navigation HUD
-  void startNavigation(Map<String, dynamic> route, String destName, double destLat, double destLng) {
+  void selectRoutePreview(Map<String, dynamic> route, String destName, double destLat, double destLng) {
     _activeRoute = route;
     _destinationName = destName;
     _destLat = destLat;
     _destLng = destLng;
-    _isNavigating = true;
+    _tripState = TripState.ROUTE_PREVIEW;
+    notifyListeners();
+  }
+
+  void startNavigation() {
+    _tripState = TripState.NAVIGATING;
     notifyListeners();
   }
 
   void stopNavigation() {
-    _isNavigating = false;
+    _tripState = TripState.IDLE;
     _activeRoute = null;
+    _destinationName = null;
+    _destLat = null;
+    _destLng = null;
     notifyListeners();
   }
 }

@@ -8,7 +8,7 @@ export class BusinessService {
   private businesses = new Map<string, any>();
 
   constructor(private readonly db: DatabaseService) {
-    this.seedDemoBusinesses();
+    
   }
 
   private seedDemoBusinesses() {

@@ -17,7 +17,7 @@ export class RoadCallService {
     private readonly realtimeGateway: RealtimeGateway,
     private readonly reportsService: ReportsService,
   ) {
-    
+    this.seedInitialQuestions();
   }
 
   private seedInitialQuestions() {

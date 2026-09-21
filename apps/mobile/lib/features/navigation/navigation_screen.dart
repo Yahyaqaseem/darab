@@ -1,5 +1,6 @@
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../../core/utils/polyline_decoder.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -32,10 +33,11 @@ class _NavigationScreenState extends State<NavigationScreen> {
   bool _isRouteSelecting = true;
   Map<String, dynamic>? _routesData;
   bool _isLoading = true;
+  List<LatLng> _routePoints = [];
 
   // Driving Simulation Timers
-  Timer? _simTimer;
-  double _simSpeed = 74.0;
+  
+  
   int _secondsElapsed = 0;
   double _distanceTraveledKm = 0.0;
   final List<double> _speedLog = [70, 75, 74, 80, 82, 250, 78, 85]; // Included 250 GPS spike for anomaly test
@@ -48,7 +50,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
   @override
   void dispose() {
-    _simTimer?.cancel();
+    
     super.dispose();
   }
 
@@ -73,40 +75,48 @@ class _NavigationScreenState extends State<NavigationScreen> {
     final routes = _routesData?['routes'] as List?;
     if (routes != null && routes.isNotEmpty) {
       final selected = routes[_selectedRouteIndex];
-      Provider.of<AppState>(context, listen: false).startNavigation(
-        selected,
-        widget.destinationName,
-        widget.destLat,
-        widget.destLng,
-      );
+      String? geom = selected['geometry'];
+      if (geom != null) {
+        setState(() {
+          _routePoints = PolylineDecoder.decode(geom);
+        });
+      }
+      final appState = Provider.of<AppState>(context, listen: false);
+        appState.selectRoutePreview(selected, widget.destinationName, widget.destLat, widget.destLng);
+        appState.startNavigation();
     }
 
-    _simTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _secondsElapsed += 1;
-        _distanceTraveledKm += 0.02;
-        _simSpeed = 70.0 + (_secondsElapsed % 12);
-        _speedLog.add(_simSpeed);
-      });
+    
     });
   }
-
-  void _finishTrip() {
-    _simTimer?.cancel();
-    Provider.of<AppState>(context, listen: false).stopNavigation();
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TripSummaryScreen(
-          startName: 'أربيل - بارك شاندر',
-          endName: widget.destinationName,
-          distanceKm: _distanceTraveledKm > 0.5 ? _distanceTraveledKm : 155.4,
-          durationSeconds: _secondsElapsed > 10 ? _secondsElapsed : 8280,
-          speedReadings: _speedLog,
+  Future<void> _finishTrip() async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    
+    // Only ask if not already completed/arriving automatically
+    if (appState.tripState == TripState.NAVIGATING) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('إنهاء الرحلة؟', style: TextStyle(fontFamily: 'Cairo')),
+          content: const Text('أنت لم تصل إلى وجهتك بعد. هل أنت متأكد من رغبتك في إنهاء الرحلة؟', style: TextStyle(fontFamily: 'Cairo')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('إلغاء', style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('نعم، إنهاء', style: TextStyle(fontFamily: 'Cairo', color: Colors.red)),
+            ),
+          ],
         ),
-      ),
-    );
+      );
+      if (confirm != true) return;
+      appState.setTripState(TripState.CANCELLED);
+    }
+    
+    appState.stopNavigation();
+    Navigator.pop(context); // Just pop back to Home map
   }
 
   @override
@@ -297,6 +307,16 @@ class _NavigationScreenState extends State<NavigationScreen> {
                     urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.darb.iraq',
                   ),
+                  PolylineLayer(
+                    polylines: [
+                      if (_routePoints.isNotEmpty)
+                        Polyline(
+                          points: _routePoints,
+                          strokeWidth: 6.0,
+                          color: AppTheme.primaryEmerald,
+                        ),
+                    ],
+                  ),
                   MarkerLayer(
                     markers: [
                       Marker(
@@ -366,7 +386,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
             Positioned(
               top: 130,
               left: 16,
-              child: SpeedHudWidget(currentSpeedKmh: _simSpeed),
+              child: SpeedHudWidget(currentSpeedKmh: appState.currentSpeedKmh),
             ),
 
             // Live Road Warnings Floating

@@ -67,7 +67,7 @@ export class UsersService {
         phoneNumber: '+9647501234567',
         username: 'سائق_أربيل_الخبير',
         trustLevel: 'ROAD_EXPERT',
-        reputationScore: 185,
+        reputationScore: 0,
         helpfulAnswersCount: 24,
         verifiedReportsCount: 38,
         falseReportsCount: 0,
