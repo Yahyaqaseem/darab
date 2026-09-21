@@ -153,17 +153,21 @@ class ApiService {
   }
 
   // --- Navigation Route ---
-  Future<Map<String, dynamic>> calculateRoute({
+  Future<Map<String, dynamic>> calculateRoutes({
     required double originLat,
     required double originLng,
     required double destLat,
     required double destLng,
+    String? originName,
+    String? destName,
   }) async {
-    final res = await _dio.post('/navigation/calculate', data: {
+    final res = await _dio.post('/navigation/calculate-routes', data: {
       'originLat': originLat,
       'originLng': originLng,
       'destLat': destLat,
       'destLng': destLng,
+      'originName': originName,
+      'destName': destName,
     });
     return res.data;
   }
