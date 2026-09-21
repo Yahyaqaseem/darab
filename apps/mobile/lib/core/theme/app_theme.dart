@@ -59,7 +59,7 @@ class AppTheme {
           fontFamily: 'Cairo',
         ),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: lightCard,
         elevation: 2,
         shadowColor: Colors.black.withOpacity(0.06),
@@ -115,7 +115,7 @@ class AppTheme {
           fontFamily: 'Cairo',
         ),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: darkCard,
         elevation: 4,
         shadowColor: Colors.black.withOpacity(0.3),
