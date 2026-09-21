@@ -1,3 +1,6 @@
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_constants.dart';
@@ -23,6 +26,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentTabIndex = 0;
   final _searchController = TextEditingController();
+  final MapController _mapController = MapController();
+  bool _hasCenteredMap = false;
 
   void _navigateToDestination(String destination, double lat, double lng) {
     Navigator.push(
@@ -96,6 +101,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final appState = Provider.of<AppState>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    if (!_hasCenteredMap && appState.currentLat != 36.191113) {
+      _hasCenteredMap = true;
+      Future.microtask(() {
+        _mapController.move(LatLng(appState.currentLat, appState.currentLng), 14.0);
+      });
+    }
+
     final screens = [
       _buildMapHomeScreen(appState, isDark),
       const ReportsScreen(),
@@ -148,82 +160,95 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // Map Background Simulation View
           Positioned.fill(
-            child: Container(
-              color: isDark ? const Color(0xFF131B26) : const Color(0xFFE2E8F0),
-              child: Stack(
-                children: [
-                  // Stylized Iraqi Road Map Grid lines
-                  CustomPaint(
-                    size: Size.infinite,
-                    painter: _MapCanvasPainter(isDark: isDark),
-                  ),
-
-                  // Center Driver Icon Pointer
-                  Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryEmerald,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primaryEmerald.withOpacity(0.5),
-                                blurRadius: 16,
-                                spreadRadius: 4,
-                              ),
-                            ],
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: LatLng(appState.currentLat, appState.currentLng),
+                initialZoom: 13.0,
+                onPositionChanged: (position, hasGesture) {
+                },
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.darb.iraq',
+                ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: LatLng(appState.currentLat, appState.currentLng),
+                      width: 60,
+                      height: 60,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryEmerald,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.primaryEmerald.withOpacity(0.5),
+                                  blurRadius: 16,
+                                  spreadRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.navigation_rounded, color: Colors.white, size: 20),
                           ),
-                          child: const Icon(Icons.navigation_rounded, color: Colors.white, size: 28),
-                        ),
-                        const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.black87,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'موقعي: ${appState.currentCity}',
-                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-
-                  // Incident Pins on Map Canvas
-                  ...appState.reports.take(4).map((r) {
-                    return Positioned(
-                      top: 240 + (r.id.hashCode % 180).toDouble(),
-                      right: 40 + (r.title.hashCode % 240).toDouble(),
+                    ...appState.reports.map((r) => Marker(
+                      point: LatLng(r.latitude, r.longitude),
+                      width: 40,
+                      height: 40,
                       child: GestureDetector(
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('⚠️ ${r.title} (${r.confirmationsCount} سواق أكدوا)'),
+                              content: Text('⚠️  ( سواق أكدوا)'),
                               backgroundColor: r.color,
                             ),
                           );
                         },
                         child: Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: r.color,
                             shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
                             boxShadow: [
                               BoxShadow(color: r.color.withOpacity(0.5), blurRadius: 8, offset: const Offset(0, 3)),
                             ],
                           ),
-                          child: Icon(r.icon, color: Colors.white, size: 18),
+                          child: Icon(r.icon, color: Colors.white, size: 16),
                         ),
                       ),
-                    );
-                  }),
-                ],
-              ),
+                    )),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          Positioned(
+            bottom: 90,
+            right: 16,
+            child: FloatingActionButton(
+              heroTag: 'my_location_btn',
+              backgroundColor: isDark ? AppTheme.darkCard : Colors.white,
+              mini: true,
+              onPressed: () async {
+                await appState.startLocationTracking();
+                _mapController.move(
+                  LatLng(appState.currentLat, appState.currentLng),
+                  15.0,
+                );
+              },
+              child: const Icon(Icons.my_location_rounded, color: AppTheme.primaryEmerald),
             ),
           ),
 
@@ -440,40 +465,3 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _MapCanvasPainter extends CustomPainter {
-  final bool isDark;
-
-  _MapCanvasPainter({required this.isDark});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final roadPaint = Paint()
-      ..color = isDark ? Colors.white.withOpacity(0.07) : Colors.black.withOpacity(0.06)
-      ..strokeWidth = 14
-      ..style = PaintingStyle.stroke;
-
-    final highwayPaint = Paint()
-      ..color = (isDark ? AppTheme.secondarySandDark : AppTheme.secondarySand).withOpacity(0.25)
-      ..strokeWidth = 20
-      ..style = PaintingStyle.stroke;
-
-    // Draw arterial roads & curved highway routes
-    final path1 = Path()
-      ..moveTo(0, size.height * 0.3)
-      ..cubicTo(size.width * 0.4, size.height * 0.25, size.width * 0.6, size.height * 0.7, size.width, size.height * 0.65);
-    canvas.drawPath(path1, highwayPaint);
-
-    final path2 = Path()
-      ..moveTo(size.width * 0.2, 0)
-      ..lineTo(size.width * 0.8, size.height);
-    canvas.drawPath(path2, roadPaint);
-
-    final path3 = Path()
-      ..moveTo(size.width * 0.85, 0)
-      ..lineTo(size.width * 0.15, size.height);
-    canvas.drawPath(path3, roadPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}

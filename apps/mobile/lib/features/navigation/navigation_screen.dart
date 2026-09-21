@@ -1,3 +1,5 @@
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -282,28 +284,35 @@ class _NavigationScreenState extends State<NavigationScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            // Simulated Road Canvas
+            // Real Map View
             Positioned.fill(
-              child: Container(
-                color: const Color(0xFF1E293B),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.directions_car_filled_rounded, size: 80, color: AppTheme.primaryEmeraldLight.withOpacity(0.8)),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'أنت على طريق أربيل — دهوك M10',
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: LatLng(appState.currentLat, appState.currentLng),
+                  initialZoom: 16.0,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.darb.iraq',
+                  ),
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: LatLng(appState.currentLat, appState.currentLng),
+                        width: 50,
+                        height: 50,
+                        child: const Icon(Icons.navigation_rounded, color: AppTheme.primaryEmerald, size: 40),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'السرعة المقترحة للطريق: 100–120 كم/س',
-                        style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13, fontFamily: 'Cairo'),
+                      Marker(
+                        point: LatLng(widget.destLat, widget.destLng),
+                        width: 50,
+                        height: 50,
+                        child: const Icon(Icons.location_on_rounded, color: AppTheme.alertRed, size: 40),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
             ),
 

@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
 
 class AppState extends ChangeNotifier {
   final ApiService _apiService = ApiService();
+  StreamSubscription<Position>? _positionStream;
 
   // Theme & Locale
   bool _isDarkMode = true;
@@ -123,6 +125,50 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  Future<void> startLocationTracking() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      debugPrint('[APP_STATE] Location services are disabled.');
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        debugPrint('[APP_STATE] Location permissions are denied');
+        return;
+      }
+    }
+    
+    if (permission == LocationPermission.deniedForever) {
+      debugPrint('[APP_STATE] Location permissions are permanently denied.');
+      return;
+    }
+
+    // Get initial location
+    try {
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      updateLocation(position.latitude, position.longitude, 'موقعي الحالي');
+    } catch (e) {
+      debugPrint('[APP_STATE] Error getting initial location: $e');
+    }
+
+    // Start stream
+    _positionStream?.cancel();
+    _positionStream = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10,
+      ),
+    ).listen((Position position) {
+      updateLocation(position.latitude, position.longitude, 'موقعي الحالي');
+    });
+  }
+
   Future<void> _recalculateActiveRoute() async {
     if (_destLat == null || _destLng == null) return;
     try {
@@ -170,6 +216,7 @@ class AppState extends ChangeNotifier {
       _isOffline = false;
       _isAuthenticated = true;
       debugPrint('[APP_STATE] Authentication successful! Navigating to HomeScreen.');
+      await startLocationTracking();
       await loadNearbyData();
     } catch (e) {
       debugPrint('[APP_STATE] Exception during loadInitialData: $e');
@@ -177,6 +224,7 @@ class AppState extends ChangeNotifier {
         debugPrint('[APP_STATE] User has token but network failed. Activating Offline Resilience Mode.');
         _isOffline = true;
         _isAuthenticated = true;
+        await startLocationTracking(); // Try getting location offline anyway
       } else {
         debugPrint('[APP_STATE] Auth failed. Retaining LoginScreen.');
         _isAuthenticated = false;
