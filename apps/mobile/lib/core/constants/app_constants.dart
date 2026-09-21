@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppConstants {
   static const String appName = 'دَرْب — DARB';
   static const String appSlogan = 'اعرف الطريق قبل لا تمشيه.';
-  static const String defaultApiUrl = 'http://localhost:4000/api/v1';
+  static const String defaultApiUrl = 'http://192.168.1.6:4000/api/v1';
 
   // Major Iraqi Cities & Coordinates
   static const Map<String, Map<String, dynamic>> iraqiCities = {
