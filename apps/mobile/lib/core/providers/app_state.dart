@@ -11,7 +11,7 @@ class AppState extends ChangeNotifier {
   String _currentLanguage = 'ar';
 
   // Auth & Profile
-  bool _isAuthenticated = true;
+  bool _isAuthenticated = false;
   String _driverUsername = 'سائق_أربيل_الخبير';
   String _trustLevel = 'ROAD_EXPERT';
   int _reputationScore = 185;
@@ -157,6 +157,7 @@ class AppState extends ChangeNotifier {
       _badges = (profile['badges'] as List?)?.map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
 
       _isOffline = false;
+      _isAuthenticated = true;
       await loadNearbyData();
     } catch (e) {
       _isOffline = true;
