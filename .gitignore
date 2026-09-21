@@ -1,0 +1,32 @@
+# Node modules and temporary files
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# Inspect/Scratch directories
+inspect_ipa/
+inspect_ipa_2/
+darb.ipa
+darb.zip
+*.apk
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Mobile Build folders
+apps/mobile/build/
+apps/mobile/.dart_tool/
+apps/mobile/.flutter-plugins-dependencies
+apps/mobile/.pub-cache/
+apps/mobile/.pub/

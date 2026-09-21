@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  darb-postgres:
+    image: postgis/postgis:16-3.4
+    container_name: darb-postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: darb_admin
+      POSTGRES_PASSWORD: darb_secret_password_2026
+      POSTGRES_DB: darb_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - darb_postgis_data:/var/lib/postgresql/data
+      - ./postgis-init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - darb-network
+
+  darb-redis:
+    image: redis:7-alpine
+    container_name: darb-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - darb-network
+
+  darb-api:
+    build:
+      context: ../apps/backend
+      dockerfile: Dockerfile
+    container_name: darb-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_HOST: darb-postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: darb_admin
+      DATABASE_PASSWORD: darb_secret_password_2026
+      DATABASE_NAME: darb_db
+      REDIS_HOST: darb-redis
+      REDIS_PORT: 6379
+      JWT_SECRET: darb_jwt_super_secure_key_iraq_2026
+    ports:
+      - "4000:4000"
+    depends_on:
+      - darb-postgres
+      - darb-redis
+    networks:
+      - darb-network
+
+networks:
+  darb-network:
+    driver: bridge
+
+volumes:
+  darb_postgis_data:

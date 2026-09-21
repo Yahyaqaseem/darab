@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>دَرْب — DARB | اعرف الطريق قبل لا تمشيه</title>
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+  
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            darb: {
+              emerald: '#0A5C36',
+              'emerald-light': '#10B981',
+              'emerald-dark': '#063B23',
+              sand: '#D4B996',
+              'sand-light': '#F3EDE2',
+              'sand-dark': '#A68B68',
+              charcoal: '#0F172A',
+              card: '#1E293B',
+              surface: '#334155',
+              orange: '#F97316',
+              red: '#EF4444',
+            }
+          },
+          fontFamily: {
+            cairo: ['Cairo', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Cairo', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .material-symbols-rounded { font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24; }
+    /* Hide scrollbars */
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Device Frame Styling */
+    .device-container {
+      width: 100%;
+      max-width: 430px;
+      height: 94vh;
+      max-height: 900px;
+      box-shadow: 0 25px 60px -15px rgba(0,0,0,0.4), 0 0 0 10px #1E293B;
+      border-radius: 46px;
+    }
+    @media (max-width: 640px) {
+      .device-container {
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+    
+    /* Leaflet Dark Filter */
+    .dark-map .leaflet-tile {
+      filter: brightness(0.65) invert(1) contrast(3) hue-rotate(200deg) saturate(0.35);
+    }
+    .leaflet-control-attribution { display: none !important; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 flex items-center justify-center min-h-screen p-0 sm:p-4 select-none">
+
+  <!-- Mobile Device Simulation Frame -->
+  <div class="device-container bg-slate-900 overflow-hidden flex flex-col relative border border-slate-700">
+    
+    <!-- Phone Top Status Bar -->
+    <div class="h-10 bg-slate-900/90 backdrop-blur px-6 flex items-center justify-between text-xs text-slate-400 font-bold z-50 shrink-0">
+      <span id="current-clock">06:45</span>
+      <div class="w-24 h-4 bg-slate-800 rounded-full flex items-center justify-center">
+        <div class="w-2.5 h-2.5 bg-black rounded-full mr-3"></div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button id="btn-voice-toggle" onclick="toggleVoice()" class="text-emerald-400 text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/30">
+          <span class="material-symbols-rounded text-sm">volume_up</span> صوت
+        </button>
+        <span class="material-symbols-rounded text-sm">wifi</span>
+        <span class="material-symbols-rounded text-sm">battery_full</span>
+      </div>
+    </div>
+
+    <!-- Main Screen View Container -->
+    <div id="screen-container" class="flex-1 overflow-y-auto relative flex flex-col">
+
+      <!-- ================= SCREEN 1: MAP & HOME ================= -->
+      <div id="view-home" class="view-screen h-full flex flex-col relative">
+        
+        <!-- Live OpenStreetMap / Leaflet Map Container -->
+        <div id="leaflet-map" class="absolute inset-0 dark-map z-0"></div>
+
+        <!-- Top Header & Search Bar -->
+        <div class="relative z-20 p-4 space-y-2.5">
+          <!-- Search Box -->
+          <div class="bg-slate-800/95 backdrop-blur-md border border-slate-700 rounded-2xl p-2.5 px-3.5 flex items-center gap-3 shadow-xl">
+            <span class="material-symbols-rounded text-emerald-400">search</span>
+            <input id="input-search" type="text" placeholder="وين تريد تروح؟ (دهوك، مطعم، بنزين...)" class="bg-transparent flex-1 text-sm outline-none text-white placeholder-slate-400 font-medium" />
+            <button onclick="openCityModal()" class="flex items-center gap-1 bg-slate-700/80 text-amber-300 text-xs px-2.5 py-1 rounded-xl border border-amber-400/30">
+              <span class="material-symbols-rounded text-sm">location_city</span>
+              <span id="btn-city-name">أربيل</span>
+            </button>
+          </div>
+
+          <!-- Quick Action Chips -->
+          <div class="flex gap-2 overflow-x-auto pb-1">
+            <button onclick="startNavRoute('دهوك - طريق M10', 36.8679, 42.9904)" class="bg-emerald-900/80 border border-emerald-500/40 text-emerald-200 text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 font-bold shadow whitespace-nowrap active:scale-95 transition">
+              <span class="material-symbols-rounded text-base text-emerald-400">navigation</span> ابدأ رحلة
+            </button>
+            <button onclick="switchTab('fuel')" class="bg-slate-800/90 border border-slate-700 text-amber-300 text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 font-bold shadow whitespace-nowrap active:scale-95 transition">
+              <span class="material-symbols-rounded text-base text-amber-400">local_gas_station</span> بنزين
+            </button>
+            <button onclick="switchTab('chat')" class="bg-slate-800/90 border border-slate-700 text-cyan-300 text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 font-bold shadow whitespace-nowrap active:scale-95 transition">
+              <span class="material-symbols-rounded text-base text-cyan-400">forum</span> شات الطريق
+            </button>
+            <button onclick="openEmergencyModal()" class="bg-slate-800/90 border border-slate-700 text-rose-300 text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 font-bold shadow whitespace-nowrap active:scale-95 transition">
+              <span class="material-symbols-rounded text-base text-rose-400">car_crash</span> بنجرجي وسَطحة
+            </button>
+            <button onclick="switchTab('places')" class="bg-slate-800/90 border border-slate-700 text-slate-200 text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 font-bold shadow whitespace-nowrap active:scale-95 transition">
+              <span class="material-symbols-rounded text-base text-blue-400">restaurant</span> مطاعم
+            </button>
+          </div>
+
+          <!-- Active Road Call Floating Notification Banner -->
+          <div onclick="switchTab('reports')" class="bg-amber-500/90 hover:bg-amber-500 text-slate-950 p-3 rounded-2xl flex items-center justify-between shadow-lg shadow-amber-900/30 cursor-pointer active:scale-98 transition">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-rounded text-xl animate-pulse">radar</span>
+              <div>
+                <p class="text-xs font-black">📡 نداء طريق نشط أمامك: «هل هنالك زحمة؟»</p>
+                <p class="text-[11px] font-bold text-slate-900">8 سواق أكدوا وجود الزحمة • أجب الآن</p>
+              </div>
+            </div>
+            <span class="material-symbols-rounded text-sm">arrow_back_ios</span>
+          </div>
+        </div>
+
+        <!-- Bottom Driver Quick Action Bar -->
+        <div class="mt-auto p-4 z-20 flex gap-2.5">
+          <!-- 1-Tap Incident Report -->
+          <button onclick="openReportModal()" class="flex-1 bg-gradient-to-r from-red-600 to-rose-700 text-white py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-red-950/60 active:scale-95 transition">
+            <span class="material-symbols-rounded text-xl">add_alert</span>
+            <span>🚨 إبلاغ فوري</span>
+          </button>
+          <!-- 1-Tap Road Call (نداء الطريق) -->
+          <button onclick="openNidaaModal()" class="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-slate-950 py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-orange-950/60 active:scale-95 transition">
+            <span class="material-symbols-rounded text-xl">radar</span>
+            <span>📡 نداء الطريق</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= SCREEN 2: ROAD REPORTS ================= -->
+      <div id="view-reports" class="view-screen hidden flex-1 p-4 overflow-y-auto space-y-3">
+        <div class="flex items-center justify-between mb-1">
+          <h2 class="text-lg font-black text-white flex items-center gap-2">
+            <span class="material-symbols-rounded text-rose-500">notification_important</span> بلاغات الطرق الحية
+          </h2>
+          <button onclick="openReportModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 shadow">
+            <span class="material-symbols-rounded text-sm">add</span> إبلاغ جديد
+          </button>
+        </div>
+        <div id="reports-list" class="space-y-3"></div>
+      </div>
+
+      <!-- ================= SCREEN 3: ANONYMOUS ROAD CHAT ================= -->
+      <div id="view-chat" class="view-screen hidden flex-1 flex flex-col bg-slate-900 p-4">
+        <!-- Header -->
+        <div class="bg-slate-800 border border-slate-700 p-3 rounded-2xl flex items-center justify-between mb-3 shrink-0">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+              <span class="material-symbols-rounded text-cyan-400 text-lg">forum</span> شات طريق: أربيل — دهوك M10
+            </h3>
+            <p class="text-[11px] text-slate-400">تواصل مجهول وآمن مع السائقين على نفس الخط</p>
+          </div>
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+        </div>
+
+        <!-- Chat Stream -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto space-y-2.5 pr-1 mb-3">
+          <!-- Injected via JS -->
+        </div>
+
+        <!-- Message Input -->
+        <div class="bg-slate-800 border border-slate-700 p-2 rounded-2xl flex items-center gap-2 shrink-0">
+          <input id="chat-input" type="text" placeholder="اكتب ملاحظة للطريق (مثلاً: بعد السيطرة زحمة)..." class="bg-transparent flex-1 text-xs outline-none text-white px-2 placeholder-slate-400 font-medium" />
+          <button onclick="sendChatMessage()" class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-xl flex items-center justify-center">
+            <span class="material-symbols-rounded text-lg">send</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= SCREEN 4: FUEL STATIONS ================= -->
+      <div id="view-fuel" class="view-screen hidden flex-1 p-4 overflow-y-auto space-y-3">
+        <div class="flex items-center justify-between mb-1">
+          <h2 class="text-lg font-black text-white flex items-center gap-2">
+            <span class="material-symbols-rounded text-amber-400">local_gas_station</span> محطات الوقود والأسعار
+          </h2>
+          <span class="text-xs text-slate-400">أسعار اليوم بالدينار</span>
+        </div>
+        <div id="fuel-list" class="space-y-3"></div>
+      </div>
+
+      <!-- ================= SCREEN 5: PLACES DIRECTORY ================= -->
+      <div id="view-places" class="view-screen hidden flex-1 p-4 overflow-y-auto space-y-3">
+        <h2 class="text-lg font-black text-white flex items-center gap-2 mb-1">
+          <span class="material-symbols-rounded text-blue-400">storefront</span> دليل الأماكن والخدمات
+        </h2>
+        <div id="places-list" class="space-y-3"></div>
+      </div>
+
+      <!-- ================= SCREEN 6: BUSINESS DASHBOARD (أصحاب المحطات والأنشطة) ================= -->
+      <div id="view-business" class="view-screen hidden flex-1 p-4 overflow-y-auto space-y-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-5 shadow-xl">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-base font-black text-white flex items-center gap-2">
+              <span class="material-symbols-rounded text-emerald-400">store</span> لوحة إدارة النشاط التجاري
+            </h3>
+            <span class="bg-emerald-500/20 text-emerald-300 text-[11px] font-bold px-2 py-0.5 rounded-lg border border-emerald-500/30">موثق ✓</span>
+          </div>
+          <p class="text-xs text-slate-300 font-bold">محطة وقود كوردستان 100 متري</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">شارع 100 متري قرب تقاطع عينكاوة</p>
+
+          <!-- Analytics Counters -->
+          <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-700">
+            <div class="bg-slate-900/80 p-2.5 rounded-xl text-center">
+              <p class="text-base font-black text-emerald-400">4,280</p>
+              <p class="text-[10px] text-slate-400">مشاهدات السائقين</p>
+            </div>
+            <div class="bg-slate-900/80 p-2.5 rounded-xl text-center">
+              <p class="text-base font-black text-amber-400">1,120</p>
+              <p class="text-[10px] text-slate-400">طلب مسار للمحطة</p>
+            </div>
+            <div class="bg-slate-900/80 p-2.5 rounded-xl text-center">
+              <p class="text-base font-black text-cyan-400">340</p>
+              <p class="text-[10px] text-slate-400">اتصال مباشر</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Price Update Form -->
+        <div class="bg-slate-800/80 border border-slate-700 rounded-3xl p-4 space-y-3">
+          <h4 class="text-xs font-black text-slate-200">تحديث أسعار الوقود اللحظية:</h4>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="text-[10px] text-slate-400">بنزين عادي</label>
+              <input id="biz-price-petrol" type="number" value="850" class="w-full bg-slate-900 text-white font-bold p-2 rounded-xl text-xs outline-none border border-slate-700" />
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400">بنزين محسن</label>
+              <input id="biz-price-premium" type="number" value="1150" class="w-full bg-slate-900 text-white font-bold p-2 rounded-xl text-xs outline-none border border-slate-700" />
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400">ديزل / كاز</label>
+              <input id="biz-price-diesel" type="number" value="750" class="w-full bg-slate-900 text-white font-bold p-2 rounded-xl text-xs outline-none border border-slate-700" />
+            </div>
+          </div>
+          <button onclick="saveBusinessPrices()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs shadow">
+            حفظ ونشر الأسعار لجميع السائقين
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= SCREEN 7: DRIVER PROFILE & GARAGE ================= -->
+      <div id="view-profile" class="view-screen hidden flex-1 p-4 overflow-y-auto space-y-4">
+        <!-- Profile Card -->
+        <div class="bg-slate-800/90 border border-slate-700 rounded-3xl p-5 text-center relative overflow-hidden shadow-xl">
+          <div class="w-20 h-20 bg-emerald-600/30 border-2 border-emerald-500 rounded-full mx-auto flex items-center justify-center text-emerald-400 mb-3 shadow">
+            <span class="material-symbols-rounded text-4xl">person_pin</span>
+          </div>
+          <h3 class="text-lg font-black text-white">سائق_أربيل_الخبير</h3>
+          <div class="inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-300 text-xs font-bold px-3 py-1 rounded-full border border-amber-500/30 mt-1">
+            <span class="material-symbols-rounded text-sm">shield</span> المستوى: خبير طرق (Road Expert)
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-slate-700/80">
+            <div>
+              <p class="text-xl font-black text-emerald-400">185</p>
+              <p class="text-[11px] text-slate-400">نقاط السمعة</p>
+            </div>
+            <div>
+              <p class="text-xl font-black text-amber-400">38</p>
+              <p class="text-[11px] text-slate-400">بلاغ مؤكد</p>
+            </div>
+            <div>
+              <p class="text-xl font-black text-blue-400">24</p>
+              <p class="text-[11px] text-slate-400">إجابة نداء</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Access to Business Dashboard -->
+        <div onclick="switchTab('business')" class="bg-gradient-to-r from-emerald-950 to-slate-800 border border-emerald-500/30 p-3.5 rounded-2xl flex items-center justify-between cursor-pointer active:scale-98 transition">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-rounded text-emerald-400 text-2xl">store</span>
+            <div>
+              <p class="text-xs font-bold text-white">لوحة تحكم أصحاب الأنشطة والمحطات</p>
+              <p class="text-[10px] text-slate-400">تحديث الأسعار، العروض الترويجية، والإحصائيات</p>
+            </div>
+          </div>
+          <span class="material-symbols-rounded text-slate-400 text-sm">arrow_back_ios</span>
+        </div>
+
+        <!-- Badges -->
+        <div>
+          <h4 class="text-sm font-black text-slate-300 mb-2.5">الأوسمة المكتسبة 🏆</h4>
+          <div class="grid grid-cols-3 gap-2.5">
+            <div class="bg-slate-800/80 border border-slate-700 p-3 rounded-2xl text-center">
+              <span class="material-symbols-rounded text-2xl text-amber-400">visibility</span>
+              <p class="text-xs font-bold mt-1 text-white">عين أربيل</p>
+            </div>
+            <div class="bg-slate-800/80 border border-slate-700 p-3 rounded-2xl text-center">
+              <span class="material-symbols-rounded text-2xl text-emerald-400">verified</span>
+              <p class="text-xs font-bold mt-1 text-white">خبير الطرق</p>
+            </div>
+            <div class="bg-slate-800/80 border border-slate-700 p-3 rounded-2xl text-center">
+              <span class="material-symbols-rounded text-2xl text-blue-400">navigation</span>
+              <p class="text-xs font-bold mt-1 text-white">ملك السفر</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Garage -->
+        <div>
+          <h4 class="text-sm font-black text-slate-300 mb-2.5">مرآب سياراتي 🚗</h4>
+          <div class="bg-slate-800/80 border border-slate-700 p-3.5 rounded-2xl flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-rounded text-2xl text-emerald-400">directions_car</span>
+              <div>
+                <p class="text-sm font-bold text-white">Toyota Land Cruiser 2023</p>
+                <p class="text-xs text-slate-400">السيارة الأساسية</p>
+              </div>
+            </div>
+            <span class="material-symbols-rounded text-emerald-400">check_circle</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SCREEN 8: DRIVING HUD NAVIGATION ================= -->
+      <div id="view-navigation" class="view-screen hidden flex-1 flex flex-col bg-slate-950 p-4 relative">
+        <!-- Turn instruction HUD -->
+        <div class="bg-emerald-950/95 border-2 border-emerald-600/60 rounded-3xl p-4 flex items-center gap-4 shadow-2xl z-30">
+          <div class="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center text-slate-950 shrink-0">
+            <span class="material-symbols-rounded text-4xl">turn_slight_right</span>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-emerald-400">بعد 800 متر</p>
+            <h3 class="text-base font-black text-white leading-tight">الزم المسار الأيمن باتجاه سيطرة دهوك</h3>
+          </div>
+        </div>
+
+        <!-- Speedometer & Alerts HUD -->
+        <div class="flex-1 flex flex-col items-center justify-center relative my-4">
+          <!-- Digital Speed HUD -->
+          <div class="w-44 h-44 rounded-full bg-slate-900 border-4 border-emerald-500/80 flex flex-col items-center justify-center shadow-2xl shadow-emerald-950">
+            <span id="nav-speed-display" class="text-5xl font-black text-white leading-none">78</span>
+            <span class="text-xs text-slate-400 font-bold mt-1">كم / ساعة</span>
+            <span class="text-[10px] text-emerald-400 font-bold mt-0.5">السرعة الموثوقة</span>
+          </div>
+
+          <!-- Highway Warning Floater -->
+          <div class="mt-6 bg-amber-500/90 text-slate-950 font-black text-xs px-4 py-2 rounded-2xl flex items-center gap-2 shadow-lg">
+            <span class="material-symbols-rounded text-lg">warning</span>
+            <span>🚦 زحمة بعد 3 كم (8 سواق أكدوا وجودها)</span>
+          </div>
+        </div>
+
+        <!-- Navigation Action Buttons -->
+        <div class="space-y-2.5 z-30">
+          <div class="flex gap-2">
+            <button onclick="openNidaaModal()" class="flex-1 bg-amber-500 text-slate-950 font-black py-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow">
+              <span class="material-symbols-rounded text-base">radar</span> نداء الطريق
+            </button>
+            <button onclick="openReportModal()" class="flex-1 bg-rose-600 text-white font-black py-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow">
+              <span class="material-symbols-rounded text-base">add_alert</span> إبلاغ سريع
+            </button>
+          </div>
+          <button onclick="finishTripSummary()" class="w-full bg-slate-800 border border-slate-700 text-white font-bold py-3 rounded-xl text-xs">
+            إنهاء الرحلة وعرض الملخص 🏁
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= SCREEN 9: TRIP SUMMARY & REPLAY ================= -->
+      <div id="view-trip-summary" class="view-screen hidden flex-1 p-5 overflow-y-auto space-y-4">
+        <div class="text-center pt-2">
+          <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-2">
+            <span class="material-symbols-rounded text-3xl">flag</span>
+          </div>
+          <h2 class="text-xl font-black text-white">الحمد لله على سلامتك!</h2>
+          <p class="text-xs text-slate-400">ملخص رحلتك: أربيل ➔ دهوك</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-slate-800/80 border border-slate-700 p-3.5 rounded-2xl">
+            <p class="text-xs text-slate-400">المسافة الكلية</p>
+            <p class="text-lg font-black text-white mt-1">155.4 كم</p>
+          </div>
+          <div class="bg-slate-800/80 border border-slate-700 p-3.5 rounded-2xl">
+            <p class="text-xs text-slate-400">مدة الرحلة</p>
+            <p class="text-lg font-black text-white mt-1">2 س و 18 د</p>
+          </div>
+          <div class="bg-slate-800/80 border border-slate-700 p-3.5 rounded-2xl">
+            <p class="text-xs text-slate-400">السرعة المتوسطة</p>
+            <p class="text-lg font-black text-white mt-1">68 كم/س</p>
+          </div>
+          <div class="bg-slate-800/80 border border-slate-700 p-3.5 rounded-2xl border-emerald-500/40">
+            <p class="text-xs text-emerald-400 font-bold">السرعة الموثوقة</p>
+            <p class="text-lg font-black text-emerald-400 mt-1">124 كم/س</p>
+          </div>
+        </div>
+
+        <!-- Anomaly Badge -->
+        <div class="bg-emerald-950/60 border border-emerald-500/40 p-3 rounded-2xl flex items-center gap-2.5 text-xs text-emerald-200">
+          <span class="material-symbols-rounded text-emerald-400 text-lg">shield</span>
+          <span>تمت تصفية طفرة الـ GPS العشوائية (250 كم/س) بنظام الذكاء الاصطناعي بنجاح.</span>
+        </div>
+
+        <button onclick="switchTab('home')" class="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-2xl text-sm shadow-lg shadow-emerald-950">
+          العودة للرئيسية
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ================= BOTTOM NAVIGATION BAR ================= -->
+    <div id="bottom-nav" class="h-16 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-3 flex items-center justify-around z-50 shrink-0">
+      <button onclick="switchTab('home')" class="nav-item active flex flex-col items-center gap-1 text-emerald-400 font-bold text-[10px]" data-target="home">
+        <span class="material-symbols-rounded text-2xl">map</span> الخريطة
+      </button>
+      <button onclick="switchTab('reports')" class="nav-item flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px]" data-target="reports">
+        <span class="material-symbols-rounded text-2xl">notification_important</span> البلاغات
+      </button>
+      <button onclick="switchTab('chat')" class="nav-item flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px]" data-target="chat">
+        <span class="material-symbols-rounded text-2xl">forum</span> الشات
+      </button>
+      <button onclick="switchTab('fuel')" class="nav-item flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px]" data-target="fuel">
+        <span class="material-symbols-rounded text-2xl">local_gas_station</span> البنزين
+      </button>
+      <button onclick="switchTab('profile')" class="nav-item flex flex-col items-center gap-1 text-slate-400 font-bold text-[10px]" data-target="profile">
+        <span class="material-symbols-rounded text-2xl">person</span> حسابي
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ================= MODALS ================= -->
+  <!-- 1. Report Modal -->
+  <div id="modal-report" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end justify-center p-0 sm:p-4">
+    <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-rounded text-rose-500 text-2xl">add_alert</span>
+          <h3 class="text-base font-black text-white">إبلاغ فوري عن حالة الطريق</h3>
+        </div>
+        <button onclick="closeModals()" class="text-slate-400 hover:text-white material-symbols-rounded">close</button>
+      </div>
+      <p class="text-xs text-slate-400">اختر نوع الحدث بضغطة واحدة ليظهر فوراً للسائقين على نفس المسار:</p>
+
+      <div class="grid grid-cols-2 gap-2.5">
+        <button onclick="submitNewReport('ACCIDENT', 'حادث سير', 'car_crash', 'text-red-400')" class="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 p-3 rounded-2xl flex items-center gap-3 text-red-300 text-xs font-bold active:scale-95 transition">
+          <span class="material-symbols-rounded text-red-400 text-2xl">car_crash</span> حادث سير
+        </button>
+        <button onclick="submitNewReport('HEAVY_TRAFFIC', 'ازدحام مروري', 'traffic', 'text-amber-400')" class="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 p-3 rounded-2xl flex items-center gap-3 text-amber-300 text-xs font-bold active:scale-95 transition">
+          <span class="material-symbols-rounded text-amber-400 text-2xl">traffic</span> ازدحام مروري
+        </button>
+        <button onclick="submitNewReport('CHECKPOINT', 'سيطرة / تفتيش', 'security', 'text-blue-400')" class="bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 p-3 rounded-2xl flex items-center gap-3 text-blue-300 text-xs font-bold active:scale-95 transition">
+          <span class="material-symbols-rounded text-blue-400 text-2xl">security</span> نقطة تفتيش
+        </button>
+        <button onclick="submitNewReport('POTHOLE', 'حفرة / تخسف', 'warning', 'text-orange-400')" class="bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 p-3 rounded-2xl flex items-center gap-3 text-orange-300 text-xs font-bold active:scale-95 transition">
+          <span class="material-symbols-rounded text-orange-400 text-2xl">warning</span> حفرة / تخسف
+        </button>
+        <button onclick="submitNewReport('WATER_ACCUMULATION', 'تجمع مياه', 'water_drop', 'text-cyan-400')" class="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 p-3 rounded-2xl flex items-center gap-3 text-cyan-300 text-xs font-bold active:scale-95 transition">
+          <span class="material-symbols-rounded text-cyan-400 text-2xl">water_drop</span> تجمع مياه
+        </button>
+        <button onclick="submitNewReport('CLOSURE', 'طريق مغلق', 'do_not_disturb_on', 'text-rose-500')" class="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 p-3 rounded-2xl flex items-center gap-3 text-rose-300 text-xs font-bold active:scale-95 transition">
+          <span class="material-symbols-rounded text-rose-400 text-2xl">do_not_disturb_on</span> طريق مغلق
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Road Call Modal -->
+  <div id="modal-nidaa" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end justify-center p-0 sm:p-4">
+    <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-rounded text-amber-400 text-2xl">radar</span>
+          <h3 class="text-base font-black text-white">📡 نداء الطريق (سؤال السائقين أمامك)</h3>
+        </div>
+        <button onclick="closeModals()" class="text-slate-400 hover:text-white material-symbols-rounded">close</button>
+      </div>
+      <p class="text-xs text-slate-400">يصل السؤال فقط للسائقين المتواجدين أمامك على مسافة (500م - 15كم):</p>
+
+      <div class="space-y-2">
+        <button onclick="submitNidaa('هل هنالك زحمة؟')" class="w-full bg-slate-700/60 hover:bg-slate-700 p-3.5 rounded-2xl flex items-center justify-between text-white text-xs font-bold">
+          <span class="flex items-center gap-2.5"><span class="material-symbols-rounded text-amber-400">traffic</span> هل هنالك زحمة؟</span>
+          <span class="material-symbols-rounded text-slate-400 text-sm">arrow_forward_ios</span>
+        </button>
+        <button onclick="submitNidaa('كيف وضع الطريق؟')" class="w-full bg-slate-700/60 hover:bg-slate-700 p-3.5 rounded-2xl flex items-center justify-between text-white text-xs font-bold">
+          <span class="flex items-center gap-2.5"><span class="material-symbols-rounded text-emerald-400">alt_route</span> كيف وضع الطريق؟</span>
+          <span class="material-symbols-rounded text-slate-400 text-sm">arrow_forward_ios</span>
+        </button>
+        <button onclick="submitNidaa('هل توجد سيطرة / تفتيش؟')" class="w-full bg-slate-700/60 hover:bg-slate-700 p-3.5 rounded-2xl flex items-center justify-between text-white text-xs font-bold">
+          <span class="flex items-center gap-2.5"><span class="material-symbols-rounded text-blue-400">security</span> هل توجد سيطرة / تفتيش؟</span>
+          <span class="material-symbols-rounded text-slate-400 text-sm">arrow_forward_ios</span>
+        </button>
+        <button onclick="submitNidaa('هل توجد محطة فيها بنزين؟')" class="w-full bg-slate-700/60 hover:bg-slate-700 p-3.5 rounded-2xl flex items-center justify-between text-white text-xs font-bold">
+          <span class="flex items-center gap-2.5"><span class="material-symbols-rounded text-rose-400">local_gas_station</span> هل توجد محطة فيها بنزين؟</span>
+          <span class="material-symbols-rounded text-slate-400 text-sm">arrow_forward_ios</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Emergency Services Modal -->
+  <div id="modal-emergency" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end justify-center p-0 sm:p-4">
+    <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-rounded text-rose-500 text-2xl">car_crash</span>
+          <h3 class="text-base font-black text-white">أحتاج مساعدة / خدمات الطوارئ</h3>
+        </div>
+        <button onclick="closeModals()" class="text-slate-400 hover:text-white material-symbols-rounded">close</button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="bg-slate-900/80 border border-slate-700 p-3.5 rounded-2xl flex items-center justify-between">
+          <div>
+            <p class="text-sm font-bold text-white">🚜 سطحة كوردستان للإنقاذ</p>
+            <p class="text-xs text-slate-400">أربيل - طريق دهوك السريع • 2.4 كم</p>
+          </div>
+          <a href="tel:07501112233" class="bg-emerald-600 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1">اتصال</a>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-700 p-3.5 rounded-2xl flex items-center justify-between">
+          <div>
+            <p class="text-sm font-bold text-white">🛞 بنجرجي متنقل السريع</p>
+            <p class="text-xs text-slate-400">شارع 100 متري و 120 متري • 1.2 كم</p>
+          </div>
+          <a href="tel:07509871122" class="bg-emerald-600 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1">اتصال</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. City Switcher Modal -->
+  <div id="modal-city" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end justify-center p-0 sm:p-4">
+    <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-black text-white">اختر المحافظة / منطقة القيادة</h3>
+        <button onclick="closeModals()" class="text-slate-400 hover:text-white material-symbols-rounded">close</button>
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        <button onclick="changeCity('أربيل', 36.1911, 44.0091)" class="bg-slate-700 hover:bg-emerald-700 text-white font-bold p-2.5 rounded-xl text-xs">أربيل</button>
+        <button onclick="changeCity('دهوك', 36.8679, 42.9904)" class="bg-slate-700 hover:bg-emerald-700 text-white font-bold p-2.5 rounded-xl text-xs">دهوك</button>
+        <button onclick="changeCity('بغداد', 33.3152, 44.3661)" class="bg-slate-700 hover:bg-emerald-700 text-white font-bold p-2.5 rounded-xl text-xs">بغداد</button>
+        <button onclick="changeCity('السليمانية', 35.5558, 45.4351)" class="bg-slate-700 hover:bg-emerald-700 text-white font-bold p-2.5 rounded-xl text-xs">السليمانية</button>
+        <button onclick="changeCity('كركوك', 35.4681, 44.3922)" class="bg-slate-700 hover:bg-emerald-700 text-white font-bold p-2.5 rounded-xl text-xs">كركوك</button>
+        <button onclick="changeCity('البصرة', 30.5081, 47.7835)" class="bg-slate-700 hover:bg-emerald-700 text-white font-bold p-2.5 rounded-xl text-xs">البصرة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="app-toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white font-bold text-xs px-4 py-2.5 rounded-2xl shadow-2xl z-50 hidden flex items-center gap-2 border border-emerald-400/30">
+    <span class="material-symbols-rounded text-base">check_circle</span>
+    <span id="toast-text">تمت العملية بنجاح</span>
+  </div>
+
+  <!-- Main Javascript Logic -->
+  <script>
+    let map = null;
+    let currentCity = 'أربيل';
+    let currentLat = 36.1911;
+    let currentLng = 44.0091;
+    let speedInterval = null;
+    let voiceEnabled = true;
+
+    // Reports Store
+    let reports = [
+      { id: 'rep-1', type: 'HEAVY_TRAFFIC', title: 'زحمة شديدة عند سيطرة الكلك', road: 'طريق أربيل - دهوك M10', lat: 36.2625, lng: 43.6667, icon: 'traffic', color: 'text-amber-400', bg: 'bg-amber-500/15', border: 'border-amber-500/30', count: 8, time: '20 دقيقة' },
+      { id: 'rep-2', type: 'ACCIDENT', title: 'حادث سير على شارع 100 متري', road: 'شارع 100 متري - أربيل', lat: 36.2167, lng: 44.0089, icon: 'car_crash', color: 'text-red-400', bg: 'bg-red-500/15', border: 'border-red-500/30', count: 6, time: '35 دقيقة' },
+      { id: 'rep-3', type: 'CHECKPOINT', title: 'نقطة تفتيش نشطة (سيطرة شيراوة)', road: 'طريق كركوك - أربيل', lat: 35.8500, lng: 44.3833, icon: 'security', color: 'text-blue-400', bg: 'bg-blue-500/15', border: 'border-blue-500/30', count: 12, time: '45 دقيقة' },
+      { id: 'rep-4', type: 'POTHOLE', title: 'حفرة وتخسف مفاجئ في الطريق السريع', road: 'طريق المطار السريع', lat: 36.2000, lng: 44.0300, icon: 'warning', color: 'text-orange-400', bg: 'bg-orange-500/15', border: 'border-orange-500/30', count: 5, time: '10 ساعات' },
+    ];
+
+    // Anonymous Road Chat Store
+    let chatMessages = [
+      { id: 'm1', sender: 'سائق على الطريق #12', text: 'طريق أربيل الكلك سالك وماكو ازدحام بالسيطرة الأولى', time: 'قبل 4 دقائق', isReportable: false },
+      { id: 'm2', sender: 'صقر الشمال', text: 'انتبهوا شباب، بعد جسر الكلك بمسافة 2 كم سيارة متوقفة بالمسار السريع', time: 'قبل 2 دقيقة', isReportable: true },
+      { id: 'm3', sender: 'كابتن دهوك', text: 'محطة بيترول أوفيسي البنزين المحسن متوفر وسريع', time: 'الآن', isReportable: false }
+    ];
+
+    // Fuel Stations Store
+    let fuelStations = [
+      { id: 'fuel-1', name: 'محطة وقود كوردستان 100 متري', address: 'شارع 100 متري قرب تقاطع عينكاوة', petrol: 850, premium: 1150, diesel: 750, available: true, crowd: 'منخفض', dist: '1.4 كم' },
+      { id: 'fuel-2', name: 'محطة بيترول أوفيسي (طريق دهوك)', address: 'طريق أربيل - دهوك السريع M10', petrol: 950, premium: 1250, diesel: 800, available: true, crowd: 'متوسط', dist: '4.8 كم' },
+      { id: 'fuel-3', name: 'محطة وقود اليرموك الحكومية', address: 'جانب الكرخ - ساحة اليرموك', petrol: 450, premium: 850, diesel: 400, available: true, crowd: 'مزدحم', dist: '8.2 كم' },
+    ];
+
+    // Places Store
+    let places = [
+      { id: 'p-1', name: 'بنجرجي وتصليح إطارات السريع', cat: '🛞 بنجرجية', address: 'أربيل - شارع 60 متري', rating: 4.8, dist: '1.2 كم' },
+      { id: 'p-2', name: 'سطحة كوردستان للإنقاذ السريع', cat: '🚜 سطحة وإنقاذ', address: 'أربيل - تغطية 24/7', rating: 4.9, dist: '2.5 كم' },
+      { id: 'p-3', name: 'المركز الألماني لصيانة السيارات', cat: '🔧 ورش وميكانيك', address: 'أربيل - المنطقة الصناعية', rating: 4.7, dist: '3.8 كم' },
+    ];
+
+    function init() {
+      initMap();
+      renderReportsList();
+      renderChatStream();
+      renderFuelList();
+      renderPlacesList();
+      updateClock();
+      setInterval(updateClock, 10000);
+    }
+
+    function initMap() {
+      if (map) map.remove();
+      map = L.map('leaflet-map', { zoomControl: false }).setView([currentLat, currentLng], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+      // Driver Pulse Marker
+      const driverIcon = L.divIcon({
+        className: 'custom-driver-icon',
+        html: `<div style="width:24px;height:24px;background:#10B981;border:3px solid white;border-radius:50%;box-shadow:0 0 15px #10B981;"></div>`,
+        iconSize: [24, 24]
+      });
+      L.marker([currentLat, currentLng], { icon: driverIcon }).addTo(map);
+
+      // Add Incident Markers
+      reports.forEach(r => {
+        const markerIcon = L.divIcon({
+          className: 'custom-pin',
+          html: `<div style="background:#EF4444;color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.5);">⚠️</div>`,
+          iconSize: [26, 26]
+        });
+        L.marker([r.lat || (currentLat + 0.02), r.lng || (currentLng + 0.02)], { icon: markerIcon }).addTo(map)
+          .bindPopup(`<b style="font-family:Cairo">${r.title}</b><br><small style="font-family:Cairo">${r.road}</small>`);
+      });
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.view-screen').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-item').forEach(el => {
+        el.classList.remove('text-emerald-400');
+        el.classList.add('text-slate-400');
+      });
+
+      const activeView = document.getElementById('view-' + tabId);
+      if (activeView) activeView.classList.remove('hidden');
+
+      const activeNav = document.querySelector(`.nav-item[data-target="${tabId}"]`);
+      if (activeNav) {
+        activeNav.classList.add('text-emerald-400');
+        activeNav.classList.remove('text-slate-400');
+      }
+      if (tabId === 'home' && map) {
+        setTimeout(() => map.invalidateSize(), 150);
+      }
+    }
+
+    function renderReportsList() {
+      const container = document.getElementById('reports-list');
+      container.innerHTML = reports.map(r => `
+        <div class="bg-slate-800/90 border border-slate-700 p-4 rounded-2xl space-y-3">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 rounded-xl ${r.bg} ${r.color}">
+              <span class="material-symbols-rounded text-2xl">${r.icon}</span>
+            </div>
+            <div class="flex-1">
+              <h4 class="text-sm font-bold text-white">${r.title}</h4>
+              <p class="text-xs text-slate-400">${r.road}</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-700/60">
+            <span class="text-emerald-400 font-bold flex items-center gap-1"><span class="material-symbols-rounded text-sm">how_to_reg</span> ${r.count} سواق أكدوا</span>
+            <span class="text-slate-400">ينتهي بعد: ${r.time}</span>
+          </div>
+          <div class="flex gap-2 pt-1">
+            <button onclick="confirmReport('${r.id}')" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1">
+              <span class="material-symbols-rounded text-sm">check_circle</span> تأكيد البلاغ (+3 نقاط)
+            </button>
+            <button onclick="rejectReport('${r.id}')" class="bg-rose-500/15 text-rose-400 font-bold px-3 py-2 rounded-xl text-xs">غير موجود</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderChatStream() {
+      const container = document.getElementById('chat-messages');
+      container.innerHTML = chatMessages.map(m => `
+        <div class="bg-slate-800/90 border border-slate-700/80 p-3 rounded-2xl space-y-1.5 shadow">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="font-bold text-cyan-300">${m.sender}</span>
+            <span class="text-slate-400">${m.time}</span>
+          </div>
+          <p class="text-xs text-white leading-relaxed">${m.text}</p>
+          ${m.isReportable ? `
+            <div class="pt-1.5 border-t border-slate-700/50 flex justify-end">
+              <button onclick="convertChatToReport('${m.text}')" class="bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/40 text-rose-300 text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
+                <span class="material-symbols-rounded text-xs">add_alert</span> تحويل إلى بلاغ معتمد
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const val = input.value.trim();
+      if (!val) return;
+      chatMessages.push({
+        id: 'm-' + Date.now(),
+        sender: 'أنت (سائق على الطريق)',
+        text: val,
+        time: 'الآن',
+        isReportable: true,
+      });
+      input.value = '';
+      renderChatStream();
+    }
+
+    function convertChatToReport(text) {
+      reports.unshift({
+        id: 'rep-' + Date.now(),
+        type: 'HAZARD',
+        title: text.substring(0, 35) + '...',
+        road: 'طريق ' + currentCity + ' — دهوك M10',
+        icon: 'warning',
+        color: 'text-amber-400',
+        bg: 'bg-amber-500/15',
+        border: 'border-amber-500/30',
+        count: 1,
+        time: '45 دقيقة'
+      });
+      renderReportsList();
+      initMap();
+      showToast('تم تحويل رسالة الشات إلى بلاغ طريق حي معتمد!');
+      switchTab('reports');
+    }
+
+    function renderFuelList() {
+      const container = document.getElementById('fuel-list');
+      container.innerHTML = fuelStations.map(s => `
+        <div class="bg-slate-800/90 border border-slate-700 p-4 rounded-2xl space-y-3">
+          <div class="flex items-start justify-between">
+            <div>
+              <h4 class="text-sm font-bold text-white">${s.name}</h4>
+              <p class="text-xs text-slate-400 mt-0.5">${s.address}</p>
+            </div>
+            <span class="bg-amber-500/20 text-amber-300 text-xs font-bold px-2 py-0.5 rounded-lg">${s.dist}</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 bg-slate-900/80 p-2.5 rounded-xl text-center">
+            <div><p class="text-[11px] text-slate-400">بنزين عادي</p><p class="text-sm font-black text-emerald-400">${s.petrol} د.ع</p></div>
+            <div><p class="text-[11px] text-slate-400">بنزين محسن</p><p class="text-sm font-black text-amber-400">${s.premium} د.ع</p></div>
+            <div><p class="text-[11px] text-slate-400">ديزل / كاز</p><p class="text-sm font-black text-blue-400">${s.diesel} د.ع</p></div>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-emerald-400 font-bold">🟢 متوفر • الازدحام: ${s.crowd}</span>
+            <button onclick="startNavRoute('${s.name}', 36.2, 44.0)" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl">المسار للمحطة</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPlacesList() {
+      const container = document.getElementById('places-list');
+      container.innerHTML = places.map(p => `
+        <div class="bg-slate-800/90 border border-slate-700 p-4 rounded-2xl space-y-2">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-sm font-bold text-white">${p.name}</h4>
+              <p class="text-xs text-slate-400">${p.address} • ${p.dist}</p>
+            </div>
+            <span class="text-amber-400 font-bold text-xs flex items-center gap-1">⭐ ${p.rating}</span>
+          </div>
+          <div class="flex gap-2 pt-1">
+            <button onclick="startNavRoute('${p.name}', 36.2, 44.0)" class="flex-1 bg-emerald-600 text-white font-bold py-2 rounded-xl text-xs">المسار إلى المكان</button>
+            <a href="tel:07501234567" class="bg-slate-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center">اتصال</a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function speakAlert(text) {
+      if (!voiceEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ar-IQ';
+      utterance.rate = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function toggleVoice() {
+      voiceEnabled = !voiceEnabled;
+      const btn = document.getElementById('btn-voice-toggle');
+      if (voiceEnabled) {
+        btn.innerHTML = `<span class="material-symbols-rounded text-sm">volume_up</span> صوت`;
+        showToast('تم تفعيل التوجيه الصوتي');
+        speakAlert('تم تفعيل التوجيه الصوتي لدرب');
+      } else {
+        btn.innerHTML = `<span class="material-symbols-rounded text-sm text-slate-400">volume_off</span> كتم`;
+        showToast('تم كتم الصوت');
+      }
+    }
+
+    function showToast(text) {
+      const t = document.getElementById('app-toast');
+      document.getElementById('toast-text').innerText = text;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+
+    function openReportModal() { document.getElementById('modal-report').classList.remove('hidden'); }
+    function openNidaaModal() { document.getElementById('modal-nidaa').classList.remove('hidden'); }
+    function openEmergencyModal() { document.getElementById('modal-emergency').classList.remove('hidden'); }
+    function openCityModal() { document.getElementById('modal-city').classList.remove('hidden'); }
+    function closeModals() {
+      document.querySelectorAll('[id^="modal-"]').forEach(m => m.classList.add('hidden'));
+    }
+
+    function submitNewReport(type, title, icon, color) {
+      reports.unshift({
+        id: 'rep-' + Date.now(),
+        type,
+        title,
+        road: 'طريق ' + currentCity + ' السريع',
+        icon,
+        color,
+        bg: 'bg-red-500/15',
+        border: 'border-red-500/30',
+        count: 1,
+        time: '30 دقيقة'
+      });
+      renderReportsList();
+      initMap();
+      closeModals();
+      showToast('تم نشر البلاغ لجميع السائقين (+10 نقاط سمعة)');
+      speakAlert('تم نشر البلاغ لجميع السائقين على الطريق');
+    }
+
+    function submitNidaa(question) {
+      closeModals();
+      showToast('تم إرسال نداء الطريق للسائقين أمامك على مسافة 10 كم!');
+      speakAlert('تم إرسال نداء الطريق للسائقين أمامك');
+    }
+
+    function confirmReport(id) {
+      const r = reports.find(x => x.id === id);
+      if (r) {
+        r.count++;
+        renderReportsList();
+        showToast('شكراً لتأكيدك البلاغ! (+3 نقاط سمعة)');
+        speakAlert('شكراً، تم تسجيل تأكيدك لحالة الطريق');
+      }
+    }
+
+    function rejectReport(id) {
+      reports = reports.filter(x => x.id !== id);
+      renderReportsList();
+      initMap();
+      showToast('تم تحديث حالة الطريق وإزالة البلاغ');
+    }
+
+    function changeCity(name, lat, lng) {
+      currentCity = name;
+      currentLat = lat;
+      currentLng = lng;
+      document.getElementById('btn-city-name').innerText = name;
+      closeModals();
+      initMap();
+      showToast('تم تغيير الموقع إلى محافظة ' + name);
+    }
+
+    function startNavRoute(dest, lat, lng) {
+      switchTab('navigation');
+      speakAlert('انتبه، بعد 800 متر الزم المسار الأيمن باتجاه سيطرة دهوك، وتوجد زحمة بعد 3 كيلومتر');
+      let speed = 72;
+      clearInterval(speedInterval);
+      speedInterval = setInterval(() => {
+        speed = 70 + Math.floor(Math.random() * 16);
+        const speedEl = document.getElementById('nav-speed-display');
+        if (speedEl) speedEl.innerText = speed;
+      }, 1000);
+      showToast('بدأت الملاحة نحو ' + dest);
+    }
+
+    function finishTripSummary() {
+      clearInterval(speedInterval);
+      switchTab('trip-summary');
+      speakAlert('الحمد لله على السلامة! وصلت إلى وجهتك');
+    }
+
+    function saveBusinessPrices() {
+      const petrol = document.getElementById('biz-price-petrol').value;
+      const premium = document.getElementById('biz-price-premium').value;
+      fuelStations[0].petrol = petrol;
+      fuelStations[0].premium = premium;
+      renderFuelList();
+      showToast('تم حفظ ونشر الأسعار الجديدة للمحطة بنجاح!');
+    }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('current-clock').innerText = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
