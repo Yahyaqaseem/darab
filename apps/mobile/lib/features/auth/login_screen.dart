@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:dio/dio.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared_widgets/driver_safe_button.dart';
@@ -22,9 +24,24 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
+  String _normalizeIraqiPhone(String input) {
+    String cleaned = input.replaceAll(RegExp(r'[^\d+]'), '').trim();
+    if (cleaned.startsWith('+964')) {
+      cleaned = cleaned.substring(4);
+    } else if (cleaned.startsWith('00964')) {
+      cleaned = cleaned.substring(5);
+    } else if (cleaned.startsWith('964')) {
+      cleaned = cleaned.substring(3);
+    }
+    if (cleaned.startsWith('0')) {
+      cleaned = cleaned.substring(1);
+    }
+    return '+964$cleaned';
+  }
+
   Future<void> _handleSendOtp() async {
     final phone = _phoneController.text.trim();
-    if (phone.isEmpty || phone.length < 10) {
+    if (phone.isEmpty || phone.length < 9) {
       setState(() => _errorMessage = 'يرجى إدخال رقم هاتف عراقي صحيح');
       return;
     }
@@ -36,16 +53,45 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final appState = Provider.of<AppState>(context, listen: false);
-      await appState.apiService.requestOtp('+964${phone.startsWith('0') ? phone.substring(1) : phone}');
+      final normalizedPhone = _normalizeIraqiPhone(phone);
+      debugPrint('[OTP REQUEST] Target: ${appState.apiService.baseUrl}/auth/request-otp');
+      debugPrint('[OTP REQUEST] Normalized Phone: $normalizedPhone');
+      
+      final res = await appState.apiService.requestOtp(normalizedPhone);
+      debugPrint('[OTP SUCCESS] Response received: ${res['message']}');
       
       setState(() {
         _isLoading = false;
         _isOtpSent = true;
       });
-    } catch (e) {
+    } on DioException catch (e) {
+      debugPrint('[OTP ERROR] DioException: status=${e.response?.statusCode}, type=${e.type}, msg=${e.message}');
+      String msg;
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.connectionError) {
+        msg = 'تعذر الاتصال بالسيرفر (${AppConstants.defaultApiUrl}). تأكد من تشغيل السيرفر ومن اتصال هاتفك بنفس الشبكة.';
+      } else if (e.response != null) {
+        final serverMsg = e.response?.data?['message'];
+        if (serverMsg is List) {
+          msg = serverMsg.join(', ');
+        } else if (serverMsg is String) {
+          msg = serverMsg;
+        } else {
+          msg = 'خطأ من السيرفر (${e.response?.statusCode})';
+        }
+      } else {
+        msg = 'خطأ في الاتصال: ${e.message}';
+      }
       setState(() {
         _isLoading = false;
-        _errorMessage = 'حدث خطأ أثناء إرسال الرمز. تأكد من الاتصال.';
+        _errorMessage = msg;
+      });
+    } catch (e) {
+      debugPrint('[OTP ERROR] Unexpected error: $e');
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'خطأ غير متوقع: $e';
       });
     }
   }
@@ -65,18 +111,42 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final phone = _phoneController.text.trim();
       final appState = Provider.of<AppState>(context, listen: false);
-      await appState.apiService.verifyOtp(
-        '+964${phone.startsWith('0') ? phone.substring(1) : phone}',
+      final normalizedPhone = _normalizeIraqiPhone(phone);
+      debugPrint('[VERIFY REQUEST] Target: ${appState.apiService.baseUrl}/auth/verify-otp');
+      debugPrint('[VERIFY REQUEST] Phone: $normalizedPhone');
+      
+      final res = await appState.apiService.verifyOtp(
+        normalizedPhone,
         otp,
         username: _usernameController.text.trim(),
       );
+      debugPrint('[VERIFY SUCCESS] User authenticated: ${res['user']?['username']}');
 
       setState(() => _isLoading = false);
       widget.onLoginSuccess();
-    } catch (e) {
+    } on DioException catch (e) {
+      debugPrint('[VERIFY ERROR] DioException: status=${e.response?.statusCode}, type=${e.type}');
+      String msg;
+      if (e.response?.statusCode == 401) {
+        msg = e.response?.data?['message'] ?? 'رمز التحقق غير صحيح أو انتهت صلاحيته (رمز الاختبار: 123456)';
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+                 e.type == DioExceptionType.connectionError) {
+        msg = 'تعذر الاتصال بالسيرفر أثناء التحقق. تأكد من اتصال الشبكة.';
+      } else if (e.response != null) {
+        final serverMsg = e.response?.data?['message'];
+        msg = serverMsg is List ? serverMsg.join(', ') : (serverMsg?.toString() ?? 'خطأ في التحقق (${e.response?.statusCode})');
+      } else {
+        msg = 'خطأ في التحقق: ${e.message}';
+      }
       setState(() {
         _isLoading = false;
-        _errorMessage = 'رمز التحقق غير صحيح أو حدث خطأ';
+        _errorMessage = msg;
+      });
+    } catch (e) {
+      debugPrint('[VERIFY ERROR] Unexpected error: $e');
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'رمز التحقق غير صحيح أو حدث خطأ: $e';
       });
     }
   }

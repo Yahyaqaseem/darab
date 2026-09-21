@@ -47,8 +47,23 @@ export class AuthService {
     });
   }
 
+  normalizePhone(phone: string): string {
+    let cleaned = phone.replace(/[^\d+]/g, '').trim();
+    if (cleaned.startsWith('+964')) {
+      cleaned = cleaned.substring(4);
+    } else if (cleaned.startsWith('00964')) {
+      cleaned = cleaned.substring(5);
+    } else if (cleaned.startsWith('964')) {
+      cleaned = cleaned.substring(3);
+    }
+    if (cleaned.startsWith('0')) {
+      cleaned = cleaned.substring(1);
+    }
+    return `+964${cleaned}`;
+  }
+
   async requestOtp(dto: RequestOtpDto) {
-    const formattedPhone = dto.phoneNumber.trim();
+    const formattedPhone = this.normalizePhone(dto.phoneNumber);
     // Default test OTP for development: 123456
     const otp = '123456';
     this.otpStore.set(formattedPhone, {
@@ -67,7 +82,7 @@ export class AuthService {
   }
 
   async verifyOtp(dto: VerifyOtpDto) {
-    const formattedPhone = dto.phoneNumber.trim();
+    const formattedPhone = this.normalizePhone(dto.phoneNumber);
     const stored = this.otpStore.get(formattedPhone);
 
     // Accept 123456 as universal test master key in dev or verify stored OTP

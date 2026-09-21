@@ -9,6 +9,8 @@ class ApiService {
   String? _authToken;
   String _baseUrl = AppConstants.defaultApiUrl;
 
+  String get baseUrl => _baseUrl;
+
   ApiService({String? baseUrl}) {
     _baseUrl = baseUrl ?? AppConstants.defaultApiUrl;
     _dio = Dio(
