@@ -12,9 +12,9 @@ class AppState extends ChangeNotifier {
 
   // Auth & Profile
   bool _isAuthenticated = false;
-  String _driverUsername = 'سائق_أربيل_الخبير';
-  String _trustLevel = 'ROAD_EXPERT';
-  int _reputationScore = 185;
+  String _driverUsername = 'سائق_درب';
+  String _trustLevel = 'BEGINNER';
+  int _reputationScore = 10;
   List<Map<String, dynamic>> _vehicles = [];
   List<Map<String, dynamic>> _badges = [];
 
@@ -144,10 +144,20 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> loadInitialData() async {
+    debugPrint('[APP_STATE] Starting loadInitialData()');
     _isLoading = true;
     notifyListeners();
 
     try {
+      await _apiService.initSession();
+      if (!_apiService.hasToken) {
+        debugPrint('[APP_STATE] No valid session found. Forcing LoginScreen.');
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
+
+      debugPrint('[APP_STATE] Session found. Attempting to load profile...');
       final profile = await _apiService.getProfile();
       if (profile['user'] != null) {
         _driverUsername = profile['user']['username'] ?? _driverUsername;
@@ -159,10 +169,18 @@ class AppState extends ChangeNotifier {
 
       _isOffline = false;
       _isAuthenticated = true;
+      debugPrint('[APP_STATE] Authentication successful! Navigating to HomeScreen.');
       await loadNearbyData();
     } catch (e) {
-      _isOffline = true;
-      debugPrint('Running in offline/local mode: $e');
+      debugPrint('[APP_STATE] Exception during loadInitialData: $e');
+      if (_apiService.hasToken) {
+        debugPrint('[APP_STATE] User has token but network failed. Activating Offline Resilience Mode.');
+        _isOffline = true;
+        _isAuthenticated = true;
+      } else {
+        debugPrint('[APP_STATE] Auth failed. Retaining LoginScreen.');
+        _isAuthenticated = false;
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -375,3 +393,5 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+

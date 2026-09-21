@@ -34,13 +34,20 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = null;
     });
 
-    final appState = Provider.of<AppState>(context, listen: false);
-    final res = await appState.apiService.requestOtp('+964${phone.startsWith('0') ? phone.substring(1) : phone}');
-
-    setState(() {
-      _isLoading = false;
-      _isOtpSent = true;
-    });
+    try {
+      final appState = Provider.of<AppState>(context, listen: false);
+      await appState.apiService.requestOtp('+964${phone.startsWith('0') ? phone.substring(1) : phone}');
+      
+      setState(() {
+        _isLoading = false;
+        _isOtpSent = true;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'حدث خطأ أثناء إرسال الرمز. تأكد من الاتصال.';
+      });
+    }
   }
 
   Future<void> _handleVerifyOtp() async {
@@ -55,16 +62,23 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = null;
     });
 
-    final phone = _phoneController.text.trim();
-    final appState = Provider.of<AppState>(context, listen: false);
-    await appState.apiService.verifyOtp(
-      '+964${phone.startsWith('0') ? phone.substring(1) : phone}',
-      otp,
-      username: _usernameController.text.trim(),
-    );
+    try {
+      final phone = _phoneController.text.trim();
+      final appState = Provider.of<AppState>(context, listen: false);
+      await appState.apiService.verifyOtp(
+        '+964${phone.startsWith('0') ? phone.substring(1) : phone}',
+        otp,
+        username: _usernameController.text.trim(),
+      );
 
-    setState(() => _isLoading = false);
-    widget.onLoginSuccess();
+      setState(() => _isLoading = false);
+      widget.onLoginSuccess();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'رمز التحقق غير صحيح أو حدث خطأ';
+      });
+    }
   }
 
   @override
