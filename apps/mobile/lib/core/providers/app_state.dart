@@ -76,7 +76,8 @@ class AppState extends ChangeNotifier {
   bool _isDisposed = false;
 
   AppState() {
-    loadInitialData();
+    // Delay loadInitialData until after the first frame to avoid notifyListeners during build
+    Future.microtask(() => loadInitialData());
     // Background queue flush check
     _flushTimer = Timer.periodic(const Duration(seconds: 15), (_) => flushOfflineQueue());
   }

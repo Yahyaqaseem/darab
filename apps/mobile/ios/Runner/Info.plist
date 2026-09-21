@@ -41,8 +41,7 @@
 	<array>
 		<string>location</string>
 		<string>audio</string>
-		<string>remote-notification</string>
-	</array>
+		</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
