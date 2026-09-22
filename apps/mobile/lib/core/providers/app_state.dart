@@ -460,6 +460,11 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setTripState(TripState state) {
+    _tripState = state;
+    notifyListeners();
+  }
+
   void stopNavigation() {
     _tripState = TripState.IDLE;
     _activeRoute = null;
