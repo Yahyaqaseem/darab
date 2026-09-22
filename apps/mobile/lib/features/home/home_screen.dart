@@ -141,8 +141,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
             children: [
               TileLayer(
-                urlTemplate: isDark ? 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png' : 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.darb.iraq',
+                tileBuilder: isDark
+                    ? (context, tileWidget, tile) {
+                        return ColorFiltered(
+                          colorFilter: const ColorFilter.matrix(<double>[
+                            -0.8, 0, 0, 0, 210,
+                            0, -0.8, 0, 0, 210,
+                            0, 0, -0.8, 0, 220,
+                            0, 0, 0, 1, 0,
+                          ]),
+                          child: tileWidget,
+                        );
+                      }
+                    : null,
               ),
               if (appState.currentLat != 0)
                 MarkerLayer(
