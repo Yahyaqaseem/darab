@@ -13,7 +13,7 @@
       "id": "background",
       "type": "background",
       "paint": {
-        "background-color": "#0F172A"
+        "background-color": "#262E3B"
       }
     },
     {
@@ -45,8 +45,8 @@
         ]
       ],
       "paint": {
-        "fill-antialias": false,
-        "fill-color": "#0A2540"
+        "fill-color": "#1A2E44",
+        "fill-antialias": false
       }
     },
     {
@@ -159,8 +159,8 @@
         ]
       ],
       "paint": {
-        "fill-color": "hsl(0,2%,5%)",
-        "fill-opacity": 0.4
+        "fill-color": "#2E3D53",
+        "fill-opacity": 0.85
       }
     },
     {
@@ -193,28 +193,8 @@
         ]
       ],
       "paint": {
-        "fill-color": "rgb(32,32,32)",
-        "fill-opacity": [
-          "interpolate",
-          [
-            "exponential",
-            0.3
-          ],
-          [
-            "zoom"
-          ],
-          8,
-          0,
-          10,
-          0.8,
-          13,
-          0.4
-        ],
-        "fill-pattern": "wood-pattern",
-        "fill-translate": [
-          0,
-          0
-        ]
+        "fill-color": "#1C4938",
+        "fill-opacity": 0.9
       }
     },
     {
@@ -246,7 +226,8 @@
         ]
       ],
       "paint": {
-        "fill-color": "rgb(32,32,32)"
+        "fill-color": "#1C4938",
+        "fill-opacity": 0.9
       }
     },
     {
@@ -267,7 +248,8 @@
         false
       ],
       "paint": {
-        "line-color": "rgb(27 ,27 ,29)"
+        "line-color": "#1E354F",
+        "line-width": 1.5
       }
     },
     {
@@ -327,8 +309,9 @@
         "text-size": 12
       },
       "paint": {
-        "text-color": "hsla(0,0%,0%,0.7)",
-        "text-halo-color": "hsl(0,0%,27%)"
+        "text-color": "#E2E8F0",
+        "text-halo-color": "#1A2332",
+        "text-halo-width": 2.0
       }
     },
     {
@@ -350,9 +333,9 @@
         false
       ],
       "paint": {
-        "fill-antialias": true,
-        "fill-color": "#1E293B",
-        "fill-outline-color": "#334155"
+        "fill-color": "#243245",
+        "fill-outline-color": "#2D3E54",
+        "fill-antialias": true
       }
     },
     {
@@ -714,32 +697,87 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#334155",
+        "line-color": "#364A62",
+        "line-opacity": 0.85,
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.4
+          ],
+          [
+            "zoom"
+          ],
+          12,
+          0.7,
+          14,
+          1.4,
+          17,
+          2.6
+        ]
+      }
+    },
+    {
+      "id": "highway_secondary_tertiary",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "filter": [
+        "all",
+        [
+          "match",
+          [
+            "geometry-type"
+          ],
+          [
+            "LineString",
+            "MultiLineString"
+          ],
+          true,
+          false
+        ],
+        [
+          "match",
+          [
+            "get",
+            "class"
+          ],
+          [
+            "secondary",
+            "tertiary"
+          ],
+          true,
+          false
+        ]
+      ],
+      "paint": {
+        "line-color": "#3E5771",
         "line-opacity": 0.9,
         "line-width": [
           "interpolate",
           [
             "exponential",
-            1.5
+            1.3
           ],
           [
             "zoom"
           ],
+          9,
+          1.2,
           12,
-          0.8,
-          14,
-          1.8,
-          17,
-          3.5
+          2.2,
+          15,
+          3.5,
+          18,
+          5.5
         ]
       }
     },
     {
-      "id": "highway_major_casing",
+      "id": "highway_primary_casing",
       "type": "line",
       "source": "openmaptiles",
       "source-layer": "transportation",
-      "minzoom": 11,
       "filter": [
         "all",
         [
@@ -755,31 +793,16 @@
           false
         ],
         [
-          "match",
+          "==",
           [
             "get",
             "class"
           ],
-          [
-            "primary",
-            "secondary",
-            "tertiary",
-            "trunk"
-          ],
-          true,
-          false
+          "primary"
         ]
       ],
-      "layout": {
-        "line-cap": "butt",
-        "line-join": "miter"
-      },
       "paint": {
-        "line-color": "#0F172A",
-        "line-dasharray": [
-          12,
-          0
-        ],
+        "line-color": "#1E2633",
         "line-width": [
           "interpolate",
           [
@@ -789,23 +812,72 @@
           [
             "zoom"
           ],
-          9,
-          3.0,
+          8,
+          2.0,
           12,
-          5.5,
+          3.6,
           15,
-          9.0,
+          5.8,
           18,
-          14.0
+          8.5
         ]
       }
     },
     {
-      "id": "highway_major_inner",
+      "id": "highway_primary_inner",
       "type": "line",
       "source": "openmaptiles",
       "source-layer": "transportation",
-      "minzoom": 11,
+      "filter": [
+        "all",
+        [
+          "match",
+          [
+            "geometry-type"
+          ],
+          [
+            "LineString",
+            "MultiLineString"
+          ],
+          true,
+          false
+        ],
+        [
+          "==",
+          [
+            "get",
+            "class"
+          ],
+          "primary"
+        ]
+      ],
+      "paint": {
+        "line-color": "#D4AF37",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.3
+          ],
+          [
+            "zoom"
+          ],
+          8,
+          1.5,
+          12,
+          2.8,
+          15,
+          4.6,
+          18,
+          7.0
+        ]
+      }
+    },
+    {
+      "id": "highway_motorway_trunk_casing",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
       "filter": [
         "all",
         [
@@ -827,21 +899,126 @@
             "class"
           ],
           [
-            "primary",
-            "secondary",
-            "tertiary",
+            "motorway",
             "trunk"
           ],
           true,
           false
         ]
       ],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round"
-      },
       "paint": {
-        "line-color": "#38BDF8",
+        "line-color": "#1F2937",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.35
+          ],
+          [
+            "zoom"
+          ],
+          6,
+          2.2,
+          10,
+          4.0,
+          14,
+          6.6,
+          17,
+          9.2
+        ]
+      }
+    },
+    {
+      "id": "highway_motorway_trunk_inner",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "filter": [
+        "all",
+        [
+          "match",
+          [
+            "geometry-type"
+          ],
+          [
+            "LineString",
+            "MultiLineString"
+          ],
+          true,
+          false
+        ],
+        [
+          "match",
+          [
+            "get",
+            "class"
+          ],
+          [
+            "motorway",
+            "trunk"
+          ],
+          true,
+          false
+        ]
+      ],
+      "paint": {
+        "line-color": "#EAB308",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.35
+          ],
+          [
+            "zoom"
+          ],
+          6,
+          1.5,
+          10,
+          3.0,
+          14,
+          5.2,
+          17,
+          7.5
+        ]
+      }
+    },
+    {
+      "id": "erbil_ring_60m",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "filter": [
+        "all",
+        [
+          "match",
+          [
+            "geometry-type"
+          ],
+          [
+            "LineString",
+            "MultiLineString"
+          ],
+          true,
+          false
+        ],
+        [
+          "match",
+          [
+            "get",
+            "ref"
+          ],
+          [
+            "60M",
+            "60m",
+            "60"
+          ],
+          true,
+          false
+        ]
+      ],
+      "paint": {
+        "line-color": "#22C55E",
         "line-width": [
           "interpolate",
           [
@@ -853,22 +1030,76 @@
           ],
           9,
           2.0,
+          12,
+          3.5,
+          15,
+          5.5,
+          18,
+          8.0
+        ]
+      }
+    },
+    {
+      "id": "erbil_ring_100m",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "filter": [
+        "all",
+        [
+          "match",
+          [
+            "geometry-type"
+          ],
+          [
+            "LineString",
+            "MultiLineString"
+          ],
+          true,
+          false
+        ],
+        [
+          "match",
+          [
+            "get",
+            "ref"
+          ],
+          [
+            "100M",
+            "100m",
+            "100"
+          ],
+          true,
+          false
+        ]
+      ],
+      "paint": {
+        "line-color": "#0284C7",
+        "line-width": [
+          "interpolate",
+          [
+            "exponential",
+            1.3
+          ],
+          [
+            "zoom"
+          ],
+          9,
+          2.2,
           12,
           3.8,
           15,
           6.0,
           18,
-          10.0
+          8.5
         ]
       }
     },
     {
-      "id": "highway_major_subtle",
+      "id": "erbil_ring_120m",
       "type": "line",
       "source": "openmaptiles",
       "source-layer": "transportation",
-      "minzoom": 6,
-      "maxzoom": 11,
       "filter": [
         "all",
         [
@@ -887,151 +1118,36 @@
           "match",
           [
             "get",
-            "class"
+            "ref"
           ],
           [
-            "primary",
-            "secondary",
-            "tertiary",
-            "trunk"
+            "120M",
+            "120m",
+            "120"
           ],
           true,
           false
         ]
       ],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round"
-      },
       "paint": {
-        "line-color": "#2a2a2a",
-        "line-width": [
-          "interpolate",
-          [
-            "linear"
-          ],
-          [
-            "zoom"
-          ],
-          6,
-          0,
-          8,
-          2
-        ]
-      }
-    },
-    {
-      "id": "highway_motorway_casing",
-      "type": "line",
-      "source": "openmaptiles",
-      "source-layer": "transportation",
-      "minzoom": 6,
-      "filter": [
-        "all",
-        [
-          "match",
-          [
-            "geometry-type"
-          ],
-          [
-            "LineString",
-            "MultiLineString"
-          ],
-          true,
-          false
-        ],
-        [
-          "==",
-          [
-            "get",
-            "class"
-          ],
-          "motorway"
-        ]
-      ],
-      "layout": {
-        "line-cap": "butt",
-        "line-join": "miter"
-      },
-      "paint": {
-        "line-color": "#3B0764",
-        "line-dasharray": [
-          2,
-          0
-        ],
-        "line-opacity": 1,
+        "line-color": "#8B5CF6",
         "line-width": [
           "interpolate",
           [
             "exponential",
-            1.4
+            1.3
           ],
           [
             "zoom"
           ],
-          6,
-          3.5,
-          10,
-          7.0,
-          14,
-          12.0,
+          9,
+          2.5,
+          12,
+          4.0,
+          15,
+          6.2,
           18,
-          22.0
-        ]
-      }
-    },
-    {
-      "id": "highway_motorway_inner",
-      "type": "line",
-      "source": "openmaptiles",
-      "source-layer": "transportation",
-      "minzoom": 6,
-      "filter": [
-        "all",
-        [
-          "match",
-          [
-            "geometry-type"
-          ],
-          [
-            "LineString",
-            "MultiLineString"
-          ],
-          true,
-          false
-        ],
-        [
-          "==",
-          [
-            "get",
-            "class"
-          ],
-          "motorway"
-        ]
-      ],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round"
-      },
-      "paint": {
-        "line-color": "#A855F7",
-        "line-width": [
-          "interpolate",
-          [
-            "exponential",
-            1.4
-          ],
-          [
-            "zoom"
-          ],
-          6,
-          2.0,
-          10,
-          4.5,
-          14,
-          8.5,
-          18,
-          16.0
+          9.0
         ]
       }
     },
@@ -1111,57 +1227,6 @@
       },
       "paint": {
         "icon-opacity": 0.5
-      }
-    },
-    {
-      "id": "highway_motorway_subtle",
-      "type": "line",
-      "source": "openmaptiles",
-      "source-layer": "transportation",
-      "maxzoom": 6,
-      "filter": [
-        "all",
-        [
-          "match",
-          [
-            "geometry-type"
-          ],
-          [
-            "LineString",
-            "MultiLineString"
-          ],
-          true,
-          false
-        ],
-        [
-          "==",
-          [
-            "get",
-            "class"
-          ],
-          "motorway"
-        ]
-      ],
-      "layout": {
-        "line-cap": "round",
-        "line-join": "round"
-      },
-      "paint": {
-        "line-color": "#181818",
-        "line-width": [
-          "interpolate",
-          [
-            "exponential",
-            1.4
-          ],
-          [
-            "zoom"
-          ],
-          4,
-          2,
-          6,
-          1.3
-        ]
       }
     },
     {
@@ -1553,10 +1618,10 @@
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "#94A3B8",
+        "text-color": "#E2E8F0",
         "text-halo-blur": 0,
-        "text-halo-color": "#0F172A",
-        "text-halo-width": 1.5,
+        "text-halo-color": "#1A2332",
+        "text-halo-width": 2.0,
         "text-translate": [
           0,
           0
@@ -1609,12 +1674,12 @@
         "text-size": 14
       },
       "paint": {
-        "text-color": "#F8FAFC",
+        "text-color": "#E2E8F0",
         "text-translate": [
           0,
           2
         ],
-        "text-halo-color": "#0F172A",
+        "text-halo-color": "#1A2332",
         "text-halo-width": 2.0
       }
     },
@@ -1848,10 +1913,10 @@
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgb(101,101,101)",
+        "text-color": "#E2E8F0",
         "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-halo-color": "#1A2332",
+        "text-halo-width": 2.0
       }
     },
     {
@@ -1927,10 +1992,10 @@
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgb(101,101,101)",
+        "text-color": "#E2E8F0",
         "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-halo-color": "#1A2332",
+        "text-halo-width": 2.0
       }
     },
     {
@@ -2008,10 +2073,10 @@
       },
       "paint": {
         "icon-opacity": 0.7,
-        "text-color": "rgb(101,101,101)",
+        "text-color": "#E2E8F0",
         "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-halo-color": "#1A2332",
+        "text-halo-width": 2.0
       }
     },
     {
@@ -2106,10 +2171,10 @@
       },
       "paint": {
         "icon-opacity": 0.7,
-        "text-color": "rgb(101,101,101)",
+        "text-color": "#E2E8F0",
         "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-halo-color": "#1A2332",
+        "text-halo-width": 2.0
       }
     },
     {
@@ -2212,10 +2277,10 @@
       },
       "paint": {
         "icon-opacity": 0.7,
-        "text-color": "rgb(101,101,101)",
+        "text-color": "#E2E8F0",
         "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-halo-color": "#1A2332",
+        "text-halo-width": 2.0
       }
     },
     {
@@ -2318,10 +2383,10 @@
       },
       "paint": {
         "icon-opacity": 0.7,
-        "text-color": "rgb(101,101,101)",
+        "text-color": "#E2E8F0",
         "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-halo-color": "#1A2332",
+        "text-halo-width": 2.0
       }
     },
     {
@@ -2391,10 +2456,10 @@
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgb(101,101,101)",
+        "text-color": "#E2E8F0",
         "text-halo-blur": 1,
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1
+        "text-halo-color": "#1A2332",
+        "text-halo-width": 2.0
       }
     },
     {
@@ -2483,9 +2548,9 @@
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgb(101,101,101)",
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1.4
+        "text-color": "#E2E8F0",
+        "text-halo-color": "#1A2332",
+        "text-halo-width": 2.0
       }
     },
     {
@@ -2579,9 +2644,9 @@
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgb(101,101,101)",
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1.4
+        "text-color": "#E2E8F0",
+        "text-halo-color": "#1A2332",
+        "text-halo-width": 2.0
       }
     },
     {
@@ -2679,9 +2744,9 @@
         "text-transform": "uppercase"
       },
       "paint": {
-        "text-color": "rgb(101,101,101)",
-        "text-halo-color": "rgba(0,0,0,0.7)",
-        "text-halo-width": 1.4
+        "text-color": "#E2E8F0",
+        "text-halo-color": "#1A2332",
+        "text-halo-width": 2.0
       }
     }
   ],

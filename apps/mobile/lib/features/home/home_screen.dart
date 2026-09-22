@@ -16,6 +16,7 @@ import '../emergency/emergency_services_screen.dart';
 import '../search/destination_search_screen.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
 import '../../core/theme/darb_vector_theme.dart';
+import '../../shared_widgets/waze_pin_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -254,6 +255,12 @@ class _HomeScreenState extends State<HomeScreen> {
             options: MapOptions(
               initialCenter: LatLng(userLat, userLng),
               initialZoom: 15.0,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.drag |
+                    InteractiveFlag.pinchZoom |
+                    InteractiveFlag.doubleTapZoom |
+                    InteractiveFlag.flingAnimation,
+              ),
               onMapReady: () {
                 setState(() => _isMapReady = true);
               },
@@ -286,11 +293,42 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               MarkerLayer(
                 markers: [
+                  // Road Reports / Incidents / Hazards / Police / Cameras (Waze Pins!)
+                  ...appState.reports.map((r) => Marker(
+                    point: LatLng(r.latitude, r.longitude),
+                    width: 40,
+                    height: 46,
+                    alignment: Alignment.topCenter,
+                    child: WazePinWidget(report: r, size: 38),
+                  )),
+                  // Community Driver Moods (Waze cute smiling cars on roads!)
+                  const Marker(
+                    point: LatLng(36.2015, 44.0040),
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
+                    child: WazePinWidget(overrideType: WazePinType.mood, size: 34),
+                  ),
+                  const Marker(
+                    point: LatLng(36.1850, 44.0210),
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
+                    child: WazePinWidget(overrideType: WazePinType.mood, size: 34),
+                  ),
+                  const Marker(
+                    point: LatLng(36.1950, 43.9980),
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
+                    child: WazePinWidget(overrideType: WazePinType.mood, size: 34),
+                  ),
                   // User Location (Waze 3D cyan navigation cursor!)
                   Marker(
                     point: LatLng(userLat, userLng),
                     width: 52,
                     height: 52,
+                    alignment: Alignment.center,
                     child: const NavCursorWidget(size: 48),
                   ),
                   // Erbil Citadel Quick Landmark Pin
@@ -298,6 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     point: const LatLng(36.1911, 44.0094),
                     width: 38,
                     height: 38,
+                    alignment: Alignment.center,
                     child: Container(
                       decoration: const BoxDecoration(
                         color: AppTheme.primaryEmerald,
@@ -312,6 +351,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     point: const LatLng(36.2089, 44.0092),
                     width: 38,
                     height: 38,
+                    alignment: Alignment.center,
                     child: Container(
                       decoration: const BoxDecoration(
                         color: Colors.blueAccent,

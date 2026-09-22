@@ -14,6 +14,7 @@ import '../nidaa_al_tariq/nidaa_dialog.dart';
 import '../road_reports/report_dialog.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
 import '../../core/theme/darb_vector_theme.dart';
+import '../../shared_widgets/waze_pin_widget.dart';
 
 class NavigationScreen extends StatefulWidget {
   final String destinationName;
@@ -39,6 +40,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   bool _isLoading = true;
   List<LatLng> _routePoints = [];
   Style? _vectorStyle;
+  bool _isFollowingUser = true;
 
   @override
   void initState() {
@@ -166,6 +168,17 @@ class _NavigationScreenState extends State<NavigationScreen> {
             options: MapOptions(
               initialCenter: LatLng(userLat, userLng),
               initialZoom: 15.0,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.drag |
+                    InteractiveFlag.pinchZoom |
+                    InteractiveFlag.doubleTapZoom |
+                    InteractiveFlag.flingAnimation,
+              ),
+              onPositionChanged: (pos, hasGesture) {
+                if (hasGesture && _isFollowingUser) {
+                  setState(() => _isFollowingUser = false);
+                }
+              },
             ),
             children: [
               if (_vectorStyle != null)
@@ -193,44 +206,57 @@ class _NavigationScreenState extends State<NavigationScreen> {
                         }
                       : null,
                 ),
-              // Route Polyline (Green glowing path with border)
+              // Route Polyline (Waze Vibrant High-Contrast Green Path)
               if (_routePoints.isNotEmpty) ...[
                 PolylineLayer(
                   polylines: [
-                    // Polyline casing / shadow
+                    // Polyline dark casing / shadow for maximum contrast
                     Polyline(
                       points: _routePoints,
-                      strokeWidth: 8.0,
-                      color: const Color(0xFF065F46),
+                      strokeWidth: 8.5,
+                      color: const Color(0xFF042F2E),
                     ),
-                    // Polyline bright green core
+                    // Polyline vibrant green core
                     Polyline(
                       points: _routePoints,
-                      strokeWidth: 5.0,
-                      color: AppTheme.primaryEmerald,
+                      strokeWidth: 5.5,
+                      color: const Color(0xFF10B981),
                     ),
                   ],
                 ),
               ],
               MarkerLayer(
                 markers: [
+                  // Road Reports / Incidents / Hazards / Police / Cameras (Waze Pins!)
+                  ...appState.reports.map((r) => Marker(
+                    point: LatLng(r.latitude, r.longitude),
+                    width: 38,
+                    height: 44,
+                    alignment: Alignment.topCenter,
+                    child: WazePinWidget(report: r, size: 36),
+                  )),
                   // User Location (Waze 3D cyan navigation cursor!)
                   Marker(
                     point: LatLng(userLat, userLng),
-                    width: 50,
-                    height: 50,
-                    child: const NavCursorWidget(size: 46),
+                    width: 52,
+                    height: 52,
+                    alignment: Alignment.center,
+                    child: NavCursorWidget(
+                      size: 48,
+                      bearing: appState.currentSpeedKmh > 2 ? (appState.activeRoute?['bearing']?.toDouble() ?? 0.0) : 0.0,
+                    ),
                   ),
                   // Destination Pin
                   Marker(
                     point: LatLng(widget.destLat, widget.destLng),
-                    width: 50,
-                    height: 50,
+                    width: 44,
+                    height: 48,
+                    alignment: Alignment.topCenter,
                     child: Container(
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         boxShadow: [
-                          BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 4)),
+                          BoxShadow(color: Colors.black45, blurRadius: 8, offset: Offset(0, 4)),
                         ],
                       ),
                       child: const Icon(Icons.location_on_rounded, color: AppTheme.alertRed, size: 44),
@@ -240,6 +266,39 @@ class _NavigationScreenState extends State<NavigationScreen> {
               ),
             ],
           ),
+
+          // Recenter Floating Button (Shown when user moves map)
+          if (!_isFollowingUser)
+            Positioned(
+              left: 16,
+              bottom: 230,
+              child: GestureDetector(
+                onTap: () {
+                  _mapController.move(LatLng(userLat, userLng), 16.0);
+                  setState(() => _isFollowingUser = true);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: (isDark ? const Color(0xFF1E293B) : Colors.white).withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 3))],
+                    border: Border.all(color: AppTheme.primaryEmerald, width: 1.5),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.my_location_rounded, color: AppTheme.primaryEmerald, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        AppStrings.tr('recenter', lang),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primaryEmerald),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
 
           // LAYER 2: Top Glass Header
           SafeArea(
