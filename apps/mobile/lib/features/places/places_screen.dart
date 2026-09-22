@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../navigation/navigation_screen.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/models/models.dart';
@@ -165,11 +166,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                                       icon: const Icon(Icons.navigation_rounded, size: 16),
                                       label: const Text('اذهب إليه', style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
                                       onPressed: () {
-                                        appState.startNavigation({
-                                          'name': p.nameAr,
-                                          'distanceKm': p.distanceKm ?? 3.0,
-                                          'durationMinutes': 8,
-                                        }, p.nameAr, p.latitude, p.longitude);
+                                        Navigator.push(context, MaterialPageRoute(builder: (_) => NavigationScreen(destinationName: p.nameAr, destLat: p.latitude, destLng: p.longitude,)));
                                       },
                                     ),
                                   ),

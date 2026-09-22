@@ -4,6 +4,7 @@ import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/models/models.dart';
 import 'update_fuel_sheet.dart';
+import '../navigation/navigation_screen.dart';
 
 class FuelScreen extends StatelessWidget {
   const FuelScreen({super.key});
@@ -173,11 +174,11 @@ class FuelScreen extends StatelessWidget {
                                 icon: const Icon(Icons.navigation_rounded, size: 18),
                                 label: const Text('المسار إلى المحطة', style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
                                 onPressed: () {
-                                  appState.startNavigation({
-                                    'name': s.nameAr,
-                                    'distanceKm': s.distanceKm ?? 2.5,
-                                    'durationMinutes': 6,
-                                  }, s.nameAr, s.latitude, s.longitude);
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) => NavigationScreen(
+                                    destinationName: s.nameAr,
+                                    destLat: s.latitude,
+                                    destLng: s.longitude,
+                                  )));
                                 },
                               ),
                             ),
