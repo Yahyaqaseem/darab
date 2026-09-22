@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/models/models.dart';
 import '../../core/providers/app_state.dart';
-import '../../core/theme/app_theme.dart';
+import '../core/theme/darb_icons.dart';
 
 enum WazePinType { police, hazard, radar, traffic, accident, mood }
 
+/// Backward-compatible wrapper delegating to DarbReportMarker
 class WazePinWidget extends StatelessWidget {
   final RoadReportModel? report;
   final WazePinType? overrideType;
@@ -22,20 +23,59 @@ class WazePinWidget extends StatelessWidget {
     this.size = 38.0,
   });
 
-  WazePinType get pinType {
-    if (overrideType != null) return overrideType!;
-    if (report == null) return WazePinType.hazard;
-    final t = report!.type.toUpperCase();
-    if (t.contains('POLICE')) return WazePinType.police;
-    if (t.contains('RADAR') || t.contains('CAMERA')) return WazePinType.radar;
-    if (t.contains('TRAFFIC') || t.contains('JAM')) return WazePinType.traffic;
-    if (t.contains('ACCIDENT') || t.contains('CRASH')) return WazePinType.accident;
-    return WazePinType.hazard;
+  DarbIconType? get _mappedIconType {
+    if (overrideType != null) {
+      switch (overrideType!) {
+        case WazePinType.police:
+          return DarbIconType.checkpoint;
+        case WazePinType.radar:
+          return DarbIconType.radar;
+        case WazePinType.traffic:
+          return DarbIconType.traffic;
+        case WazePinType.accident:
+          return DarbIconType.accident;
+        case WazePinType.hazard:
+          return DarbIconType.danger;
+        case WazePinType.mood:
+          return null;
+      }
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    if (overrideType == WazePinType.mood) {
+      // Clean Community Driver Indicator (Replaces cartoon smiling car with clean DARB beacon)
+      return Container(
+        width: size * 0.8,
+        height: size * 0.8,
+        decoration: BoxDecoration(
+          color: const Color(0xFF0F172A),
+          shape: BoxShape.circle,
+          border: Border.all(color: DarbIconColors.emerald, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Center(
+          child: DarbIcon(
+            DarbIconType.myLocation,
+            size: 16,
+            color: DarbIconColors.emerald,
+          ),
+        ),
+      );
+    }
+
+    return DarbReportMarker(
+      report: report,
+      overrideType: _mappedIconType,
+      size: size,
       onTap: () {
         if (onTap != null) {
           onTap!();
@@ -43,123 +83,13 @@ class WazePinWidget extends StatelessWidget {
           _showReportDetails(context);
         }
       },
-      child: CustomPaint(
-        size: Size(size, size * 1.15),
-        painter: _WazePinPainter(pinType),
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: Center(
-            child: _buildPinIcon(),
-          ),
-        ),
-      ),
     );
   }
 
-  Widget _buildPinIcon() {
-    switch (pinType) {
-      case WazePinType.police:
-        return Container(
-          width: size * 0.65,
-          height: size * 0.65,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFF0284C7),
-          ),
-          child: const Icon(
-            Icons.local_police_rounded,
-            color: Colors.white,
-            size: 17,
-          ),
-        );
-
-      case WazePinType.radar:
-        return Container(
-          width: size * 0.65,
-          height: size * 0.65,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFF0EA5E9),
-          ),
-          child: const Icon(
-            Icons.camera_alt_rounded,
-            color: Colors.white,
-            size: 16,
-          ),
-        );
-
-      case WazePinType.hazard:
-        return Container(
-          width: size * 0.65,
-          height: size * 0.65,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFFF59E0B),
-          ),
-          child: const Icon(
-            Icons.warning_amber_rounded,
-            color: Colors.black87,
-            size: 18,
-          ),
-        );
-
-      case WazePinType.traffic:
-        return Container(
-          width: size * 0.65,
-          height: size * 0.65,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFFEF4444),
-          ),
-          child: const Icon(
-            Icons.directions_car_rounded,
-            color: Colors.white,
-            size: 16,
-          ),
-        );
-
-      case WazePinType.accident:
-        return Container(
-          width: size * 0.65,
-          height: size * 0.65,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFFDC2626),
-          ),
-          child: const Icon(
-            Icons.car_crash_rounded,
-            color: Colors.white,
-            size: 16,
-          ),
-        );
-
-      case WazePinType.mood:
-        return Container(
-          width: size * 0.82,
-          height: size * 0.82,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFFF43F5E),
-            border: Border.all(color: Colors.white, width: 1.5),
-            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
-          ),
-          child: const Center(
-            child: Icon(
-              Icons.sentiment_very_satisfied_rounded,
-              color: Colors.white,
-              size: 19,
-            ),
-          ),
-        );
-    }
-  }
-
   void _showReportDetails(BuildContext context) {
-    if (report == null) return;
     final appState = Provider.of<AppState>(context, listen: false);
-    final lang = appState.currentLanguage;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lang = appState.currentLanguage;
 
     showModalBottomSheet(
       context: context,
@@ -169,24 +99,31 @@ class WazePinWidget extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 16)],
+          boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 16)],
         ),
         child: SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(10),
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  WazePinWidget(report: report, size: 48),
+                  DarbReportMarker(
+                    report: report,
+                    overrideType: _mappedIconType,
+                    size: 36,
+                  ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -194,32 +131,17 @@ class WazePinWidget extends StatelessWidget {
                       children: [
                         Text(
                           _getReportTitle(report!.type, lang),
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           report!.roadName,
                           style: TextStyle(
-                            fontSize: 14,
-                            color: isDark ? Colors.white70 : Colors.black54,
+                            fontSize: 13,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryEmerald.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      ' تأكيد',
-                      style: const TextStyle(
-                        color: AppTheme.primaryEmerald,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
                     ),
                   ),
                 ],
@@ -235,10 +157,7 @@ class WazePinWidget extends StatelessWidget {
                   ),
                   child: Text(
                     report!.description,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: isDark ? Colors.white70 : Colors.black87,
-                    ),
+                    style: const TextStyle(fontSize: 14),
                   ),
                 ),
               ],
@@ -248,7 +167,7 @@ class WazePinWidget extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryEmerald,
+                        backgroundColor: DarbIconColors.emerald,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -264,7 +183,7 @@ class WazePinWidget extends StatelessWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(lang == 'en' ? 'Thank you for confirming!' : (lang == 'ku' ? 'سوپاس بۆ پشتڕاستکردنەوە!' : 'شكراً لتأكيدك! ساعدت السائقين')),
-                            backgroundColor: AppTheme.primaryEmerald,
+                            backgroundColor: DarbIconColors.emerald,
                             duration: const Duration(seconds: 2),
                           ),
                         );
@@ -276,7 +195,7 @@ class WazePinWidget extends StatelessWidget {
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.grey,
-                        side: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                        side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
@@ -303,80 +222,29 @@ class WazePinWidget extends StatelessWidget {
   String _getReportTitle(String type, String lang) {
     switch (type.toUpperCase()) {
       case 'POLICE':
+      case 'CHECKPOINT':
         return lang == 'en' ? 'Police Checkpoint' : (lang == 'ku' ? 'بازگەی پۆلیس / ئاسایش' : 'سيطرة أمنية / شرطة');
       case 'RADAR':
       case 'CAMERA':
         return lang == 'en' ? 'Speed Camera' : (lang == 'ku' ? 'کامێرای تیژڕەوی' : 'رادار سرعة / كاميرا');
       case 'HAZARD':
+      case 'DANGER':
       case 'WARNING':
         return lang == 'en' ? 'Road Hazard' : (lang == 'ku' ? 'مەترسی لەسەر ڕێگا' : 'خطر / عائق على الطريق');
       case 'TRAFFIC':
         return lang == 'en' ? 'Heavy Traffic' : (lang == 'ku' ? 'قەرەباڵغی هاتوچۆ' : 'ازدحام مروري خانق');
       case 'ACCIDENT':
         return lang == 'en' ? 'Traffic Accident' : (lang == 'ku' ? 'ڕووداوی هاتوچۆ' : 'حادث سير');
+      case 'POTHOLE':
+        return lang == 'en' ? 'Pothole / Road Damage' : (lang == 'ku' ? 'چاڵ لەسەر شەقام' : 'حفرة / تخسف في الشارع');
+      case 'CLOSURE':
+        return lang == 'en' ? 'Road Closure' : (lang == 'ku' ? 'شەقام داخراوە' : 'طريق مغلق');
+      case 'ROADWORKS':
+        return lang == 'en' ? 'Road Works' : (lang == 'ku' ? 'کاری ڕێگاوبان' : 'أشغال طريق');
+      case 'FLOOD':
+        return lang == 'en' ? 'Flooding / Water' : (lang == 'ku' ? 'کۆبوونەوەی ئاو' : 'تجمع مياه');
       default:
         return lang == 'en' ? 'Road Alert' : (lang == 'ku' ? 'ئاگاداری ڕێگا' : 'تنبيه على الطريق');
     }
   }
-}
-
-class _WazePinPainter extends CustomPainter {
-  final WazePinType type;
-
-  _WazePinPainter(this.type);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (type == WazePinType.mood) return;
-
-    final w = size.width;
-    final h = size.height;
-    final radius = w * 0.48;
-    final centerX = w * 0.5;
-    final centerY = radius;
-
-    final path = Path();
-    path.addOval(Rect.fromCircle(center: Offset(centerX, centerY), radius: radius));
-
-    final tailPath = Path()
-      ..moveTo(centerX - radius * 0.35, centerY + radius * 0.7)
-      ..lineTo(centerX, h)
-      ..lineTo(centerX + radius * 0.35, centerY + radius * 0.7)
-      ..close();
-
-    final fullPath = Path.combine(PathOperation.union, path, tailPath);
-
-    canvas.drawShadow(fullPath, Colors.black.withOpacity(0.4), 4.0, true);
-
-    final whitePaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(fullPath, whitePaint);
-
-    final borderPaint = Paint()
-      ..color = _getPinColor(type)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-    canvas.drawPath(fullPath, borderPaint);
-  }
-
-  Color _getPinColor(WazePinType t) {
-    switch (t) {
-      case WazePinType.police:
-        return const Color(0xFF0284C7);
-      case WazePinType.radar:
-        return const Color(0xFF0EA5E9);
-      case WazePinType.hazard:
-        return const Color(0xFFF59E0B);
-      case WazePinType.traffic:
-        return const Color(0xFFEF4444);
-      case WazePinType.accident:
-        return const Color(0xFFDC2626);
-      case WazePinType.mood:
-        return const Color(0xFFF43F5E);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

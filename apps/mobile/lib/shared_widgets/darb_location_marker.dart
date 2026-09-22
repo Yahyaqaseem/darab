@@ -139,26 +139,26 @@ class _DarbLocationMarkerState extends State<DarbLocationMarker>
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // 1. Subtle GPS Accuracy Halo Ring
+            // 1. Subtle Adaptive GPS Accuracy Halo Ring
             Container(
               width: widget.size * haloScale,
               height: widget.size * haloScale,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF10B981).withOpacity(0.08),
+                color: const Color(0xFF10B981).withValues(alpha: 0.08),
                 border: Border.all(
-                  color: const Color(0xFF10B981).withOpacity(0.25),
-                  width: 1.2,
+                  color: const Color(0xFF10B981).withValues(alpha: 0.22),
+                  width: 1.0,
                 ),
               ),
             ),
 
-            // 2. High-Precision Navigation Puck & Stealth Arrow
+            // 2. Sleek Aerodynamic DARB Stealth Vehicle Arrow
             Transform.rotate(
-              angle: _currentBearing * (pi / 180.0),
+              angle: _currentBearing * (3.141592653589793 / 180.0),
               child: CustomPaint(
                 size: Size(widget.size, widget.size),
-                painter: _DarbPuckPainter(),
+                painter: _DarbVehicleMarkerPainter(),
               ),
             ),
           ],
@@ -168,78 +168,91 @@ class _DarbLocationMarkerState extends State<DarbLocationMarker>
   }
 }
 
-class _DarbPuckPainter extends CustomPainter {
+class _DarbVehicleMarkerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final center = Offset(w * 0.5, h * 0.5);
-    final radius = w * 0.44;
 
-    // 1. Subtle Outer Drop Shadow
+    // 1. Soft Aerodynamic Drop Shadow Under Vehicle
+    final shadowPath = Path()
+      ..moveTo(w * 0.5, h * 0.16)
+      ..lineTo(w * 0.88, h * 0.86)
+      ..lineTo(w * 0.5, h * 0.72)
+      ..lineTo(w * 0.12, h * 0.86)
+      ..close();
+
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.35)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
-    canvas.drawCircle(center.translate(0, 2), radius + 1, shadowPaint);
+      ..color = Colors.black.withValues(alpha: 0.38)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
+    canvas.drawPath(shadowPath.shift(const Offset(0, 3)), shadowPaint);
 
-    // 2. Crisp White Collar Ring
-    final whiteRingPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius, whiteRingPaint);
+    // 2. Left Wing (Bright Emerald Highlight)
+    final leftWing = Path()
+      ..moveTo(w * 0.5, h * 0.10)
+      ..lineTo(w * 0.5, h * 0.70)
+      ..lineTo(w * 0.12, h * 0.84)
+      ..close();
 
-    // 3. Deep Titanium Inner Puck Body
-    final innerPuckPaint = Paint()
+    final leftWingPaint = Paint()
       ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
         colors: [
-          Color(0xFF1E293B), // Dark slate
-          Color(0xFF0F172A), // Deep navy
+          Color(0xFF34D399), // Emerald highlight
+          Color(0xFF10B981), // Emerald primary
         ],
-      ).createShader(Rect.fromCircle(center: center, radius: radius * 0.88))
+      ).createShader(Rect.fromLTWH(w * 0.12, h * 0.10, w * 0.38, h * 0.74))
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius * 0.86, innerPuckPaint);
+    canvas.drawPath(leftWing, leftWingPaint);
 
-    // 4. Precision Stealth Arrowhead (Pointing UP)
-    final arrowPath = Path();
-    final arrowWidth = w * 0.38;
-    final arrowHeight = h * 0.52;
-    final arrowTop = h * 0.22;
-    final arrowBottom = arrowTop + arrowHeight;
+    // 3. Right Wing (Deep Emerald Shadow Facet)
+    final rightWing = Path()
+      ..moveTo(w * 0.5, h * 0.10)
+      ..lineTo(w * 0.88, h * 0.84)
+      ..lineTo(w * 0.5, h * 0.70)
+      ..close();
 
-    arrowPath.moveTo(w * 0.5, arrowTop); // Sharp Nose Tip
-    arrowPath.lineTo(w * 0.5 + arrowWidth * 0.5, arrowBottom); // Right Wingtip
-    arrowPath.lineTo(w * 0.5, arrowBottom - arrowHeight * 0.25); // Inward Tail Notch
-    arrowPath.lineTo(w * 0.5 - arrowWidth * 0.5, arrowBottom); // Left Wingtip
-    arrowPath.close();
-
-    // Vibrant DARB Emerald Gradient Fill
-    final arrowPaint = Paint()
+    final rightWingPaint = Paint()
       ..shader = const LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
+        begin: Alignment.topRight,
+        end: Alignment.bottomLeft,
         colors: [
-          Color(0xFF34D399), // Bright emerald highlight
-          Color(0xFF059669), // Deep rich emerald
+          Color(0xFF059669), // Rich emerald
+          Color(0xFF047857), // Deep emerald shade
         ],
-      ).createShader(Rect.fromLTWH(w * 0.2, arrowTop, arrowWidth, arrowHeight))
+      ).createShader(Rect.fromLTWH(w * 0.5, h * 0.10, w * 0.38, h * 0.74))
       ..style = PaintingStyle.fill;
-    canvas.drawPath(arrowPath, arrowPaint);
+    canvas.drawPath(rightWing, rightWingPaint);
 
-    // Hairline crisp edge on arrow
-    final arrowBorderPaint = Paint()
-      ..color = Colors.white.withOpacity(0.9)
-      ..strokeWidth = 1.0
+    // 4. Razor Titanium Outer Hull Border (100% road contrast)
+    final outerHull = Path()
+      ..moveTo(w * 0.5, h * 0.10)
+      ..lineTo(w * 0.88, h * 0.84)
+      ..lineTo(w * 0.5, h * 0.70)
+      ..lineTo(w * 0.12, h * 0.84)
+      ..close();
+
+    final hullBorderPaint = Paint()
+      ..color = const Color(0xFF0F172A)
+      ..strokeWidth = 1.8
       ..style = PaintingStyle.stroke
-      ..strokeJoin = StrokeJoin.miter;
-    canvas.drawPath(arrowPath, arrowBorderPaint);
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(outerHull, hullBorderPaint);
 
-    // 5. Center Radar Core Dot
+    // 5. White Navigation Dorsal Ridge / Center Spine
+    final spinePaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 1.6
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(w * 0.5, h * 0.12), Offset(w * 0.5, h * 0.68), spinePaint);
+
+    // 6. Navigation Radar Pulse Core Dot
     final coreDotPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(center.translate(0, arrowHeight * 0.08), 2.2, coreDotPaint);
+    canvas.drawCircle(Offset(w * 0.5, h * 0.44), 2.2, coreDotPaint);
   }
 
   @override

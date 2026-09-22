@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/models/models.dart';
 import 'update_fuel_sheet.dart';
 import '../navigation/navigation_screen.dart';
 

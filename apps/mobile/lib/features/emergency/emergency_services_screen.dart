@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/darb_icons.dart';
 import '../../shared_widgets/driver_safe_button.dart';
 
 class EmergencyServicesScreen extends StatefulWidget {
@@ -88,15 +87,15 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                _buildFilterChip('all', 'الكل'),
+                _buildFilterChip('all', 'الكل', null),
                 const SizedBox(width: 8),
-                _buildFilterChip('towing', '🚜 سطحة وإنقاذ'),
+                _buildFilterChip('towing', 'سطحة وإنقاذ', DarbIconType.brokenCar),
                 const SizedBox(width: 8),
-                _buildFilterChip('tire', '🛞 بنجرجي'),
+                _buildFilterChip('tire', 'بنجرجي متنقل', DarbIconType.tireRepair),
                 const SizedBox(width: 8),
-                _buildFilterChip('battery', '🔋 بطارية'),
+                _buildFilterChip('battery', 'بطارية وكهرباء', DarbIconType.battery),
                 const SizedBox(width: 8),
-                _buildFilterChip('mechanic', '🔧 ميكانيكي'),
+                _buildFilterChip('mechanic', 'ميكانيكي سيارات', DarbIconType.workshop),
               ],
             ),
           ),
@@ -120,10 +119,10 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryEmerald.withOpacity(0.12),
+                                color: AppTheme.primaryEmerald.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.car_repair_rounded, color: AppTheme.primaryEmerald, size: 26),
+                              child: DarbIcon(_getProviderIcon(p['type'] as String), color: AppTheme.primaryEmerald, size: 24),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -204,12 +203,39 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
     );
   }
 
-  Widget _buildFilterChip(String key, String label) {
+  DarbIconType _getProviderIcon(String type) {
+    switch (type) {
+      case 'towing':
+        return DarbIconType.brokenCar;
+      case 'tire':
+        return DarbIconType.tireRepair;
+      case 'battery':
+        return DarbIconType.battery;
+      case 'mechanic':
+      default:
+        return DarbIconType.workshop;
+    }
+  }
+
+  Widget _buildFilterChip(String key, String label, DarbIconType? icon) {
     final isSelected = _selectedCategory == key;
     return ChoiceChip(
-      label: Text(label, style: TextStyle( fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      avatar: icon != null
+          ? DarbIcon(
+              icon,
+              size: 15,
+              color: isSelected ? Colors.white : AppTheme.primaryEmerald,
+            )
+          : null,
+      label: Text(
+        label,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected ? Colors.white : null,
+        ),
+      ),
       selected: isSelected,
-      selectedColor: AppTheme.primaryEmerald.withOpacity(0.2),
+      selectedColor: AppTheme.primaryEmerald,
       onSelected: (selected) {
         if (selected) setState(() => _selectedCategory = key);
       },

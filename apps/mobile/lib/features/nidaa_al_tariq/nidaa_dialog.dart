@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
-import '../../shared_widgets/driver_safe_button.dart';
+import '../../core/theme/darb_icons.dart';
 
 class NidaaDialog extends StatefulWidget {
   const NidaaDialog({super.key});
@@ -51,6 +51,23 @@ class _NidaaDialogState extends State<NidaaDialog> {
     }
   }
 
+  DarbIconType _getQuestionIcon(String type) {
+    switch (type) {
+      case 'TRAFFIC':
+        return DarbIconType.traffic;
+      case 'ROAD_CONDITION':
+        return DarbIconType.badRoad;
+      case 'ACCIDENT':
+        return DarbIconType.accident;
+      case 'CHECKPOINT':
+        return DarbIconType.checkpoint;
+      case 'FUEL_AVAILABILITY':
+        return DarbIconType.fuel;
+      default:
+        return DarbIconType.roadCall;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -71,7 +88,7 @@ class _NidaaDialogState extends State<NidaaDialog> {
                 width: 44,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -82,21 +99,20 @@ class _NidaaDialogState extends State<NidaaDialog> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentOrange.withOpacity(0.15),
+                    color: AppTheme.accentOrange.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.radar_rounded, color: AppTheme.accentOrange, size: 26),
+                  child: const DarbIcon(DarbIconType.roadCall, color: AppTheme.accentOrange, size: 26),
                 ),
                 const SizedBox(width: 12),
                 const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '📡 نداء الطريق (سؤال السائقين أمامك)',
+                      'نداء الطريق (سؤال السائقين أمامك)',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        
                       ),
                     ),
                     Text(
@@ -128,7 +144,7 @@ class _NidaaDialogState extends State<NidaaDialog> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       child: Row(
                         children: [
-                          Icon(item['icon'] as IconData, color: AppTheme.primaryEmerald, size: 24),
+                          DarbIcon(_getQuestionIcon(item['type'] as String), color: AppTheme.primaryEmerald, size: 24),
                           const SizedBox(width: 14),
                           Expanded(
                             child: Text(
@@ -136,7 +152,6 @@ class _NidaaDialogState extends State<NidaaDialog> {
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                
                               ),
                             ),
                           ),

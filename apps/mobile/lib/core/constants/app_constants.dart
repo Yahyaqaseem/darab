@@ -72,9 +72,37 @@ class AppConstants {
     {
       'type': 'BROKEN_CAR',
       'label': 'سيارة معطلة',
-      'icon': Icons.build_circle,
+      'icon': Icons.car_repair,
       'color': Color(0xFF64748B),
       'desc': 'مركبة متوقفة في جانب الطريق',
+    },
+    {
+      'type': 'ROADWORKS',
+      'label': 'أشغال طريق',
+      'icon': Icons.construction,
+      'color': Color(0xFFF59E0B),
+      'desc': 'أعمال صيانة أو حفريات بالطريق',
+    },
+    {
+      'type': 'DANGER',
+      'label': 'خطر / عائق',
+      'icon': Icons.warning_amber_rounded,
+      'color': Color(0xFFEF4444),
+      'desc': 'خطر فوري أو عائق في نهر الشارع',
+    },
+    {
+      'type': 'BAD_ROAD',
+      'label': 'طريق وعر / سيئ',
+      'icon': Icons.terrain,
+      'color': Color(0xFFD97706),
+      'desc': 'شارع غير معبد أو رديء جداً',
+    },
+    {
+      'type': 'OTHER',
+      'label': 'بلاغ آخر',
+      'icon': Icons.info_outline,
+      'color': Color(0xFF10B981),
+      'desc': 'ملاحظة عامة عن حالة السير',
     },
   ];
 

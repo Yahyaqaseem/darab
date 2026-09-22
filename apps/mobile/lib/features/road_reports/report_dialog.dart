@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
-import '../../shared_widgets/driver_safe_button.dart';
+import '../../core/theme/darb_icons.dart';
 
 class ReportDialog extends StatefulWidget {
   const ReportDialog({super.key});
@@ -22,7 +22,6 @@ class ReportDialog extends StatefulWidget {
 }
 
 class _ReportDialogState extends State<ReportDialog> {
-  String? _selectedType;
   final _descController = TextEditingController();
   bool _isSubmitting = false;
 
@@ -53,6 +52,36 @@ class _ReportDialogState extends State<ReportDialog> {
     }
   }
 
+  DarbIconType _getReportIcon(String type) {
+    switch (type) {
+      case 'ACCIDENT':
+        return DarbIconType.accident;
+      case 'HEAVY_TRAFFIC':
+        return DarbIconType.traffic;
+      case 'CHECKPOINT':
+        return DarbIconType.checkpoint;
+      case 'CLOSURE':
+        return DarbIconType.closure;
+      case 'POTHOLE':
+        return DarbIconType.pothole;
+      case 'WATER_ACCUMULATION':
+        return DarbIconType.flood;
+      case 'DETOUR':
+        return DarbIconType.route;
+      case 'BROKEN_CAR':
+        return DarbIconType.brokenCar;
+      case 'ROADWORKS':
+        return DarbIconType.roadworks;
+      case 'DANGER':
+        return DarbIconType.danger;
+      case 'BAD_ROAD':
+        return DarbIconType.badRoad;
+      case 'OTHER':
+      default:
+        return DarbIconType.otherReport;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -73,7 +102,7 @@ class _ReportDialogState extends State<ReportDialog> {
                 width: 44,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -81,14 +110,13 @@ class _ReportDialogState extends State<ReportDialog> {
             const SizedBox(height: 16),
             const Row(
               children: [
-                Icon(Icons.add_alert_rounded, color: AppTheme.alertRed, size: 28),
+                DarbIcon(DarbIconType.quickReport, color: DarbIconColors.criticalRed, size: 26),
                 SizedBox(width: 10),
                 Text(
                   'إبلاغ فوري عن حالة الطريق',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    
                   ),
                 ),
               ],
@@ -99,7 +127,6 @@ class _ReportDialogState extends State<ReportDialog> {
               style: TextStyle(
                 fontSize: 13,
                 color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
-                
               ),
             ),
             const SizedBox(height: 20),
@@ -120,7 +147,7 @@ class _ReportDialogState extends State<ReportDialog> {
                 final color = item['color'] as Color;
 
                 return Material(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                   child: InkWell(
                     onTap: _isSubmitting ? null : () => _submit(item['type']),
@@ -128,7 +155,7 @@ class _ReportDialogState extends State<ReportDialog> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        border: Border.all(color: color.withOpacity(0.35), width: 1.5),
+                        border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -136,10 +163,10 @@ class _ReportDialogState extends State<ReportDialog> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: color.withOpacity(0.2),
+                              color: color.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(item['icon'] as IconData, color: color, size: 22),
+                            child: DarbIcon(_getReportIcon(item['type'] as String), color: color, size: 20),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
@@ -153,7 +180,6 @@ class _ReportDialogState extends State<ReportDialog> {
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                     color: color,
-                                    
                                   ),
                                 ),
                               ],

@@ -13,6 +13,7 @@ import '../../shared_widgets/speed_hud_widget.dart';
 import '../../shared_widgets/driver_safe_button.dart';
 import '../nidaa_al_tariq/nidaa_dialog.dart';
 import '../road_reports/report_dialog.dart';
+import '../../core/theme/darb_icons.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
 import '../../core/theme/darb_vector_theme.dart';
 import '../../core/services/darb_tile_cache.dart';
@@ -397,17 +398,13 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                   // Destination Pin
                   Marker(
                     point: LatLng(widget.destLat, widget.destLng),
-                    width: 44,
-                    height: 48,
+                    width: 38,
+                    height: 44,
                     alignment: Alignment.topCenter,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(color: Colors.black45, blurRadius: 8, offset: Offset(0, 4)),
-                        ],
-                      ),
-                      child: const Icon(Icons.location_on_rounded, color: AppTheme.alertRed, size: 44),
+                    child: const DarbPOIMarker(
+                      type: DarbIconType.recenter,
+                      label: '',
+                      color: DarbIconColors.criticalRed,
                     ),
                   ),
                 ],
@@ -434,19 +431,19 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: (isDark ? const Color(0xFF1E293B) : Colors.white).withOpacity(0.95),
+                    color: (isDark ? const Color(0xFF0F172A) : Colors.white).withValues(alpha: 0.95),
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 3))],
-                    border: Border.all(color: AppTheme.primaryEmerald, width: 1.5),
+                    border: Border.all(color: DarbIconColors.emerald, width: 1.5),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.my_location_rounded, color: AppTheme.primaryEmerald, size: 20),
+                      const DarbIcon(DarbIconType.recenter, color: DarbIconColors.emerald, size: 18),
                       const SizedBox(width: 8),
                       Text(
                         AppStrings.tr('recenter', lang),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primaryEmerald),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: DarbIconColors.emerald),
                       ),
                     ],
                   ),
@@ -461,18 +458,10 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
               child: Row(
                 children: [
                   // Back button
-                  GestureDetector(
+                  DarbIconButton(
+                    icon: DarbIconType.back,
+                    size: 44,
                     onTap: _finishTrip,
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: (isDark ? AppTheme.darkCard : Colors.white).withOpacity(0.9),
-                        shape: BoxShape.circle,
-                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
-                      ),
-                      child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-                    ),
                   ),
                   const SizedBox(width: 12),
                   // Destination banner
@@ -480,15 +469,15 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: (isDark ? AppTheme.darkCard : Colors.white).withOpacity(0.92),
+                        color: (isDark ? AppTheme.darkCard : Colors.white).withValues(alpha: 0.92),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
                       ),
                       child: Row(
                         children: [
-                          Icon(
-                            _isRouteSelecting ? Icons.route_rounded : Icons.navigation_rounded,
-                            color: AppTheme.primaryEmerald,
+                          DarbIcon(
+                            _isRouteSelecting ? DarbIconType.route : DarbIconType.recenter,
+                            color: DarbIconColors.emerald,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
@@ -524,13 +513,21 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildCircleBtn(Icons.warning_rounded, AppTheme.accentOrange, () {
-                    showDialog(context: context, builder: (_) => const ReportDialog());
-                  }, isDark),
+                  DarbIconButton(
+                    icon: DarbIconType.quickReport,
+                    iconColor: DarbIconColors.warningOrange,
+                    borderColor: DarbIconColors.warningOrange.withValues(alpha: 0.4),
+                    onTap: () {
+                      showDialog(context: context, builder: (_) => const ReportDialog());
+                    },
+                  ),
                   const SizedBox(height: 12),
-                  _buildCircleBtn(Icons.sos_rounded, AppTheme.alertRed, () {
-                    showDialog(context: context, builder: (_) => const NidaaDialog());
-                  }, isDark),
+                  DarbSOSButton(
+                    size: 44,
+                    onTap: () {
+                      showDialog(context: context, builder: (_) => const NidaaDialog());
+                    },
+                  ),
                 ],
               ),
             ),
@@ -629,22 +626,6 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
         const SizedBox(height: 2),
         Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
       ],
-    );
-  }
-
-  Widget _buildCircleBtn(IconData icon, Color color, VoidCallback onTap, bool isDark) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: (isDark ? AppTheme.darkCard : Colors.white).withOpacity(0.9),
-          shape: BoxShape.circle,
-          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
-        ),
-        child: Icon(icon, color: color, size: 24),
-      ),
     );
   }
 }

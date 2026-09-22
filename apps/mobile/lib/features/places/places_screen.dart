@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../navigation/navigation_screen.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/models/models.dart';
+import '../../core/theme/darb_icons.dart';
 
 class PlacesScreen extends StatefulWidget {
   final String? initialCategory;
@@ -56,7 +56,10 @@ class _PlacesScreenState extends State<PlacesScreen> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 hintText: 'ابحث عن مكان، ورشة، مطعم...',
-                prefixIcon: const Icon(Icons.search_rounded),
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: DarbIcon(DarbIconType.search, size: 18, color: Colors.grey),
+                ),
                 filled: true,
                 fillColor: isDark ? AppTheme.darkCard : AppTheme.lightSurface,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
@@ -70,17 +73,17 @@ class _PlacesScreenState extends State<PlacesScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
               children: [
-                _buildCatChip('all', 'الكل'),
+                _buildCatChip('all', 'الكل', null),
                 const SizedBox(width: 8),
-                _buildCatChip('tire_repair', '🛞 بنجرجية'),
+                _buildCatChip('tire_repair', 'بنجرجية', DarbIconType.tireRepair),
                 const SizedBox(width: 8),
-                _buildCatChip('mechanic', '🔧 ورش وميكانيك'),
+                _buildCatChip('mechanic', 'ورش وميكانيك', DarbIconType.workshop),
                 const SizedBox(width: 8),
-                _buildCatChip('towing', '🚜 سطحة وإنقاذ'),
+                _buildCatChip('towing', 'سطحة وإنقاذ', DarbIconType.brokenCar),
                 const SizedBox(width: 8),
-                _buildCatChip('restaurant', '🍔 مطاعم'),
+                _buildCatChip('restaurant', 'مطاعم', DarbIconType.restaurant),
                 const SizedBox(width: 8),
-                _buildCatChip('cafe', '☕ كافيهات'),
+                _buildCatChip('cafe', 'كافيهات', DarbIconType.cafe),
               ],
             ),
           ),
@@ -165,8 +168,8 @@ class _PlacesScreenState extends State<PlacesScreen> {
                                         minimumSize: const Size(0, 40),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                       ),
-                                      icon: const Icon(Icons.navigation_rounded, size: 16),
-                                      label: const Text('اذهب إليه', style: TextStyle( fontWeight: FontWeight.bold)),
+                                      icon: const DarbIcon(DarbIconType.recenter, size: 16, color: Colors.white),
+                                      label: const Text('اذهب إليه', style: TextStyle(fontWeight: FontWeight.bold)),
                                       onPressed: () {
                                         Navigator.push(context, MaterialPageRoute(builder: (_) => NavigationScreen(destinationName: p.nameAr, destLat: p.latitude, destLng: p.longitude,)));
                                       },
@@ -178,7 +181,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                                       minimumSize: const Size(0, 40),
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                     ),
-                                    icon: const Icon(Icons.phone_rounded, size: 16),
+                                    icon: const DarbIcon(DarbIconType.phone, size: 16, color: AppTheme.primaryEmerald),
                                     label: const Text('اتصال', style: TextStyle()),
                                     onPressed: () {},
                                   ),
@@ -196,12 +199,25 @@ class _PlacesScreenState extends State<PlacesScreen> {
     );
   }
 
-  Widget _buildCatChip(String key, String label) {
+  Widget _buildCatChip(String key, String label, DarbIconType? icon) {
     final isSelected = _selectedCategory == key;
     return ChoiceChip(
-      label: Text(label, style: TextStyle( fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      avatar: icon != null
+          ? DarbIcon(
+              icon,
+              size: 15,
+              color: isSelected ? Colors.white : AppTheme.primaryEmerald,
+            )
+          : null,
+      label: Text(
+        label,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected ? Colors.white : null,
+        ),
+      ),
       selected: isSelected,
-      selectedColor: AppTheme.primaryEmerald.withOpacity(0.2),
+      selectedColor: AppTheme.primaryEmerald,
       onSelected: (selected) {
         if (selected) setState(() => _selectedCategory = key);
       },

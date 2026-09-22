@@ -16,7 +16,7 @@ import '../search/destination_search_screen.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
 import '../../core/theme/darb_vector_theme.dart';
 import '../../core/services/darb_tile_cache.dart';
-import '../../shared_widgets/waze_pin_widget.dart';
+import '../../core/theme/darb_icons.dart';
 import '../../shared_widgets/darb_location_marker.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -30,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final MapController _mapController = MapController();
   bool _isMapReady = false;
   Style? _vectorStyle;
+  double _currentZoom = 15.0;
 
   final List<Map<String, dynamic>> _recentPlaces = [
     {'name': 'مستشفى رزكاري', 'nameEn': 'Rizgary Hospital', 'subtitle': 'هەولێر - Erbil', 'lat': 36.1780, 'lng': 44.0250},
@@ -58,7 +59,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<AppState>(context, listen: false).startLocationTracking();
+      final appState = Provider.of<AppState>(context, listen: false);
+      appState.startLocationTracking();
+      if (appState.fuelStations.isEmpty || appState.places.isEmpty) {
+        appState.loadNearbyData();
+      }
     });
   }
 
@@ -126,9 +131,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               const SizedBox(height: 16),
               ListTile(
-                leading: const Icon(Icons.local_gas_station_rounded, color: AppTheme.primaryEmerald),
+                leading: const DarbIcon(DarbIconType.fuel, color: DarbIconColors.emerald, size: 22),
                 title: Text(AppStrings.tr('fuel_stations', lang), style: const TextStyle(fontWeight: FontWeight.bold)),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
                 onTap: () {
                   Navigator.pop(ctx);
                   _openScreenSheet(const FuelScreen(), isDark);
@@ -136,9 +141,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               const Divider(height: 1),
               ListTile(
-                leading: const Icon(Icons.place_rounded, color: AppTheme.accentOrange),
+                leading: const DarbIcon(DarbIconType.workshop, color: DarbIconColors.warningOrange, size: 22),
                 title: Text(AppStrings.tr('places', lang), style: const TextStyle(fontWeight: FontWeight.bold)),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
                 onTap: () {
                   Navigator.pop(ctx);
                   _openScreenSheet(const PlacesScreen(), isDark);
@@ -146,9 +151,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               const Divider(height: 1),
               ListTile(
-                leading: const Icon(Icons.person_rounded, color: Colors.blue),
+                leading: const DarbIcon(DarbIconType.profile, color: DarbIconColors.checkpointBlue, size: 22),
                 title: Text(AppStrings.tr('profile', lang), style: const TextStyle(fontWeight: FontWeight.bold)),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
                 onTap: () {
                   Navigator.pop(ctx);
                   _openScreenSheet(const ProfileScreen(), isDark);
@@ -156,11 +161,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               const Divider(height: 1),
               ListTile(
-                leading: const Icon(Icons.language_rounded, color: Colors.purple),
+                leading: const DarbIcon(DarbIconType.share, color: DarbIconColors.purple, size: 22),
                 title: Text(AppStrings.tr('app_language', lang), style: const TextStyle(fontWeight: FontWeight.bold)),
                 trailing: Text(
                   lang == 'ar' ? 'العربية' : (lang == 'ku' ? 'کوردی' : 'English'),
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryEmerald),
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: DarbIconColors.emerald),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -300,6 +305,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     InteractiveFlag.doubleTapZoom |
                     InteractiveFlag.flingAnimation,
               ),
+              onPositionChanged: (pos, hasGesture) {
+                if (pos.zoom != null && (pos.zoom! - _currentZoom).abs() > 0.15) {
+                  setState(() => _currentZoom = pos.zoom!);
+                }
+              },
               onMapReady: () {
                 setState(() => _isMapReady = true);
               },
@@ -339,37 +349,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               MarkerLayer(
                 markers: [
-                  // Road Reports / Incidents / Hazards / Police / Cameras (Waze Pins!)
-                  ...appState.reports.map((r) => Marker(
-                    point: LatLng(r.latitude, r.longitude),
-                    width: 40,
-                    height: 46,
-                    alignment: Alignment.topCenter,
-                    child: WazePinWidget(report: r, size: 38),
-                  )),
-                  // Community Driver Moods (Waze cute smiling cars on roads!)
+                  // Road Reports / Incidents with intelligent zoom-density filtering
+                  ...appState.reports
+                      .where((r) => _currentZoom >= 12.0 || r.type == 'ACCIDENT' || r.type == 'CLOSURE')
+                      .map((r) => Marker(
+                        point: LatLng(r.latitude, r.longitude),
+                        width: 38,
+                        height: 44,
+                        alignment: Alignment.topCenter,
+                        child: DarbReportMarker(report: r, size: 36),
+                      )),
+                  // Fuel Stations (Zoom-Adaptive: icon at distance, price pill at close zoom)
+                  if (_currentZoom >= 12.5)
+                    ...appState.fuelStations.map((s) => Marker(
+                      point: LatLng(s.latitude, s.longitude),
+                      width: _currentZoom >= 14.5 ? 90 : 36,
+                      height: 36,
+                      alignment: Alignment.center,
+                      child: DarbFuelMarker(
+                        station: s,
+                        currentZoom: _currentZoom,
+                        onTap: () => _openScreenSheet(const FuelScreen(), isDark),
+                      ),
+                    )),
+                  // Verified Community Drivers Presence (Clean geometric indicator)
                   const Marker(
                     point: LatLng(36.2015, 44.0040),
-                    width: 36,
-                    height: 36,
+                    width: 28,
+                    height: 28,
                     alignment: Alignment.center,
-                    child: WazePinWidget(overrideType: WazePinType.mood, size: 34),
+                    child: DarbPOIMarker(type: DarbIconType.myLocation, label: '', color: DarbIconColors.emerald),
                   ),
                   const Marker(
                     point: LatLng(36.1850, 44.0210),
-                    width: 36,
-                    height: 36,
+                    width: 28,
+                    height: 28,
                     alignment: Alignment.center,
-                    child: WazePinWidget(overrideType: WazePinType.mood, size: 34),
+                    child: DarbPOIMarker(type: DarbIconType.myLocation, label: '', color: DarbIconColors.emerald),
                   ),
-                  const Marker(
-                    point: LatLng(36.1950, 43.9980),
-                    width: 36,
-                    height: 36,
-                    alignment: Alignment.center,
-                    child: WazePinWidget(overrideType: WazePinType.mood, size: 34),
-                  ),
-                  // User Location (Darb High-Precision Location Marker)
+                  // User Location (Darb High-Precision Aerodynamic Vehicle Arrow)
                   Marker(
                     point: LatLng(userLat, userLng),
                     width: 72,
@@ -380,37 +398,34 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       bearing: 0.0,
                       speedKmh: appState.currentSpeedKmh,
                       accuracyMeters: 8.0,
-                      size: 46,
+                      size: 42,
                     ),
                   ),
-                  // Erbil Citadel Quick Landmark Pin
+                  // Erbil Citadel Landmark Pin
                   Marker(
                     point: const LatLng(36.1911, 44.0094),
-                    width: 38,
-                    height: 38,
-                    alignment: Alignment.center,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: AppTheme.primaryEmerald,
-                        shape: BoxShape.circle,
-                        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
-                      ),
-                      child: const Icon(Icons.castle_rounded, color: Colors.white, size: 20),
+                    width: 40,
+                    height: 48,
+                    alignment: Alignment.topCenter,
+                    child: DarbPOIMarker(
+                      type: DarbIconType.civic,
+                      label: 'قلعة أربيل',
+                      showLabel: _currentZoom >= 14.0,
+                      onTap: () => _navigateTo('قلعة أربيل', 36.1911, 44.0094),
                     ),
                   ),
                   // Family Mall Pin
                   Marker(
                     point: const LatLng(36.2089, 44.0092),
-                    width: 38,
-                    height: 38,
-                    alignment: Alignment.center,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.blueAccent,
-                        shape: BoxShape.circle,
-                        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
-                      ),
-                      child: const Icon(Icons.shopping_bag_rounded, color: Colors.white, size: 20),
+                    width: 40,
+                    height: 48,
+                    alignment: Alignment.topCenter,
+                    child: DarbPOIMarker(
+                      type: DarbIconType.store,
+                      label: 'فاميلي مول',
+                      color: DarbIconColors.checkpointBlue,
+                      showLabel: _currentZoom >= 14.0,
+                      onTap: () => _navigateTo('فاميلي مول', 36.2089, 44.0092),
                     ),
                   ),
                 ],
@@ -418,29 +433,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ],
           ),
 
-          // LAYER 2: Top-Left Navigation Controls (Waze Menu & Compass!)
+          // LAYER 2: Top-Left Navigation Controls (DARB Menu & Minimal Compass)
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(
                 children: [
                   // Hamburger Menu Button
-                  GestureDetector(
+                  DarbIconButton(
+                    icon: DarbIconType.menu,
                     onTap: () => _openMenuSheet(context, isDark, lang),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: (isDark ? const Color(0xFF1E293B) : Colors.white).withOpacity(0.92),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
-                        border: Border.all(color: Colors.white.withOpacity(0.15)),
-                      ),
-                      child: const Icon(Icons.menu_rounded, size: 24),
-                    ),
                   ),
                   const SizedBox(width: 10),
-                  // Compass Widget
+                  // Minimal Circular Navigation Compass
                   CompassWidget(
                     onTap: () {
                       if (_isMapReady) {
@@ -450,38 +455,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const Spacer(),
                   // Top-Right Quick Road Actions: Warning & SOS
-                  GestureDetector(
+                  DarbIconButton(
+                    icon: DarbIconType.quickReport,
+                    iconColor: DarbIconColors.warningOrange,
+                    borderColor: DarbIconColors.warningOrange.withValues(alpha: 0.4),
                     onTap: () {
                       showDialog(context: context, builder: (_) => const ReportDialog());
                     },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: (isDark ? const Color(0xFF1E293B) : Colors.white).withOpacity(0.92),
-                        shape: BoxShape.circle,
-                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
-                        border: Border.all(color: AppTheme.accentOrange.withOpacity(0.4), width: 1.5),
-                      ),
-                      child: const Icon(Icons.warning_rounded, color: AppTheme.accentOrange, size: 24),
-                    ),
                   ),
                   const SizedBox(width: 10),
-                  GestureDetector(
+                  DarbSOSButton(
+                    size: 44,
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (_) => const EmergencyServicesScreen()));
                     },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: (isDark ? const Color(0xFF1E293B) : Colors.white).withOpacity(0.92),
-                        shape: BoxShape.circle,
-                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
-                        border: Border.all(color: AppTheme.alertRed.withOpacity(0.4), width: 1.5),
-                      ),
-                      child: const Icon(Icons.sos_rounded, color: AppTheme.alertRed, size: 24),
-                    ),
                   ),
                 ],
               ),
@@ -492,23 +479,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Positioned(
             left: 16,
             bottom: 300,
-            child: GestureDetector(
+            child: DarbIconButton(
+              icon: DarbIconType.myLocation,
+              size: 48,
               onTap: () {
                 if (_isMapReady) {
                   _animatedMapMove(LatLng(userLat, userLng), 16.0);
                 }
               },
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: (isDark ? const Color(0xFF1E293B) : Colors.white).withOpacity(0.95),
-                  shape: BoxShape.circle,
-                  boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 3))],
-                  border: Border.all(color: Colors.white.withOpacity(0.2)),
-                ),
-                child: const Icon(Icons.my_location_rounded, size: 24),
-              ),
             ),
           ),
 
@@ -560,7 +538,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.search_rounded, color: Colors.grey, size: 24),
+                            const DarbIcon(DarbIconType.search, color: Colors.grey, size: 20),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -568,7 +546,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 style: const TextStyle(fontSize: 17, color: Colors.grey, fontWeight: FontWeight.w500),
                               ),
                             ),
-                            const Icon(Icons.mic_rounded, color: Colors.grey, size: 22),
+                            const Icon(Icons.mic_rounded, color: Colors.grey, size: 20),
                           ],
                         ),
                       ),
@@ -580,21 +558,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     Row(
                       children: [
                         _buildQuickChip(
-                          icon: Icons.home_rounded,
+                          icon: DarbIconType.home,
                           label: AppStrings.tr('home', lang),
                           isDark: isDark,
                           onTap: () => _navigateTo(AppStrings.tr('home', lang), 36.1911, 44.0094),
                         ),
                         const SizedBox(width: 8),
                         _buildQuickChip(
-                          icon: Icons.work_rounded,
+                          icon: DarbIconType.work,
                           label: AppStrings.tr('work', lang),
                           isDark: isDark,
                           onTap: () => _navigateTo(AppStrings.tr('work', lang), 36.2089, 44.0092),
                         ),
                         const SizedBox(width: 8),
                         _buildQuickChip(
-                          icon: Icons.add_rounded,
+                          icon: DarbIconType.add,
                           label: AppStrings.tr('new_place', lang),
                           isDark: isDark,
                           onTap: () {
@@ -624,10 +602,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             width: 38,
                             height: 38,
                             decoration: BoxDecoration(
-                              color: (isDark ? Colors.white10 : Colors.black.withOpacity(0.04)),
+                              color: (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04)),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.history_rounded, size: 20, color: Colors.grey),
+                            child: const Center(
+                              child: DarbIcon(DarbIconType.route, size: 18, color: Colors.grey),
+                            ),
                           ),
                           title: Text(
                             lang == 'en' ? p['nameEn'] : p['name'],
@@ -655,7 +635,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildQuickChip({
-    required IconData icon,
+    required DarbIconType icon,
     required String label,
     required bool isDark,
     required VoidCallback onTap,
@@ -669,13 +649,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
+              color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06),
             ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 18, color: AppTheme.primaryEmerald),
+              DarbIcon(icon, size: 16, color: DarbIconColors.emerald),
               const SizedBox(width: 6),
               Text(
                 label,
