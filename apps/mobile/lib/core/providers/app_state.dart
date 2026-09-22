@@ -28,7 +28,16 @@ class AppState extends ChangeNotifier {
   double _currentLng = 44.009167;
   String _currentCity = 'أربيل';
   double _currentSpeedKmh = 0.0;
-  List<double> _speedBuffer = [];
+
+  // Isolated High-Frequency Telemetry ValueNotifiers (Zero Full-Map Rebuilds)
+  final ValueNotifier<LatLng> userLocationNotifier = ValueNotifier<LatLng>(const LatLng(36.191113, 44.009167));
+  final ValueNotifier<double> userSpeedNotifier = ValueNotifier<double>(0.0);
+  final ValueNotifier<double> userHeadingNotifier = ValueNotifier<double>(0.0);
+  final ValueNotifier<double> userAccuracyNotifier = ValueNotifier<double>(8.0);
+
+  // Throttled Nearby Data Tracking
+  LatLng? _lastNearbyFetchPos;
+  DateTime? _lastNearbyFetchTime;
 
   // Navigation State
   TripState _tripState = TripState.IDLE;
@@ -91,6 +100,11 @@ class AppState extends ChangeNotifier {
   void dispose() {
     _isDisposed = true;
     _flushTimer?.cancel();
+    _positionStream?.cancel();
+    userLocationNotifier.dispose();
+    userSpeedNotifier.dispose();
+    userHeadingNotifier.dispose();
+    userAccuracyNotifier.dispose();
     super.dispose();
   }
 
@@ -115,10 +129,30 @@ class AppState extends ChangeNotifier {
     _currentLat = lat;
     _currentLng = lng;
     _currentCity = city;
-    notifyListeners();
-    loadNearbyData();
+    userLocationNotifier.value = LatLng(lat, lng);
 
-    // Reroute Debouncing: check if navigating and needs recalibration (min 10s gap)
+    // Throttled Nearby Data: Only query server if moved > 400m AND at least 45s since last query
+    final now = DateTime.now();
+    bool shouldFetchNearby = false;
+    if (_lastNearbyFetchPos == null || _lastNearbyFetchTime == null) {
+      shouldFetchNearby = true;
+    } else {
+      final elapsedSec = now.difference(_lastNearbyFetchTime!).inSeconds;
+      if (elapsedSec >= 45) {
+        final dist = const Distance().as(LengthUnit.Meter, _lastNearbyFetchPos!, LatLng(lat, lng));
+        if (dist >= 400) {
+          shouldFetchNearby = true;
+        }
+      }
+    }
+
+    if (shouldFetchNearby) {
+      _lastNearbyFetchPos = LatLng(lat, lng);
+      _lastNearbyFetchTime = now;
+      loadNearbyData();
+    }
+
+    // Reroute Debouncing: check if navigating and needs recalibration (min 15s gap)
     if (_tripState == TripState.NAVIGATING && _destLat != null && _destLng != null) {
       final dist = const Distance().as(LengthUnit.Meter, LatLng(lat, lng), LatLng(_destLat!, _destLng!));
       if (dist < 100) {
@@ -129,8 +163,7 @@ class AppState extends ChangeNotifier {
           notifyListeners();
         });
       } else {
-        final now = DateTime.now();
-        if (_lastRerouteCalculation == null || now.difference(_lastRerouteCalculation!).inSeconds > 10) {
+        if (_lastRerouteCalculation == null || now.difference(_lastRerouteCalculation!).inSeconds > 15) {
           _lastRerouteCalculation = now;
           _recalculateActiveRoute();
         }
@@ -165,26 +198,40 @@ class AppState extends ChangeNotifier {
     // Get initial location
     try {
       Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      _currentLat = position.latitude;
+      _currentLng = position.longitude;
+      userLocationNotifier.value = LatLng(position.latitude, position.longitude);
+      userSpeedNotifier.value = (position.speed * 3.6).clamp(0.0, 200.0);
+      if (position.heading.isFinite && position.heading >= 0) {
+        userHeadingNotifier.value = position.heading;
+      }
+      userAccuracyNotifier.value = position.accuracy;
       updateLocation(position.latitude, position.longitude, 'موقعي الحالي');
     } catch (e) {
       debugPrint('[APP_STATE] Error getting initial location: $e');
     }
 
-    // Start stream
+    // Start high-precision location stream (distanceFilter: 3m for smooth 60fps interpolation)
     _positionStream?.cancel();
     _positionStream = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
+        distanceFilter: 3,
       ),
     ).listen((Position position) {
       // Calculate speed: position.speed is in m/s, convert to km/h
       double speedKmh = position.speed * 3.6;
       if (speedKmh < 0) speedKmh = 0;
-      // Filter out crazy spikes (> 200 km/h) unless they are consistent, but for now just cap/filter:
-      if (speedKmh > 200.0) speedKmh = 0; // Likely a GPS anomaly
+      if (speedKmh > 200.0) speedKmh = 0; // Filter anomalous spikes
       
       _currentSpeedKmh = speedKmh;
+      userSpeedNotifier.value = speedKmh;
+      if (position.heading.isFinite && position.heading >= 0) {
+        userHeadingNotifier.value = position.heading;
+      }
+      if (position.accuracy.isFinite) {
+        userAccuracyNotifier.value = position.accuracy;
+      }
       updateLocation(position.latitude, position.longitude, 'موقعي الحالي');
     });
   }

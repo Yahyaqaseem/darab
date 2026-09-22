@@ -1,7 +1,7 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
@@ -11,7 +11,7 @@ import 'package:vector_map_tiles/vector_map_tiles.dart';
 /// DARB Production-Grade Vector Tile Cache & Prefetch Engine
 /// 
 /// 3-Tier Architecture:
-/// - L1: Instant RAM LRU Cache (Up to 600 tiles in memory, < 0.1ms access)
+/// - L1: Instant RAM LRU Cache (Up to 600 tiles in memory, < 0.1ms access via LinkedHashMap O(1))
 /// - L2: Persistent Disk Cache (Survives app restarts & device reboots)
 /// - L3: Resilient Network with In-Flight Deduplication & Concurrency Throttling
 class DarbCachingTileProvider extends VectorTileProvider {
@@ -21,9 +21,8 @@ class DarbCachingTileProvider extends VectorTileProvider {
   @override
   final int minimumZoom;
 
-  // L1 Memory Cache (LRU)
-  static final Map<String, Uint8List> _l1Cache = {};
-  static final List<String> _l1Order = [];
+  // L1 Memory Cache (True O(1) LRU Cache via LinkedHashMap)
+  static final LinkedHashMap<String, Uint8List> _l1Cache = LinkedHashMap<String, Uint8List>();
   static const int _maxL1Tiles = 600;
 
   // In-Flight Request Deduplication (prevents duplicate simultaneous network calls)
@@ -155,49 +154,79 @@ class DarbCachingTileProvider extends VectorTileProvider {
   }
 
   static void _putL1(String key, Uint8List data) {
-    if (_l1Cache.length >= _maxL1Tiles) {
-      final oldest = _l1Order.removeAt(0);
-      _l1Cache.remove(oldest);
+    if (_l1Cache.containsKey(key)) {
+      _l1Cache.remove(key);
+    } else if (_l1Cache.length >= _maxL1Tiles) {
+      _l1Cache.remove(_l1Cache.keys.first);
     }
     _l1Cache[key] = data;
-    _l1Order.remove(key);
-    _l1Order.add(key);
   }
 
   static void _touchL1(String key) {
-    _l1Order.remove(key);
-    _l1Order.add(key);
+    final data = _l1Cache.remove(key);
+    if (data != null) {
+      _l1Cache[key] = data;
+    }
   }
 }
 
 /// Background Intelligent Tile Prefetcher
 /// 
-/// Prefetches tiles around current driver location and along active navigation route
+/// Strict Concurrency & Touch Priority:
+/// - Max 2 concurrent background prefetch tasks
+/// - Automatically pauses during active user touch/gestures
+/// - Zero competition with visible viewport rendering
 class DarbTilePrefetcher {
   static final Set<String> _prefetchedKeys = {};
   static bool _isPrefetchingRoute = false;
+  static bool isPrefetchPaused = false;
+  static int _activePrefetches = 0;
+  static const int _maxConcurrent = 2;
 
-  /// Prefetches a grid of tiles around a center coordinate (Viewport buffer)
+  static void pausePrefetch() {
+    isPrefetchPaused = true;
+  }
+
+  static void resumePrefetch() {
+    isPrefetchPaused = false;
+  }
+
+  /// Prefetches a grid of tiles around a center coordinate with strict concurrency
   static Future<void> prefetchAround({
     required LatLng center,
     required double zoom,
     int radius = 1,
     required DarbCachingTileProvider provider,
   }) async {
+    if (isPrefetchPaused) return;
+
     final z = zoom.round().clamp(provider.minimumZoom, provider.maximumZoom);
     final centerTile = _latLngToTile(center, z);
 
     for (int dx = -radius; dx <= radius; dx++) {
       for (int dy = -radius; dy <= radius; dy++) {
+        if (isPrefetchPaused) return;
+
         final tx = centerTile.x + dx;
         final ty = centerTile.y + dy;
-        final key = "${z}_${tx}_${ty}";
+        final key = '${z}_${tx}_$ty';
 
         if (!_prefetchedKeys.contains(key)) {
           _prefetchedKeys.add(key);
           final tileId = TileIdentity(z, tx, ty);
           if (tileId.isValid()) {
-            unawaited(provider.provide(tileId).catchError((_) => Uint8List(0)));
+            while (_activePrefetches >= _maxConcurrent) {
+              await Future.delayed(const Duration(milliseconds: 30));
+              if (isPrefetchPaused) return;
+            }
+
+            _activePrefetches++;
+            provider.provide(tileId).catchError((_) => Uint8List(0)).whenComplete(() {
+              _activePrefetches--;
+            });
+
+            // Gentle delay between dispatched background requests
+            await Future.delayed(const Duration(milliseconds: 25));
           }
         }
       }
@@ -217,7 +246,7 @@ class DarbTilePrefetcher {
         if (z > provider.maximumZoom) continue;
 
         final routeTiles = <Point<int>>{};
-        final step = max(1, (routePoints.length / 40).ceil());
+        final step = max(1, (routePoints.length / 35).ceil());
         for (int i = 0; i < routePoints.length; i += step) {
           final pt = routePoints[i];
           final t = _latLngToTile(pt, z);
@@ -229,13 +258,26 @@ class DarbTilePrefetcher {
         }
 
         for (final t in routeTiles) {
+          while (isPrefetchPaused) {
+            await Future.delayed(const Duration(milliseconds: 100));
+          }
+
           final key = "${z}_${t.x}_${t.y}";
           if (!_prefetchedKeys.contains(key)) {
             _prefetchedKeys.add(key);
             final tileId = TileIdentity(z, t.x, t.y);
             if (tileId.isValid()) {
-              await provider.provide(tileId).catchError((_) => Uint8List(0));
-              await Future.delayed(const Duration(milliseconds: 20));
+              while (_activePrefetches >= _maxConcurrent) {
+                await Future.delayed(const Duration(milliseconds: 30));
+              }
+
+              _activePrefetches++;
+              provider.provide(tileId).catchError((_) => Uint8List(0)).whenComplete(() {
+                _activePrefetches--;
+              });
+
+              // Throttled 40ms interval so route prefetching never causes frame drops
+              await Future.delayed(const Duration(milliseconds: 40));
             }
           }
         }

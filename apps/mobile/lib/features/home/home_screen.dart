@@ -282,12 +282,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<AppState>(context);
+    final appState = Provider.of<AppState>(context, listen: false);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final lang = appState.currentLanguage;
 
-    final userLat = appState.currentLat != 0 ? appState.currentLat : 36.1911;
-    final userLng = appState.currentLng != 0 ? appState.currentLng : 44.0091;
+    final initialLat = appState.currentLat != 0 ? appState.currentLat : 36.1911;
+    final initialLng = appState.currentLng != 0 ? appState.currentLng : 44.0091;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -297,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              initialCenter: LatLng(userLat, userLng),
+              initialCenter: LatLng(initialLat, initialLng),
               initialZoom: 15.0,
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.drag |
@@ -306,7 +306,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     InteractiveFlag.flingAnimation,
               ),
               onPositionChanged: (pos, hasGesture) {
-                if (pos.zoom != null && (pos.zoom! - _currentZoom).abs() > 0.15) {
+                if (hasGesture) {
+                  DarbTilePrefetcher.pausePrefetch();
+                } else if (DarbTilePrefetcher.isPrefetchPaused) {
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    DarbTilePrefetcher.resumePrefetch();
+                  });
+                }
+                if (pos.zoom != null && (pos.zoom! - _currentZoom).abs() > 0.5) {
                   setState(() => _currentZoom = pos.zoom!);
                 }
               },
@@ -316,119 +323,152 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             children: [
               if (_vectorStyle != null)
-                VectorTileLayer(
-                  theme: _vectorStyle!.theme,
-                  sprites: _vectorStyle!.sprites,
-                  tileProviders: _vectorStyle!.providers,
-                  layerMode: VectorTileLayerMode.vector,
-                  memoryTileCacheMaxSize: 128 * 1024 * 1024,
-                  memoryTileDataCacheMaxSize: 500,
-                  fileCacheMaximumSizeInBytes: 256 * 1024 * 1024,
-                  maximumTileSubstitutionDifference: 3,
-                  textCacheMaxSize: 1000,
-                  concurrency: 4,
-                  cacheFolder: DarbCachingTileProvider.getCacheDirectory,
+                RepaintBoundary(
+                  child: VectorTileLayer(
+                    theme: _vectorStyle!.theme,
+                    sprites: _vectorStyle!.sprites,
+                    tileProviders: _vectorStyle!.providers,
+                    layerMode: VectorTileLayerMode.vector,
+                    memoryTileCacheMaxSize: 128 * 1024 * 1024,
+                    memoryTileDataCacheMaxSize: 500,
+                    fileCacheMaximumSizeInBytes: 256 * 1024 * 1024,
+                    maximumTileSubstitutionDifference: 3,
+                    textCacheMaxSize: 1000,
+                    concurrency: 4,
+                    cacheFolder: DarbCachingTileProvider.getCacheDirectory,
+                  ),
                 )
               else
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.darb.iraq',
-                  tileBuilder: isDark
-                      ? (context, tileWidget, tile) {
-                          return ColorFiltered(
-                            colorFilter: const ColorFilter.matrix(<double>[
-                              -0.8, 0, 0, 0, 210,
-                              0, -0.8, 0, 0, 210,
-                              0, 0, -0.8, 0, 220,
-                              0, 0, 0, 1, 0,
-                            ]),
-                            child: tileWidget,
-                          );
-                        }
-                      : null,
+                RepaintBoundary(
+                  child: TileLayer(
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.darb.iraq',
+                    tileBuilder: isDark
+                        ? (context, tileWidget, tile) {
+                            return ColorFiltered(
+                              colorFilter: const ColorFilter.matrix(<double>[
+                                -0.8, 0, 0, 0, 210,
+                                0, -0.8, 0, 0, 210,
+                                0, 0, -0.8, 0, 220,
+                                0, 0, 0, 1, 0,
+                              ]),
+                              child: tileWidget,
+                            );
+                          }
+                        : null,
+                  ),
                 ),
-              MarkerLayer(
-                markers: [
-                  // Road Reports / Incidents with intelligent zoom-density filtering
-                  ...appState.reports
-                      .where((r) => _currentZoom >= 12.0 || r.type == 'ACCIDENT' || r.type == 'CLOSURE')
-                      .map((r) => Marker(
-                        point: LatLng(r.latitude, r.longitude),
-                        width: 38,
-                        height: 44,
-                        alignment: Alignment.topCenter,
-                        child: DarbReportMarker(report: r, size: 36),
-                      )),
-                  // Fuel Stations (Zoom-Adaptive: icon at distance, price pill at close zoom)
-                  if (_currentZoom >= 12.5)
-                    ...appState.fuelStations.map((s) => Marker(
-                      point: LatLng(s.latitude, s.longitude),
-                      width: _currentZoom >= 14.5 ? 90 : 36,
-                      height: 36,
-                      alignment: Alignment.center,
-                      child: DarbFuelMarker(
-                        station: s,
-                        currentZoom: _currentZoom,
-                        onTap: () => _openScreenSheet(const FuelScreen(), isDark),
+              // Static & POI Marker Layer
+              Consumer<AppState>(
+                builder: (context, state, _) {
+                  return MarkerLayer(
+                    markers: [
+                      // Road Reports / Incidents with intelligent zoom-density filtering
+                      ...state.reports
+                          .where((r) => _currentZoom >= 12.0 || r.type == 'ACCIDENT' || r.type == 'CLOSURE')
+                          .map((r) => Marker(
+                            point: LatLng(r.latitude, r.longitude),
+                            width: 38,
+                            height: 44,
+                            alignment: Alignment.topCenter,
+                            child: DarbReportMarker(report: r, size: 36),
+                          )),
+                      // Fuel Stations (Zoom-Adaptive: icon at distance, price pill at close zoom)
+                      if (_currentZoom >= 12.5)
+                        ...state.fuelStations.map((s) => Marker(
+                          point: LatLng(s.latitude, s.longitude),
+                          width: _currentZoom >= 14.5 ? 90 : 36,
+                          height: 36,
+                          alignment: Alignment.center,
+                          child: DarbFuelMarker(
+                            station: s,
+                            currentZoom: _currentZoom,
+                            onTap: () => _openScreenSheet(const FuelScreen(), isDark),
+                          ),
+                        )),
+                      // Verified Community Drivers Presence
+                      const Marker(
+                        point: LatLng(36.2015, 44.0040),
+                        width: 28,
+                        height: 28,
+                        alignment: Alignment.center,
+                        child: DarbPOIMarker(type: DarbIconType.myLocation, label: '', color: DarbIconColors.emerald),
                       ),
-                    )),
-                  // Verified Community Drivers Presence (Clean geometric indicator)
-                  const Marker(
-                    point: LatLng(36.2015, 44.0040),
-                    width: 28,
-                    height: 28,
-                    alignment: Alignment.center,
-                    child: DarbPOIMarker(type: DarbIconType.myLocation, label: '', color: DarbIconColors.emerald),
-                  ),
-                  const Marker(
-                    point: LatLng(36.1850, 44.0210),
-                    width: 28,
-                    height: 28,
-                    alignment: Alignment.center,
-                    child: DarbPOIMarker(type: DarbIconType.myLocation, label: '', color: DarbIconColors.emerald),
-                  ),
-                  // User Location (Darb High-Precision Aerodynamic Vehicle Arrow)
-                  Marker(
-                    point: LatLng(userLat, userLng),
-                    width: 72,
-                    height: 72,
-                    alignment: Alignment.center,
-                    child: DarbLocationMarker(
-                      position: LatLng(userLat, userLng),
-                      bearing: 0.0,
-                      speedKmh: appState.currentSpeedKmh,
-                      accuracyMeters: 8.0,
-                      size: 42,
-                    ),
-                  ),
-                  // Erbil Citadel Landmark Pin
-                  Marker(
-                    point: const LatLng(36.1911, 44.0094),
-                    width: 40,
-                    height: 48,
-                    alignment: Alignment.topCenter,
-                    child: DarbPOIMarker(
-                      type: DarbIconType.civic,
-                      label: 'قلعة أربيل',
-                      showLabel: _currentZoom >= 14.0,
-                      onTap: () => _navigateTo('قلعة أربيل', 36.1911, 44.0094),
-                    ),
-                  ),
-                  // Family Mall Pin
-                  Marker(
-                    point: const LatLng(36.2089, 44.0092),
-                    width: 40,
-                    height: 48,
-                    alignment: Alignment.topCenter,
-                    child: DarbPOIMarker(
-                      type: DarbIconType.store,
-                      label: 'فاميلي مول',
-                      color: DarbIconColors.checkpointBlue,
-                      showLabel: _currentZoom >= 14.0,
-                      onTap: () => _navigateTo('فاميلي مول', 36.2089, 44.0092),
-                    ),
-                  ),
-                ],
+                      const Marker(
+                        point: LatLng(36.1850, 44.0210),
+                        width: 28,
+                        height: 28,
+                        alignment: Alignment.center,
+                        child: DarbPOIMarker(type: DarbIconType.myLocation, label: '', color: DarbIconColors.emerald),
+                      ),
+                      // Erbil Citadel Landmark Pin
+                      Marker(
+                        point: const LatLng(36.1911, 44.0094),
+                        width: 40,
+                        height: 48,
+                        alignment: Alignment.topCenter,
+                        child: DarbPOIMarker(
+                          type: DarbIconType.civic,
+                          label: 'قلعة أربيل',
+                          showLabel: _currentZoom >= 14.0,
+                          onTap: () => _navigateTo('قلعة أربيل', 36.1911, 44.0094),
+                        ),
+                      ),
+                      // Family Mall Pin
+                      Marker(
+                        point: const LatLng(36.2089, 44.0092),
+                        width: 40,
+                        height: 48,
+                        alignment: Alignment.topCenter,
+                        child: DarbPOIMarker(
+                          type: DarbIconType.store,
+                          label: 'فاميلي مول',
+                          color: DarbIconColors.checkpointBlue,
+                          showLabel: _currentZoom >= 14.0,
+                          onTap: () => _navigateTo('فاميلي مول', 36.2089, 44.0092),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              // Real-Time GPS User Location Marker Layer (Isolated, ZERO full map rebuilds)
+              ValueListenableBuilder<LatLng>(
+                valueListenable: appState.userLocationNotifier,
+                builder: (context, userPos, _) {
+                  return MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: userPos,
+                        width: 72,
+                        height: 72,
+                        alignment: Alignment.center,
+                        child: ValueListenableBuilder<double>(
+                          valueListenable: appState.userHeadingNotifier,
+                          builder: (context, heading, _) {
+                            return ValueListenableBuilder<double>(
+                              valueListenable: appState.userSpeedNotifier,
+                              builder: (context, speed, _) {
+                                return ValueListenableBuilder<double>(
+                                  valueListenable: appState.userAccuracyNotifier,
+                                  builder: (context, accuracy, _) {
+                                    return DarbLocationMarker(
+                                      position: userPos,
+                                      bearing: heading,
+                                      speedKmh: speed,
+                                      accuracyMeters: accuracy,
+                                      size: 42,
+                                    );
+                                  },
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -437,7 +477,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Row(
+              child: RepaintBoundary(
+                child: Row(
                 children: [
                   // Hamburger Menu Button
                   DarbIconButton(
@@ -474,28 +515,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
+          ),
 
           // LAYER 3: Re-center GPS Button (Bottom-Left)
           Positioned(
             left: 16,
             bottom: 300,
-            child: DarbIconButton(
-              icon: DarbIconType.myLocation,
-              size: 48,
-              onTap: () {
-                if (_isMapReady) {
-                  _animatedMapMove(LatLng(userLat, userLng), 16.0);
-                }
-              },
+            child: RepaintBoundary(
+              child: DarbIconButton(
+                icon: DarbIconType.myLocation,
+                size: 48,
+                onTap: () {
+                  if (_isMapReady) {
+                    final curPos = appState.userLocationNotifier.value;
+                    _animatedMapMove(curPos, 16.0);
+                  }
+                },
+              ),
             ),
           ),
 
           // LAYER 4: Waze-Style Floating Bottom Sheet!
-          DraggableScrollableSheet(
-            initialChildSize: 0.35,
-            minChildSize: 0.16,
-            maxChildSize: 0.75,
-            builder: (context, scrollController) {
+          RepaintBoundary(
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.35,
+              minChildSize: 0.16,
+              maxChildSize: 0.75,
+              builder: (context, scrollController) {
               return Container(
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF131D2E) : Colors.white,
@@ -629,6 +675,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               );
             },
           ),
+        ),
         ],
       ),
     );

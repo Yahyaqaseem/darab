@@ -30,14 +30,9 @@ class DarbLocationMarker extends StatefulWidget {
 }
 
 class _DarbLocationMarkerState extends State<DarbLocationMarker>
-    with TickerProviderStateMixin {
-  late AnimationController _positionController;
-  late Animation<double> _posAnimation;
-  LatLng _prevPosition = const LatLng(36.1911, 44.0091);
-  LatLng _targetPosition = const LatLng(36.1911, 44.0091);
-
-  late AnimationController _headingController;
-  late Animation<double> _headingAnimation;
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _headingController;
+  Animation<double>? _headingAnimation;
   double _currentBearing = 0.0;
   double _targetBearing = 0.0;
   double? _lastStableBearing;
@@ -45,58 +40,38 @@ class _DarbLocationMarkerState extends State<DarbLocationMarker>
   @override
   void initState() {
     super.initState();
-    _prevPosition = widget.position;
-    _targetPosition = widget.position;
     _currentBearing = widget.bearing;
     _targetBearing = widget.bearing;
     if (widget.speedKmh > 2.0) {
       _lastStableBearing = widget.bearing;
     }
 
-    _positionController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 650),
-    );
-    _posAnimation = CurvedAnimation(
-      parent: _positionController,
-      curve: Curves.easeOutCubic,
-    )..addListener(() => setState(() {}));
-
     _headingController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 320),
+      duration: const Duration(milliseconds: 280),
     );
-    _headingAnimation = CurvedAnimation(
-      parent: _headingController,
-      curve: Curves.easeOutQuad,
-    )..addListener(() {
+    _headingController.addListener(() {
+      if (mounted && _headingAnimation != null) {
         setState(() {
-          _currentBearing = _headingAnimation.value;
+          _currentBearing = _headingAnimation!.value;
         });
-      });
+      }
+    });
   }
 
   @override
   void didUpdateWidget(covariant DarbLocationMarker oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // 1. Smooth Position Interpolation (A -> B)
-    if (widget.position != _targetPosition) {
-      _prevPosition = _currentInterpolatedPosition;
-      _targetPosition = widget.position;
-      _positionController.forward(from: 0.0);
-    }
-
-    // 2. Anti-Jitter Stationary Lock & Shortest-Angle Heading Interpolation
+    // Anti-Jitter Stationary Lock & Shortest-Angle Heading Interpolation
     double newTarget = widget.bearing;
     if (widget.speedKmh < 2.0 && _lastStableBearing != null) {
-      // Lock heading when stopped or crawling to prevent GPS sensor drift
       newTarget = _lastStableBearing!;
     } else {
       _lastStableBearing = widget.bearing;
     }
 
-    if ((newTarget - _targetBearing).abs() > 0.5) {
+    if ((newTarget - _targetBearing).abs() > 0.8) {
       double diff = (newTarget - _currentBearing) % 360.0;
       if (diff > 180.0) diff -= 360.0;
       if (diff < -180.0) diff += 360.0;
@@ -112,16 +87,8 @@ class _DarbLocationMarkerState extends State<DarbLocationMarker>
     }
   }
 
-  LatLng get _currentInterpolatedPosition {
-    final t = _posAnimation.value;
-    final lat = _prevPosition.latitude + (_targetPosition.latitude - _prevPosition.latitude) * t;
-    final lng = _prevPosition.longitude + (_targetPosition.longitude - _prevPosition.longitude) * t;
-    return LatLng(lat, lng);
-  }
-
   @override
   void dispose() {
-    _positionController.dispose();
     _headingController.dispose();
     super.dispose();
   }
@@ -132,36 +99,38 @@ class _DarbLocationMarkerState extends State<DarbLocationMarker>
     // Scale accuracy ring: minimum 1.1x, maximum 2.4x
     final haloScale = (1.1 + (accuracy / 40.0)).clamp(1.1, 2.2);
 
-    return SizedBox(
-      width: widget.size * 2.2,
-      height: widget.size * 2.2,
-      child: Center(
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // 1. Subtle Adaptive GPS Accuracy Halo Ring
-            Container(
-              width: widget.size * haloScale,
-              height: widget.size * haloScale,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF10B981).withOpacity(0.08),
-                border: Border.all(
-                  color: const Color(0xFF10B981).withOpacity(0.22),
-                  width: 1.0,
+    return RepaintBoundary(
+      child: SizedBox(
+        width: widget.size * 2.2,
+        height: widget.size * 2.2,
+        child: Center(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // 1. Subtle Adaptive GPS Accuracy Halo Ring
+              Container(
+                width: widget.size * haloScale,
+                height: widget.size * haloScale,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF10B981).withOpacity(0.08),
+                  border: Border.all(
+                    color: const Color(0xFF10B981).withOpacity(0.22),
+                    width: 1.0,
+                  ),
                 ),
               ),
-            ),
 
-            // 2. Sleek Aerodynamic DARB Stealth Vehicle Arrow
-            Transform.rotate(
-              angle: _currentBearing * (3.141592653589793 / 180.0),
-              child: CustomPaint(
-                size: Size(widget.size, widget.size),
-                painter: _DarbVehicleMarkerPainter(),
+              // 2. Sleek Aerodynamic DARB Stealth Vehicle Arrow
+              Transform.rotate(
+                angle: _currentBearing * (3.141592653589793 / 180.0),
+                child: CustomPaint(
+                  size: Size(widget.size, widget.size),
+                  painter: _DarbVehicleMarkerPainter(),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -174,7 +143,7 @@ class _DarbVehicleMarkerPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // 1. Soft Aerodynamic Drop Shadow Under Vehicle
+    // 1. Soft Aerodynamic Drop Shadow Under Vehicle (Dual-pass alpha, zero GPU blur stall)
     final shadowPath = Path()
       ..moveTo(w * 0.5, h * 0.16)
       ..lineTo(w * 0.88, h * 0.86)
@@ -182,10 +151,18 @@ class _DarbVehicleMarkerPainter extends CustomPainter {
       ..lineTo(w * 0.12, h * 0.86)
       ..close();
 
-    final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.38)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
-    canvas.drawPath(shadowPath.shift(const Offset(0, 3)), shadowPaint);
+    canvas.drawPath(
+      shadowPath.shift(const Offset(0, 3)),
+      Paint()
+        ..color = Colors.black.withOpacity(0.22)
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawPath(
+      shadowPath.shift(const Offset(0, 1.5)),
+      Paint()
+        ..color = Colors.black.withOpacity(0.32)
+        ..style = PaintingStyle.fill,
+    );
 
     // 2. Left Wing (Bright Emerald Highlight)
     final leftWing = Path()
