@@ -14,7 +14,7 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('حسابي والسمعة'),
+        title: const Text('حسابي والسمعة', style: TextStyle(fontFamily: 'Cairo')),
         actions: [
           IconButton(
             icon: Icon(appState.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
@@ -62,7 +62,7 @@ class ProfileScreen extends StatelessWidget {
                         Icon(Icons.shield_rounded, color: AppTheme.secondarySandDark, size: 16),
                         SizedBox(width: 6),
                         Text(
-                          'المستوى: خبير طرق (Road Expert)',
+                          'مستخدم جديد',
                           style: TextStyle(
                             color: AppTheme.secondarySandDark,
                             fontWeight: FontWeight.bold,
@@ -79,9 +79,9 @@ class ProfileScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatColumn('نقاط السمعة', '${appState.reputationScore}', AppTheme.primaryEmerald),
-                      _buildStatColumn('البلاغات المؤكدة', '38', AppTheme.accentOrange),
-                      _buildStatColumn('إجابات مفيدة', '24', Colors.blue),
+                      _buildStatColumn('نقاط السمعة', '', AppTheme.primaryEmerald),
+                      _buildStatColumn('البلاغات المؤكدة', '0', AppTheme.accentOrange),
+                      _buildStatColumn('إجابات مفيدة', '0', Colors.blue),
                     ],
                   ),
                 ],
@@ -91,67 +91,20 @@ class ProfileScreen extends StatelessWidget {
 
             // Badges Section
             const Text(
-              'الأوسمة المكتسبة (Badges)',
+              'الأوسمة المكتسبة',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
             ),
             const SizedBox(height: 10),
-            Row(
-              children: [
-                _buildBadgeCard('عين أربيل', Icons.visibility_rounded, isDark),
-                const SizedBox(width: 10),
-                _buildBadgeCard('خبير الطرق', Icons.verified_rounded, isDark),
-                const SizedBox(width: 10),
-                _buildBadgeCard('ملك السفر', Icons.navigation_rounded, isDark),
-              ],
-            ),
+            const Center(child: Text('لا توجد أوسمة بعد', style: TextStyle(fontFamily: 'Cairo', color: Colors.grey))),
             const SizedBox(height: 24),
 
             // Garage (Vehicles) Section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'مرآب سياراتي (Garage)',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
-                ),
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: const Text('إضافة سيارة', style: TextStyle(fontFamily: 'Cairo')),
-                ),
-              ],
+            const Text(
+              'مرآب سياراتي',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
             ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkCard : Colors.white,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryEmerald.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.directions_car_rounded, color: AppTheme.primaryEmerald, size: 28),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Toyota Land Cruiser 2023', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Cairo')),
-                        Text('السيارة الأساسية الحالية', style: TextStyle(color: Colors.grey, fontSize: 12, fontFamily: 'Cairo')),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.check_circle, color: AppTheme.primaryEmerald, size: 22),
-                ],
-              ),
-            ),
+            const SizedBox(height: 10),
+            const Center(child: Text('لا توجد مركبات مضافة', style: TextStyle(fontFamily: 'Cairo', color: Colors.grey))),
             const SizedBox(height: 24),
 
             // Settings & Preferences
@@ -179,12 +132,6 @@ class ProfileScreen extends StatelessWidget {
                     title: const Text('التوجيه الصوتي أثناء القيادة', style: TextStyle(fontFamily: 'Cairo')),
                     trailing: Switch(value: true, activeColor: AppTheme.primaryEmerald, onChanged: (_) {}),
                   ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.privacy_tip_outlined),
-                    title: const Text('حماية الموقع وهوية السائق المجهولة', style: TextStyle(fontFamily: 'Cairo')),
-                    trailing: const Icon(Icons.check, color: AppTheme.successGreen),
-                  ),
                 ],
               ),
             ),
@@ -201,30 +148,6 @@ class ProfileScreen extends StatelessWidget {
         const SizedBox(height: 2),
         Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Cairo')),
       ],
-    );
-  }
-
-  Widget _buildBadgeCard(String title, IconData icon, bool isDark) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-        decoration: BoxDecoration(
-          color: isDark ? AppTheme.darkCard : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.secondarySand.withOpacity(0.4)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: AppTheme.secondarySandDark, size: 28),
-            const SizedBox(height: 6),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
