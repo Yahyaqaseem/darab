@@ -258,14 +258,20 @@ class AppState extends ChangeNotifier {
   Future<void> loadNearbyData() async {
     try {
       _reports = await _apiService.getNearbyReports(lat: _currentLat, lng: _currentLng);
+    } catch (_) {}
+
+    try {
       _activeRoadQuestions = await _apiService.getActiveRoadQuestions(lat: _currentLat, lng: _currentLng);
+    } catch (_) {}
+
+    try {
       _fuelStations = await _apiService.getNearbyFuelStations(lat: _currentLat, lng: _currentLng);
+    } catch (_) {}
+
+    try {
       _places = await _apiService.getNearbyPlaces(lat: _currentLat, lng: _currentLng);
-      _isOffline = false;
-    } catch (e) {
-      _isOffline = true;
-      debugPrint('Error loading nearby data (offline active): $e');
-    }
+    } catch (_) {}
+
     notifyListeners();
   }
 

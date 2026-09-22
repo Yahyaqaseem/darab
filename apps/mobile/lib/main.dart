@@ -30,11 +30,12 @@ class DarbApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: appState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       
-      // Arabic-First RTL Configuration
-      locale: Locale(appState.currentLanguage, 'IQ'),
+      // Multi-Language RTL/LTR Configuration (maps 'ku' safely to avoid Flutter crash)
+      locale: appState.currentLanguage == 'en'
+          ? const Locale('en', 'US')
+          : const Locale('ar', 'IQ'),
       supportedLocales: const [
         Locale('ar', 'IQ'),
-        Locale('ku', 'IQ'),
         Locale('en', 'US'),
       ],
       localizationsDelegates: const [

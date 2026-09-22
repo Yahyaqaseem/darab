@@ -6,8 +6,24 @@ import '../../core/models/models.dart';
 import 'update_fuel_sheet.dart';
 import '../navigation/navigation_screen.dart';
 
-class FuelScreen extends StatelessWidget {
+class FuelScreen extends StatefulWidget {
   const FuelScreen({super.key});
+
+  @override
+  State<FuelScreen> createState() => _FuelScreenState();
+}
+
+class _FuelScreenState extends State<FuelScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final appState = Provider.of<AppState>(context, listen: false);
+      if (appState.fuelStations.isEmpty) {
+        appState.loadNearbyData();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +44,23 @@ class FuelScreen extends StatelessWidget {
         ],
       ),
       body: stations.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.local_gas_station_rounded, size: 54, color: AppTheme.primaryEmerald),
+                  const SizedBox(height: 12),
+                  const Text('جاري جلب المحطات القريبة...', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryEmerald),
+                    icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                    label: const Text('تحديث المحطات', style: TextStyle(color: Colors.white)),
+                    onPressed: () => appState.loadNearbyData(),
+                  ),
+                ],
+              ),
+            )
           : ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               itemCount: stations.length,
