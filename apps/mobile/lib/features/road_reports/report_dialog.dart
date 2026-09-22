@@ -102,7 +102,7 @@ class _ReportDialogState extends State<ReportDialog> {
                 width: 44,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.3),
+                  color: Colors.grey.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -147,7 +147,7 @@ class _ReportDialogState extends State<ReportDialog> {
                 final color = item['color'] as Color;
 
                 return Material(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
                   child: InkWell(
                     onTap: _isSubmitting ? null : () => _submit(item['type']),
@@ -155,7 +155,7 @@ class _ReportDialogState extends State<ReportDialog> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
+                        border: Border.all(color: color.withOpacity(0.35), width: 1.5),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -163,7 +163,7 @@ class _ReportDialogState extends State<ReportDialog> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.2),
+                              color: color.withOpacity(0.2),
                               shape: BoxShape.circle,
                             ),
                             child: DarbIcon(_getReportIcon(item['type'] as String), color: color, size: 20),

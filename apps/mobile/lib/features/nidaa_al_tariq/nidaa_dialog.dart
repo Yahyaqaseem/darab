@@ -88,7 +88,7 @@ class _NidaaDialogState extends State<NidaaDialog> {
                 width: 44,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.3),
+                  color: Colors.grey.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -99,7 +99,7 @@ class _NidaaDialogState extends State<NidaaDialog> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentOrange.withValues(alpha: 0.15),
+                    color: AppTheme.accentOrange.withOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const DarbIcon(DarbIconType.roadCall, color: AppTheme.accentOrange, size: 26),

@@ -119,7 +119,7 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryEmerald.withValues(alpha: 0.12),
+                                color: AppTheme.primaryEmerald.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: DarbIcon(_getProviderIcon(p['type'] as String), color: AppTheme.primaryEmerald, size: 24),

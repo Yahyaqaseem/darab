@@ -458,7 +458,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   DarbIconButton(
                     icon: DarbIconType.quickReport,
                     iconColor: DarbIconColors.warningOrange,
-                    borderColor: DarbIconColors.warningOrange.withValues(alpha: 0.4),
+                    borderColor: DarbIconColors.warningOrange.withOpacity(0.4),
                     onTap: () {
                       showDialog(context: context, builder: (_) => const ReportDialog());
                     },
@@ -602,7 +602,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             width: 38,
                             height: 38,
                             decoration: BoxDecoration(
-                              color: (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04)),
+                              color: (isDark ? Colors.white10 : Colors.black.withOpacity(0.04)),
                               shape: BoxShape.circle,
                             ),
                             child: const Center(
@@ -649,7 +649,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06),
+              color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
             ),
           ),
           child: Row(

@@ -431,7 +431,7 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: (isDark ? const Color(0xFF0F172A) : Colors.white).withValues(alpha: 0.95),
+                    color: (isDark ? const Color(0xFF0F172A) : Colors.white).withOpacity(0.95),
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 3))],
                     border: Border.all(color: DarbIconColors.emerald, width: 1.5),
@@ -469,7 +469,7 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: (isDark ? AppTheme.darkCard : Colors.white).withValues(alpha: 0.92),
+                        color: (isDark ? AppTheme.darkCard : Colors.white).withOpacity(0.92),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
                       ),
@@ -516,7 +516,7 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                   DarbIconButton(
                     icon: DarbIconType.quickReport,
                     iconColor: DarbIconColors.warningOrange,
-                    borderColor: DarbIconColors.warningOrange.withValues(alpha: 0.4),
+                    borderColor: DarbIconColors.warningOrange.withOpacity(0.4),
                     onTap: () {
                       showDialog(context: context, builder: (_) => const ReportDialog());
                     },

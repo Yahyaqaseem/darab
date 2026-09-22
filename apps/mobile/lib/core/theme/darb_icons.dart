@@ -721,8 +721,8 @@ class DarbIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = backgroundColor ?? (isDark ? DarbIconColors.charcoal : Colors.white).withValues(alpha: 0.94);
-    final border = borderColor ?? (isSelected ? DarbIconColors.emerald : (isDark ? Colors.white.withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.08)));
+    final bg = backgroundColor ?? (isDark ? DarbIconColors.charcoal : Colors.white).withOpacity(0.94);
+    final border = borderColor ?? (isSelected ? DarbIconColors.emerald : (isDark ? Colors.white.withOpacity(0.12) : Colors.black.withOpacity(0.08)));
     final icColor = iconColor ?? (isSelected ? DarbIconColors.emerald : (isDark ? DarbIconColors.offWhite : DarbIconColors.charcoal));
 
     return Tooltip(
@@ -738,7 +738,7 @@ class DarbIconButton extends StatelessWidget {
             border: Border.all(color: border, width: isSelected ? 1.8 : 1.2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.22),
+                color: Colors.black.withOpacity(0.22),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -788,12 +788,12 @@ class DarbSOSButton extends StatelessWidget {
           color: DarbIconColors.criticalRed,
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.9),
+            color: Colors.white.withOpacity(0.9),
             width: 2.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: DarbIconColors.criticalRed.withValues(alpha: 0.45),
+              color: DarbIconColors.criticalRed.withOpacity(0.45),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -961,7 +961,7 @@ class _DarbMarkerPinPainter extends CustomPainter {
 
     // Drop shadow
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.35)
+      ..color = Colors.black.withOpacity(0.35)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
     canvas.drawCircle(Offset(w * 0.5, h * 0.92), 4.0, shadowPaint);
 
@@ -987,7 +987,7 @@ class _DarbMarkerPinPainter extends CustomPainter {
 
     // Crisp inner core circle
     final corePaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.18)
+      ..color = Colors.black.withOpacity(0.18)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, r * 0.72, corePaint);
   }
@@ -1020,12 +1020,12 @@ class DarbFuelMarker extends StatelessWidget {
           ? Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.94),
+                color: const Color(0xFF0F172A).withOpacity(0.94),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: DarbIconColors.emerald, width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.35),
+                    color: Colors.black.withOpacity(0.35),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -1060,7 +1060,7 @@ class DarbFuelMarker extends StatelessWidget {
                 border: Border.all(color: DarbIconColors.emerald, width: 1.8),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
+                    color: Colors.black.withOpacity(0.3),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -1113,7 +1113,7 @@ class DarbPOIMarker extends StatelessWidget {
               border: Border.all(color: effectiveColor, width: 1.6),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: Colors.black.withOpacity(0.3),
                   blurRadius: 5,
                   offset: const Offset(0, 2),
                 ),
@@ -1132,9 +1132,9 @@ class DarbPOIMarker extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.9),
+                color: const Color(0xFF0F172A).withOpacity(0.9),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
               ),
               child: Text(
                 label,

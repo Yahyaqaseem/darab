@@ -28,15 +28,15 @@ class CompassWidget extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: const Color(0xFF0F172A).withValues(alpha: 0.94),
+          color: const Color(0xFF0F172A).withOpacity(0.94),
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.14),
+            color: Colors.white.withOpacity(0.14),
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.28),
+              color: Colors.black.withOpacity(0.28),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -67,7 +67,7 @@ class _DarbCompassPainter extends CustomPainter {
 
     // 1. Thin Outer Graduation Ring with 4 Cardinal Ticks
     final ringPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.18)
+      ..color = Colors.white.withOpacity(0.18)
       ..strokeWidth = 0.9
       ..style = PaintingStyle.stroke;
     canvas.drawCircle(Offset(cx, cy), r, ringPaint);

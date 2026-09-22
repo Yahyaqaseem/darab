@@ -56,7 +56,7 @@ class WazePinWidget extends StatelessWidget {
           border: Border.all(color: DarbIconColors.emerald, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
+              color: Colors.black.withOpacity(0.25),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -111,7 +111,7 @@ class WazePinWidget extends StatelessWidget {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.4),
+                    color: Colors.grey.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -195,7 +195,7 @@ class WazePinWidget extends StatelessWidget {
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.grey,
-                        side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
+                        side: BorderSide(color: Colors.grey.withOpacity(0.4)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),

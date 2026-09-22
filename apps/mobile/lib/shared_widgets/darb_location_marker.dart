@@ -145,9 +145,9 @@ class _DarbLocationMarkerState extends State<DarbLocationMarker>
               height: widget.size * haloScale,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF10B981).withValues(alpha: 0.08),
+                color: const Color(0xFF10B981).withOpacity(0.08),
                 border: Border.all(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.22),
+                  color: const Color(0xFF10B981).withOpacity(0.22),
                   width: 1.0,
                 ),
               ),
@@ -183,7 +183,7 @@ class _DarbVehicleMarkerPainter extends CustomPainter {
       ..close();
 
     final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.38)
+      ..color = Colors.black.withOpacity(0.38)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
     canvas.drawPath(shadowPath.shift(const Offset(0, 3)), shadowPaint);
 
