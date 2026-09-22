@@ -85,10 +85,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
         appState.selectRoutePreview(selected, widget.destinationName, widget.destLat, widget.destLng);
         appState.startNavigation();
     }
-
-    
-    });
   }
+
   Future<void> _finishTrip() async {
     final appState = Provider.of<AppState>(context, listen: false);
     
