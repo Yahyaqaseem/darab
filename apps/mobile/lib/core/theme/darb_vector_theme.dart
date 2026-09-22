@@ -4,9 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:vector_map_tiles/vector_map_tiles.dart';
 import 'package:vector_tile_renderer/vector_tile_renderer.dart';
+import '../services/darb_tile_cache.dart';
 
 class DarbVectorTheme {
   static Style? _cachedStyle;
+  static DarbCachingTileProvider? cachingTileProvider;
 
   static const String baseStyleUrl = 'https://tiles.openfreemap.org/styles/dark';
   static const String vectorTilesUrl = 'https://tiles.openfreemap.org/planet/20260913_164504_pt/{z}/{x}/{y}.pbf';
@@ -32,13 +34,15 @@ class DarbVectorTheme {
 
       final Map<String, dynamic> styleJson = jsonDecode(styleText);
 
-      // Tile providers for OpenMapTiles vector tiles
+      // Tile providers for OpenMapTiles vector tiles with 3-tier caching & prefetch
+      cachingTileProvider ??= DarbCachingTileProvider(
+        urlTemplate: vectorTilesUrl,
+        maximumZoom: 14,
+        minimumZoom: 0,
+      );
+
       final providers = <String, VectorTileProvider>{
-        'openmaptiles': NetworkVectorTileProvider(
-          urlTemplate: vectorTilesUrl,
-          maximumZoom: 14,
-          minimumZoom: 0,
-        ),
+        'openmaptiles': cachingTileProvider!,
       };
 
       // Load sprites

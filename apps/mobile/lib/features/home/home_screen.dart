@@ -5,7 +5,6 @@ import 'package:latlong2/latlong.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/localization/app_strings.dart';
-import '../../shared_widgets/nav_cursor.dart';
 import '../../shared_widgets/compass_widget.dart';
 import '../fuel/fuel_screen.dart';
 import '../places/places_screen.dart';
@@ -16,7 +15,9 @@ import '../emergency/emergency_services_screen.dart';
 import '../search/destination_search_screen.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
 import '../../core/theme/darb_vector_theme.dart';
+import '../../core/services/darb_tile_cache.dart';
 import '../../shared_widgets/waze_pin_widget.dart';
+import '../../shared_widgets/darb_location_marker.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,7 +26,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final MapController _mapController = MapController();
   bool _isMapReady = false;
   Style? _vectorStyle;
@@ -41,11 +42,49 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     DarbVectorTheme.loadStyle().then((style) {
-      if (mounted) setState(() => _vectorStyle = style);
+      if (mounted) {
+        setState(() => _vectorStyle = style);
+        final appState = Provider.of<AppState>(context, listen: false);
+        final lat = appState.currentLat != 0 ? appState.currentLat : 36.1911;
+        final lng = appState.currentLng != 0 ? appState.currentLng : 44.0091;
+        if (DarbVectorTheme.cachingTileProvider != null) {
+          DarbTilePrefetcher.prefetchAround(
+            center: LatLng(lat, lng),
+            zoom: 15.0,
+            radius: 2,
+            provider: DarbVectorTheme.cachingTileProvider!,
+          );
+        }
+      }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<AppState>(context, listen: false).startLocationTracking();
     });
+  }
+
+  void _animatedMapMove(LatLng destLocation, double destZoom) {
+    final camera = _mapController.camera;
+    final latTween = Tween<double>(begin: camera.center.latitude, end: destLocation.latitude);
+    final lngTween = Tween<double>(begin: camera.center.longitude, end: destLocation.longitude);
+    final zoomTween = Tween<double>(begin: camera.zoom, end: destZoom);
+
+    final controller = AnimationController(duration: const Duration(milliseconds: 550), vsync: this);
+    final animation = CurvedAnimation(parent: controller, curve: Curves.easeInOutCubic);
+
+    controller.addListener(() {
+      _mapController.move(
+        LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
+        zoomTween.evaluate(animation),
+      );
+    });
+
+    animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed || status == AnimationStatus.dismissed) {
+        controller.dispose();
+      }
+    });
+
+    controller.forward();
   }
 
   void _navigateTo(String name, double lat, double lng) {
@@ -271,7 +310,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   theme: _vectorStyle!.theme,
                   sprites: _vectorStyle!.sprites,
                   tileProviders: _vectorStyle!.providers,
-                  layerMode: VectorTileLayerMode.raster,
+                  layerMode: VectorTileLayerMode.vector,
+                  memoryTileCacheMaxSize: 128 * 1024 * 1024,
+                  memoryTileDataCacheMaxSize: 500,
+                  fileCacheMaximumSizeInBytes: 256 * 1024 * 1024,
+                  maximumTileSubstitutionDifference: 3,
+                  textCacheMaxSize: 1000,
+                  concurrency: 4,
+                  cacheFolder: DarbCachingTileProvider.getCacheDirectory,
                 )
               else
                 TileLayer(
@@ -323,13 +369,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     alignment: Alignment.center,
                     child: WazePinWidget(overrideType: WazePinType.mood, size: 34),
                   ),
-                  // User Location (Waze 3D cyan navigation cursor!)
+                  // User Location (Darb High-Precision Location Marker)
                   Marker(
                     point: LatLng(userLat, userLng),
-                    width: 52,
-                    height: 52,
+                    width: 72,
+                    height: 72,
                     alignment: Alignment.center,
-                    child: const NavCursorWidget(size: 48),
+                    child: DarbLocationMarker(
+                      position: LatLng(userLat, userLng),
+                      bearing: 0.0,
+                      speedKmh: appState.currentSpeedKmh,
+                      accuracyMeters: 8.0,
+                      size: 46,
+                    ),
                   ),
                   // Erbil Citadel Quick Landmark Pin
                   Marker(
@@ -443,7 +495,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: GestureDetector(
               onTap: () {
                 if (_isMapReady) {
-                  _mapController.move(LatLng(userLat, userLng), 16.0);
+                  _animatedMapMove(LatLng(userLat, userLng), 16.0);
                 }
               },
               child: Container(

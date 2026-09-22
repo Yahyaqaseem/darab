@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -7,13 +8,14 @@ import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/polyline_decoder.dart';
 import '../../core/localization/app_strings.dart';
-import '../../shared_widgets/nav_cursor.dart';
+import '../../shared_widgets/darb_location_marker.dart';
 import '../../shared_widgets/speed_hud_widget.dart';
 import '../../shared_widgets/driver_safe_button.dart';
 import '../nidaa_al_tariq/nidaa_dialog.dart';
 import '../road_reports/report_dialog.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
 import '../../core/theme/darb_vector_theme.dart';
+import '../../core/services/darb_tile_cache.dart';
 import '../../shared_widgets/waze_pin_widget.dart';
 
 class NavigationScreen extends StatefulWidget {
@@ -32,7 +34,7 @@ class NavigationScreen extends StatefulWidget {
   State<NavigationScreen> createState() => _NavigationScreenState();
 }
 
-class _NavigationScreenState extends State<NavigationScreen> {
+class _NavigationScreenState extends State<NavigationScreen> with TickerProviderStateMixin {
   final MapController _mapController = MapController();
   int _selectedRouteIndex = 0;
   bool _isRouteSelecting = true;
@@ -41,6 +43,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
   List<LatLng> _routePoints = [];
   Style? _vectorStyle;
   bool _isFollowingUser = true;
+  AppState? _appState;
+  AnimationController? _cameraNavController;
 
   @override
   void initState() {
@@ -49,6 +53,107 @@ class _NavigationScreenState extends State<NavigationScreen> {
       if (mounted) setState(() => _vectorStyle = style);
     });
     _fetchRoutes();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final state = Provider.of<AppState>(context, listen: false);
+    if (_appState != state) {
+      _appState?.removeListener(_onAppStateChanged);
+      _appState = state;
+      _appState?.addListener(_onAppStateChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    _appState?.removeListener(_onAppStateChanged);
+    _cameraNavController?.dispose();
+    super.dispose();
+  }
+
+  void _onAppStateChanged() {
+    if (!mounted || _isRouteSelecting || !_isFollowingUser || _appState == null) return;
+
+    final lat = _appState!.currentLat != 0 ? _appState!.currentLat : 36.1911;
+    final lng = _appState!.currentLng != 0 ? _appState!.currentLng : 44.0091;
+    final userPos = LatLng(lat, lng);
+    final bearing = _appState!.activeRoute?['bearing']?.toDouble() ?? 0.0;
+    final speed = _appState!.currentSpeedKmh;
+
+    final targetPos = _calculateLookahead(userPos, bearing, speed);
+    final targetZoom = _calculateDynamicZoom(speed);
+
+    _smoothNavMove(targetPos, targetZoom);
+  }
+
+  LatLng _calculateLookahead(LatLng pos, double bearingDeg, double speedKmh) {
+    if (speedKmh < 5.0) return pos;
+    final lookaheadMeters = (speedKmh * 1.2).clamp(30.0, 100.0);
+    final rad = bearingDeg * (math.pi / 180.0);
+    final dLat = (lookaheadMeters * math.cos(rad)) / 111139.0;
+    final latRad = pos.latitude * (math.pi / 180.0);
+    final dLng = (lookaheadMeters * math.sin(rad)) / (111139.0 * math.cos(latRad));
+    return LatLng(pos.latitude + dLat, pos.longitude + dLng);
+  }
+
+  double _calculateDynamicZoom(double speedKmh) {
+    if (speedKmh > 75) return 15.0;
+    if (speedKmh > 45) return 15.8;
+    if (speedKmh > 20) return 16.4;
+    return 17.0;
+  }
+
+  void _animatedMapMove(LatLng destLocation, double destZoom) {
+    final camera = _mapController.camera;
+    final latTween = Tween<double>(begin: camera.center.latitude, end: destLocation.latitude);
+    final lngTween = Tween<double>(begin: camera.center.longitude, end: destLocation.longitude);
+    final zoomTween = Tween<double>(begin: camera.zoom, end: destZoom);
+
+    final controller = AnimationController(duration: const Duration(milliseconds: 550), vsync: this);
+    final animation = CurvedAnimation(parent: controller, curve: Curves.easeInOutCubic);
+
+    controller.addListener(() {
+      _mapController.move(
+        LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
+        zoomTween.evaluate(animation),
+      );
+    });
+
+    animation.addStatusListener((status) {
+      if (status == AnimationStatus.completed || status == AnimationStatus.dismissed) {
+        controller.dispose();
+      }
+    });
+
+    controller.forward();
+  }
+
+  void _smoothNavMove(LatLng destLocation, double destZoom) {
+    if (!mounted) return;
+    _cameraNavController?.stop();
+    _cameraNavController?.dispose();
+
+    final camera = _mapController.camera;
+    final latTween = Tween<double>(begin: camera.center.latitude, end: destLocation.latitude);
+    final lngTween = Tween<double>(begin: camera.center.longitude, end: destLocation.longitude);
+    final zoomTween = Tween<double>(begin: camera.zoom, end: destZoom);
+
+    final controller = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
+    _cameraNavController = controller;
+    final animation = CurvedAnimation(parent: controller, curve: Curves.easeOutQuad);
+
+    controller.addListener(() {
+      if (mounted) {
+        _mapController.move(
+          LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
+          zoomTween.evaluate(animation),
+        );
+      }
+    });
+
+    controller.forward();
   }
 
   Future<void> _fetchRoutes() async {
@@ -77,9 +182,28 @@ class _NavigationScreenState extends State<NavigationScreen> {
           final firstRoute = routes[0];
           final geom = firstRoute['geometry'] as String?;
           if (geom != null) {
+            final points = PolylineDecoder.decode(geom);
             setState(() {
-              _routePoints = PolylineDecoder.decode(geom);
+              _routePoints = points;
             });
+            if (points.isNotEmpty) {
+              try {
+                final bounds = LatLngBounds.fromPoints(points);
+                _mapController.fitCamera(
+                  CameraFit.bounds(
+                    bounds: bounds,
+                    padding: const EdgeInsets.only(top: 100, bottom: 260, left: 40, right: 40),
+                  ),
+                );
+              } catch (_) {}
+
+              if (DarbVectorTheme.cachingTileProvider != null) {
+                DarbTilePrefetcher.prefetchRoute(
+                  routePoints: points,
+                  provider: DarbVectorTheme.cachingTileProvider!,
+                );
+              }
+            }
           }
         }
       }
@@ -91,7 +215,10 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   void _startDrive() {
-    setState(() => _isRouteSelecting = false);
+    setState(() {
+      _isRouteSelecting = false;
+      _isFollowingUser = true;
+    });
     final routes = _routesData?['routes'] as List? ?? [];
     if (routes.isNotEmpty) {
       final selected = routes[_selectedRouteIndex];
@@ -104,6 +231,17 @@ class _NavigationScreenState extends State<NavigationScreen> {
       final appState = Provider.of<AppState>(context, listen: false);
       appState.selectRoutePreview(selected, widget.destinationName, widget.destLat, widget.destLng);
       appState.startNavigation();
+
+      if (DarbVectorTheme.cachingTileProvider != null && _routePoints.isNotEmpty) {
+        DarbTilePrefetcher.prefetchRoute(
+          routePoints: _routePoints,
+          provider: DarbVectorTheme.cachingTileProvider!,
+        );
+      }
+
+      final originLat = appState.currentLat != 0 ? appState.currentLat : 36.1911;
+      final originLng = appState.currentLng != 0 ? appState.currentLng : 44.0091;
+      _animatedMapMove(LatLng(originLat, originLng), 16.5);
     }
   }
 
@@ -186,7 +324,14 @@ class _NavigationScreenState extends State<NavigationScreen> {
                   theme: _vectorStyle!.theme,
                   sprites: _vectorStyle!.sprites,
                   tileProviders: _vectorStyle!.providers,
-                  layerMode: VectorTileLayerMode.raster,
+                  layerMode: VectorTileLayerMode.vector,
+                  memoryTileCacheMaxSize: 128 * 1024 * 1024,
+                  memoryTileDataCacheMaxSize: 500,
+                  fileCacheMaximumSizeInBytes: 256 * 1024 * 1024,
+                  maximumTileSubstitutionDifference: 3,
+                  textCacheMaxSize: 1000,
+                  concurrency: 4,
+                  cacheFolder: DarbCachingTileProvider.getCacheDirectory,
                 )
               else
                 TileLayer(
@@ -235,15 +380,18 @@ class _NavigationScreenState extends State<NavigationScreen> {
                     alignment: Alignment.topCenter,
                     child: WazePinWidget(report: r, size: 36),
                   )),
-                  // User Location (Waze 3D cyan navigation cursor!)
+                  // User Location (Darb High-Precision Location Marker)
                   Marker(
                     point: LatLng(userLat, userLng),
-                    width: 52,
-                    height: 52,
+                    width: 72,
+                    height: 72,
                     alignment: Alignment.center,
-                    child: NavCursorWidget(
-                      size: 48,
+                    child: DarbLocationMarker(
+                      position: LatLng(userLat, userLng),
                       bearing: appState.currentSpeedKmh > 2 ? (appState.activeRoute?['bearing']?.toDouble() ?? 0.0) : 0.0,
+                      speedKmh: appState.currentSpeedKmh,
+                      accuracyMeters: 6.0,
+                      size: 48,
                     ),
                   ),
                   // Destination Pin
@@ -274,7 +422,13 @@ class _NavigationScreenState extends State<NavigationScreen> {
               bottom: 230,
               child: GestureDetector(
                 onTap: () {
-                  _mapController.move(LatLng(userLat, userLng), 16.0);
+                  final targetPos = _calculateLookahead(
+                    LatLng(userLat, userLng),
+                    appState.activeRoute?['bearing']?.toDouble() ?? 0.0,
+                    appState.currentSpeedKmh,
+                  );
+                  final targetZoom = _isRouteSelecting ? 15.0 : _calculateDynamicZoom(appState.currentSpeedKmh);
+                  _animatedMapMove(targetPos, targetZoom);
                   setState(() => _isFollowingUser = true);
                 },
                 child: Container(
