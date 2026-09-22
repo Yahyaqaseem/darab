@@ -95,16 +95,16 @@ class _NavigationScreenState extends State<NavigationScreen> {
       final confirm = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('إنهاء الرحلة؟', style: TextStyle(fontFamily: 'Cairo')),
-          content: const Text('أنت لم تصل إلى وجهتك بعد. هل أنت متأكد من رغبتك في إنهاء الرحلة؟', style: TextStyle(fontFamily: 'Cairo')),
+          title: const Text('إنهاء الرحلة؟', style: TextStyle()),
+          content: const Text('أنت لم تصل إلى وجهتك بعد. هل أنت متأكد من رغبتك في إنهاء الرحلة؟', style: TextStyle()),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('إلغاء', style: TextStyle(fontFamily: 'Cairo', color: Colors.grey)),
+              child: const Text('إلغاء', style: TextStyle( color: Colors.grey)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('نعم، إنهاء', style: TextStyle(fontFamily: 'Cairo', color: Colors.red)),
+              child: const Text('نعم، إنهاء', style: TextStyle( color: Colors.red)),
             ),
           ],
         ),
@@ -133,7 +133,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
               SizedBox(height: 16),
               Text(
                 'جارِ تحليل بيانات الطرق الحية وحساب أفضل المسارات...',
-                style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -188,7 +188,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                             children: [
                               Text(
                                 r['name'],
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Cairo'),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                               ),
                               if (isRecommended)
                                 Container(
@@ -203,7 +203,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                                       color: AppTheme.primaryEmerald,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
-                                      fontFamily: 'Cairo',
+                                      
                                     ),
                                   ),
                                 ),
@@ -214,7 +214,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                             children: [
                               Text(
                                 r['durationFormatted'],
-                                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, fontFamily: 'Cairo'),
+                                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
                               ),
                               const SizedBox(width: 14),
                               Text(
@@ -222,13 +222,13 @@ class _NavigationScreenState extends State<NavigationScreen> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
-                                  fontFamily: 'Cairo',
+                                  
                                 ),
                               ),
                               const Spacer(),
                               Text(
                                 'الوصول: ${r['eta']}',
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryEmerald, fontFamily: 'Cairo'),
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryEmerald),
                               ),
                             ],
                           ),
@@ -246,7 +246,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                                 Expanded(
                                   child: Text(
                                     r['recommendationReason'],
-                                    style: const TextStyle(fontSize: 12, fontFamily: 'Cairo'),
+                                    style: const TextStyle(fontSize: 12),
                                   ),
                                 ),
                               ],
@@ -257,7 +257,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                             ...warnings.map(
                               (w) => Padding(
                                 padding: const EdgeInsets.only(bottom: 4),
-                                child: Text(w.toString(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                                child: Text(w.toString(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                               ),
                             ),
                           ],
@@ -302,7 +302,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    urlTemplate: isDark ? 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png' : 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.darb.iraq',
                   ),
                   PolylineLayer(
@@ -366,11 +366,11 @@ class _NavigationScreenState extends State<NavigationScreen> {
                         children: [
                           Text(
                             'بعد 800 متر',
-                            style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                            style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
                           ),
                           Text(
                             'الزم المسار الأيمن باتجاه سيطرة دهوك',
-                            style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900, fontFamily: 'Cairo'),
+                            style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900),
                           ),
                         ],
                       ),
@@ -404,7 +404,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                     SizedBox(width: 6),
                     Text(
                       '🚦 زحمة بعد 3 كم (8 سواق أكدوا)',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Cairo'),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                   ],
                 ),
@@ -430,7 +430,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
                           icon: const Icon(Icons.radar_rounded),
-                          label: const Text('📡 نداء الطريق', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                          label: const Text('📡 نداء الطريق', style: TextStyle(fontWeight: FontWeight.bold)),
                           onPressed: () => NidaaDialog.show(context),
                         ),
                       ),
@@ -445,7 +445,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
                           icon: const Icon(Icons.add_alert_rounded),
-                          label: const Text('🚨 إبلاغ سريع', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                          label: const Text('🚨 إبلاغ سريع', style: TextStyle(fontWeight: FontWeight.bold)),
                           onPressed: () => ReportDialog.show(context),
                         ),
                       ),
@@ -461,7 +461,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     onPressed: _finishTrip,
-                    child: const Text('إنهاء الرحلة وعرض الملخص', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                    child: const Text('إنهاء الرحلة وعرض الملخص', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),

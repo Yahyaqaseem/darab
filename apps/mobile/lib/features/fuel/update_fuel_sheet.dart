@@ -57,7 +57,7 @@ class _UpdateFuelSheetState extends State<UpdateFuelSheet> {
         SnackBar(
           content: const Text(
             'شكراً لك! تم تحديث بيانات الوقود وحصلت على +5 نقاط سمعة',
-            style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold),
+            style: TextStyle( fontWeight: FontWeight.bold),
           ),
           backgroundColor: AppTheme.primaryEmerald,
           behavior: SnackBarBehavior.floating,
@@ -100,16 +100,16 @@ class _UpdateFuelSheetState extends State<UpdateFuelSheet> {
               const SizedBox(height: 16),
               Text(
                 'تحديث أسعار وحالة: ${widget.station.nameAr}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 18),
 
               // Availability Switch
               SwitchListTile(
-                title: const Text('هل الوقود متوفر حالياً؟', style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
+                title: const Text('هل الوقود متوفر حالياً؟', style: TextStyle( fontWeight: FontWeight.bold)),
                 subtitle: Text(
                   _isAvailable ? 'متوفر' : 'غير متوفر / نفد الوقود',
-                  style: TextStyle(color: _isAvailable ? AppTheme.successGreen : AppTheme.alertRed, fontFamily: 'Cairo'),
+                  style: TextStyle(color: _isAvailable ? AppTheme.successGreen : AppTheme.alertRed),
                 ),
                 value: _isAvailable,
                 activeColor: AppTheme.primaryEmerald,
@@ -149,7 +149,7 @@ class _UpdateFuelSheetState extends State<UpdateFuelSheet> {
               ),
               const SizedBox(height: 16),
 
-              const Text('مستوى الازدحام على المضخات:', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+              const Text('مستوى الازدحام على المضخات:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
 
               // Crowd Selection
@@ -180,7 +180,7 @@ class _UpdateFuelSheetState extends State<UpdateFuelSheet> {
     final isSelected = _selectedCrowd == value;
     return Expanded(
       child: ChoiceChip(
-        label: Text(title, style: TextStyle(fontFamily: 'Cairo', fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+        label: Text(title, style: TextStyle( fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
         selected: isSelected,
         selectedColor: AppTheme.primaryEmerald.withOpacity(0.2),
         onSelected: (selected) {

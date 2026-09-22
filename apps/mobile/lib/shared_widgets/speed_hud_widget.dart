@@ -40,7 +40,7 @@ class SpeedHudWidget extends StatelessWidget {
               color: Colors.white,
               fontSize: 32,
               fontWeight: FontWeight.w900,
-              fontFamily: 'Cairo',
+              
               height: 1.0,
             ),
           ),
@@ -50,7 +50,7 @@ class SpeedHudWidget extends StatelessWidget {
               color: Colors.white70,
               fontSize: 11,
               fontWeight: FontWeight.bold,
-              fontFamily: 'Cairo',
+              
             ),
           ),
         ],

@@ -194,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
-                    fontFamily: 'Cairo',
+                    
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.secondarySandDark,
-                    fontFamily: 'Cairo',
+                    
                   ),
                 ),
                 const SizedBox(height: 40),
@@ -232,7 +232,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Cairo',
+                          
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -243,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(
                           fontSize: 14,
                           color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
-                          fontFamily: 'Cairo',
+                          
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -294,7 +294,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 12),
                         Text(
                           _errorMessage!,
-                          style: const TextStyle(color: AppTheme.alertRed, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                          style: const TextStyle(color: AppTheme.alertRed, fontWeight: FontWeight.bold),
                         ),
                       ],
 
@@ -312,7 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 12),
                         TextButton(
                           onPressed: () => setState(() => _isOtpSent = false),
-                          child: const Text('تغيير رقم الهاتف', style: TextStyle(fontFamily: 'Cairo')),
+                          child: const Text('تغيير رقم الهاتف', style: TextStyle()),
                         ),
                       ],
                     ],

@@ -58,7 +58,7 @@ class DriverSafeButton extends StatelessWidget {
                   color: fg,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Cairo',
+                  
                 ),
               ),
             ],

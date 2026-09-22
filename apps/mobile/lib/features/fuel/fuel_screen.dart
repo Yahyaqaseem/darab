@@ -16,7 +16,9 @@ class FuelScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: const Text('محطات الوقود والأسعار'),
         actions: [
           IconButton(
@@ -62,7 +64,7 @@ class FuelScreen extends StatelessWidget {
                                       Expanded(
                                         child: Text(
                                           s.nameAr,
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Cairo'),
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -78,7 +80,7 @@ class FuelScreen extends StatelessWidget {
                                     style: TextStyle(
                                       color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
                                       fontSize: 12,
-                                      fontFamily: 'Cairo',
+                                      
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -142,19 +144,19 @@ class FuelScreen extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                     fontSize: 12,
                                     color: s.isPetrolAvailable ? AppTheme.successGreen : AppTheme.alertRed,
-                                    fontFamily: 'Cairo',
+                                    
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
                                   'الازدحام: ${s.crowdText}',
-                                  style: TextStyle(fontSize: 12, color: s.crowdColor, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                                  style: TextStyle(fontSize: 12, color: s.crowdColor, fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
                             Text(
                               updatedAgoMins > 0 ? 'قبل $updatedAgoMins دقيقة' : 'الآن',
-                              style: const TextStyle(fontSize: 11, color: Colors.grey, fontFamily: 'Cairo'),
+                              style: const TextStyle(fontSize: 11, color: Colors.grey),
                             ),
                           ],
                         ),
@@ -172,7 +174,7 @@ class FuelScreen extends StatelessWidget {
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
                                 icon: const Icon(Icons.navigation_rounded, size: 18),
-                                label: const Text('المسار إلى المحطة', style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
+                                label: const Text('المسار إلى المحطة', style: TextStyle( fontWeight: FontWeight.bold)),
                                 onPressed: () {
                                   Navigator.push(context, MaterialPageRoute(builder: (_) => NavigationScreen(
                                     destinationName: s.nameAr,
@@ -189,7 +191,7 @@ class FuelScreen extends StatelessWidget {
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               ),
                               icon: const Icon(Icons.edit_note_rounded, size: 18),
-                              label: const Text('تحديث السعر', style: TextStyle(fontFamily: 'Cairo', fontSize: 12)),
+                              label: const Text('تحديث السعر', style: TextStyle( fontSize: 12)),
                               onPressed: () => UpdateFuelSheet.show(context, s),
                             ),
                           ],
@@ -206,11 +208,11 @@ class FuelScreen extends StatelessWidget {
   Widget _buildPriceTag(String title, String price, Color color) {
     return Column(
       children: [
-        Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey, fontFamily: 'Cairo')),
+        Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey)),
         const SizedBox(height: 2),
         Text(
           price,
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: color, fontFamily: 'Cairo'),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: color),
         ),
       ],
     );

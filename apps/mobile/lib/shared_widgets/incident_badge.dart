@@ -37,7 +37,7 @@ class IncidentBadge extends StatelessWidget {
               color: color,
               fontWeight: FontWeight.bold,
               fontSize: isSmall ? 12 : 14,
-              fontFamily: 'Cairo',
+              
             ),
           ),
         ],

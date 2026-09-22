@@ -41,7 +41,9 @@ class _PlacesScreenState extends State<PlacesScreen> {
     }).toList();
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: const Text('دليل الأماكن والخدمات'),
       ),
       body: Column(
@@ -86,7 +88,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
 
           Expanded(
             child: filtered.isEmpty
-                ? const Center(child: Text('لا توجد أماكن مطابقة', style: TextStyle(fontFamily: 'Cairo')))
+                ? const Center(child: Text('لا توجد أماكن مطابقة', style: TextStyle()))
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: filtered.length,
@@ -108,7 +110,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                                       children: [
                                         Text(
                                           p.nameAr,
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Cairo'),
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
@@ -116,7 +118,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                                           style: TextStyle(
                                             color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
                                             fontSize: 12,
-                                            fontFamily: 'Cairo',
+                                            
                                           ),
                                         ),
                                       ],
@@ -142,13 +144,13 @@ class _PlacesScreenState extends State<PlacesScreen> {
                                     children: [
                                       const Icon(Icons.access_time_rounded, size: 16, color: Colors.grey),
                                       const SizedBox(width: 4),
-                                      Text(p.openingHours, style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Cairo')),
+                                      Text(p.openingHours, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                                     ],
                                   ),
                                   if (p.distanceKm != null)
                                     Text(
                                       '${p.distanceKm} كم من موقعك',
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryEmerald, fontFamily: 'Cairo'),
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryEmerald),
                                     ),
                                 ],
                               ),
@@ -164,7 +166,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                       ),
                                       icon: const Icon(Icons.navigation_rounded, size: 16),
-                                      label: const Text('اذهب إليه', style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
+                                      label: const Text('اذهب إليه', style: TextStyle( fontWeight: FontWeight.bold)),
                                       onPressed: () {
                                         Navigator.push(context, MaterialPageRoute(builder: (_) => NavigationScreen(destinationName: p.nameAr, destLat: p.latitude, destLng: p.longitude,)));
                                       },
@@ -177,7 +179,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                     ),
                                     icon: const Icon(Icons.phone_rounded, size: 16),
-                                    label: const Text('اتصال', style: TextStyle(fontFamily: 'Cairo')),
+                                    label: const Text('اتصال', style: TextStyle()),
                                     onPressed: () {},
                                   ),
                                 ],
@@ -197,7 +199,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
   Widget _buildCatChip(String key, String label) {
     final isSelected = _selectedCategory == key;
     return ChoiceChip(
-      label: Text(label, style: TextStyle(fontFamily: 'Cairo', fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      label: Text(label, style: TextStyle( fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
       selected: isSelected,
       selectedColor: AppTheme.primaryEmerald.withOpacity(0.2),
       onSelected: (selected) {

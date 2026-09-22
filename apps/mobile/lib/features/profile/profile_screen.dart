@@ -13,8 +13,10 @@ class ProfileScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('حسابي والسمعة', style: TextStyle(fontFamily: 'Cairo')),
+        backgroundColor: Colors.transparent,
+        title: const Text('حسابي والسمعة', style: TextStyle()),
         actions: [
           IconButton(
             icon: Icon(appState.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
@@ -47,7 +49,7 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     appState.driverUsername,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Container(
@@ -67,7 +69,7 @@ class ProfileScreen extends StatelessWidget {
                             color: AppTheme.secondarySandDark,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
-                            fontFamily: 'Cairo',
+                            
                           ),
                         ),
                       ],
@@ -79,7 +81,7 @@ class ProfileScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatColumn('نقاط السمعة', '', AppTheme.primaryEmerald),
+                      _buildStatColumn('نقاط السمعة', '${appState.reputationScore}', AppTheme.primaryEmerald),
                       _buildStatColumn('البلاغات المؤكدة', '0', AppTheme.accentOrange),
                       _buildStatColumn('إجابات مفيدة', '0', Colors.blue),
                     ],
@@ -92,25 +94,25 @@ class ProfileScreen extends StatelessWidget {
             // Badges Section
             const Text(
               'الأوسمة المكتسبة',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            const Center(child: Text('لا توجد أوسمة بعد', style: TextStyle(fontFamily: 'Cairo', color: Colors.grey))),
+            const Center(child: Text('لا توجد أوسمة بعد', style: TextStyle( color: Colors.grey))),
             const SizedBox(height: 24),
 
             // Garage (Vehicles) Section
             const Text(
               'مرآب سياراتي',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            const Center(child: Text('لا توجد مركبات مضافة', style: TextStyle(fontFamily: 'Cairo', color: Colors.grey))),
+            const Center(child: Text('لا توجد مركبات مضافة', style: TextStyle( color: Colors.grey))),
             const SizedBox(height: 24),
 
             // Settings & Preferences
             const Text(
               'الإعدادات والخصوصية',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Container(
@@ -122,14 +124,46 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   ListTile(
                     leading: const Icon(Icons.language_rounded),
-                    title: const Text('لغة التطبيق', style: TextStyle(fontFamily: 'Cairo')),
-                    trailing: const Text('العربية', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                    onTap: () {},
+                    title: const Text('لغة التطبيق', style: TextStyle()),
+                    trailing: Text(
+                      appState.currentLanguage == 'ar' ? 'العربية' :
+                      (appState.currentLanguage == 'ku' ? 'کوردی' : 'English'),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryEmerald),
+                    ),
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        builder: (ctx) => Container(
+                          decoration: BoxDecoration(
+                            color: isDark ? AppTheme.darkCard : Colors.white,
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                          ),
+                          child: SafeArea(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Text('اختر اللغة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                ),
+                                _buildLanguageOption(context, 'العربية', 'ar', appState),
+                                const Divider(height: 1),
+                                _buildLanguageOption(context, 'کوردی (Kurdish)', 'ku', appState),
+                                const Divider(height: 1),
+                                _buildLanguageOption(context, 'English', 'en', appState),
+                                const SizedBox(height: 16),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.volume_up_rounded),
-                    title: const Text('التوجيه الصوتي أثناء القيادة', style: TextStyle(fontFamily: 'Cairo')),
+                    title: const Text('التوجيه الصوتي أثناء القيادة', style: TextStyle()),
                     trailing: Switch(value: true, activeColor: AppTheme.primaryEmerald, onChanged: (_) {}),
                   ),
                 ],
@@ -144,10 +178,26 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildStatColumn(String label, String value, Color color) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color, fontFamily: 'Cairo')),
+        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color)),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Cairo')),
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
       ],
+    );
+  }
+
+  Widget _buildLanguageOption(BuildContext context, String label, String code, AppState appState) {
+    final isSelected = appState.currentLanguage == code;
+    return ListTile(
+      title: Text(label, textAlign: TextAlign.center, style: TextStyle(
+        fontSize: 18,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        color: isSelected ? AppTheme.primaryEmerald : null,
+      )),
+      trailing: isSelected ? const Icon(Icons.check_circle, color: AppTheme.primaryEmerald) : null,
+      onTap: () {
+        appState.setLanguage(code);
+        Navigator.pop(context);
+      },
     );
   }
 }

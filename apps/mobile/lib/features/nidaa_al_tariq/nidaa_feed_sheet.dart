@@ -29,7 +29,7 @@ class NidaaFeedSheet extends StatelessWidget {
         icon: const Icon(Icons.radar_rounded),
         label: const Text(
           'أطلق نداء طريق',
-          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         onPressed: () => NidaaDialog.show(context),
       ),
@@ -42,14 +42,14 @@ class NidaaFeedSheet extends StatelessWidget {
                   const SizedBox(height: 16),
                   const Text(
                     'لا توجد نداءات طريق حالية على مسارك',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'إذا كنت في حيرة من وضع الطريق، اطلب معلومات من السائقين أمامك',
                     style: TextStyle(
                       color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
-                      fontFamily: 'Cairo',
+                      
                     ),
                   ),
                 ],
@@ -95,7 +95,7 @@ class NidaaFeedSheet extends StatelessWidget {
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
-                                      fontFamily: 'Cairo',
+                                      
                                     ),
                                   ),
                                   Text(
@@ -103,7 +103,7 @@ class NidaaFeedSheet extends StatelessWidget {
                                     style: TextStyle(
                                       color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
                                       fontSize: 12,
-                                      fontFamily: 'Cairo',
+                                      
                                     ),
                                   ),
                                 ],
@@ -121,7 +121,7 @@ class NidaaFeedSheet extends StatelessWidget {
                                   color: AppTheme.accentOrange,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
-                                  fontFamily: 'Cairo',
+                                  
                                 ),
                               ),
                             ),
@@ -144,7 +144,7 @@ class NidaaFeedSheet extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.alertRed,
                                 fontSize: 13,
-                                fontFamily: 'Cairo',
+                                
                               ),
                             ),
                           ),
@@ -153,7 +153,7 @@ class NidaaFeedSheet extends StatelessWidget {
                         const SizedBox(height: 14),
                         const Text(
                           'أجب لمساعدة السائق خلفك (+2 نقطة سمعة):',
-                          style: TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Cairo'),
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                         const SizedBox(height: 8),
 
@@ -169,7 +169,7 @@ class NidaaFeedSheet extends StatelessWidget {
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
                                 onPressed: () => appState.answerRoadQuestion(q.id, 'نعم'),
-                                child: Text('نعم (${q.answersYes})', style: const TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
+                                child: Text('نعم (${q.answersYes})', style: const TextStyle( fontWeight: FontWeight.bold)),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -183,7 +183,7 @@ class NidaaFeedSheet extends StatelessWidget {
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
                                 onPressed: () => appState.answerRoadQuestion(q.id, 'لا'),
-                                child: Text('لا (${q.answersNo})', style: const TextStyle(fontFamily: 'Cairo')),
+                                child: Text('لا (${q.answersNo})', style: const TextStyle()),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -194,7 +194,7 @@ class NidaaFeedSheet extends StatelessWidget {
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
                                 onPressed: () => appState.answerRoadQuestion(q.id, 'غير متأكد'),
-                                child: const Text('غير متأكد', style: TextStyle(fontFamily: 'Cairo', fontSize: 11)),
+                                child: const Text('غير متأكد', style: TextStyle( fontSize: 11)),
                               ),
                             ),
                           ],

@@ -30,7 +30,7 @@ class ReportsScreen extends StatelessWidget {
         icon: const Icon(Icons.add_alert_rounded),
         label: const Text(
           'إبلاغ جديد',
-          style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         onPressed: () => ReportDialog.show(context),
       ),
@@ -43,14 +43,14 @@ class ReportsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   const Text(
                     'الطرق سالكة ولا توجد بلاغات حالياً',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'كن أول من يبلغ إذا صادفك أي عائق أو ازدحام',
                     style: TextStyle(
                       color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
-                      fontFamily: 'Cairo',
+                      
                     ),
                   ),
                 ],
@@ -90,7 +90,7 @@ class ReportsScreen extends StatelessWidget {
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
-                                      fontFamily: 'Cairo',
+                                      
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -99,7 +99,7 @@ class ReportsScreen extends StatelessWidget {
                                     style: TextStyle(
                                       color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
                                       fontSize: 13,
-                                      fontFamily: 'Cairo',
+                                      
                                     ),
                                   ),
                                 ],
@@ -127,7 +127,7 @@ class ReportsScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14,
                               color: isDark ? AppTheme.textLightPrimary : AppTheme.textDarkPrimary,
-                              fontFamily: 'Cairo',
+                              
                             ),
                           ),
                         ],
@@ -149,7 +149,7 @@ class ReportsScreen extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
                                     color: AppTheme.primaryEmerald,
-                                    fontFamily: 'Cairo',
+                                    
                                   ),
                                 ),
                               ],
@@ -160,7 +160,7 @@ class ReportsScreen extends StatelessWidget {
                                 const SizedBox(width: 4),
                                 Text(
                                   remainingMins > 0 ? 'ينتهي بعد $remainingMins د' : 'أوشك على الانتهاء',
-                                  style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Cairo'),
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                                 ),
                               ],
                             ),
@@ -182,7 +182,7 @@ class ReportsScreen extends StatelessWidget {
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
                                 icon: const Icon(Icons.check_circle_outline, size: 18),
-                                label: const Text('تأكيد البلاغ', style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
+                                label: const Text('تأكيد البلاغ', style: TextStyle( fontWeight: FontWeight.bold)),
                                 onPressed: () => appState.confirmReport(r.id, 'CONFIRM'),
                               ),
                             ),
@@ -195,7 +195,7 @@ class ReportsScreen extends StatelessWidget {
                                   minimumSize: const Size(0, 42),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
-                                child: const Text('غير موجود', style: TextStyle(fontFamily: 'Cairo', fontSize: 12)),
+                                child: const Text('غير موجود', style: TextStyle( fontSize: 12)),
                                 onPressed: () => appState.confirmReport(r.id, 'NOT_THERE_ANYMORE'),
                               ),
                             ),

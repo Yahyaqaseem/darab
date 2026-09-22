@@ -1,20 +1,16 @@
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants/app_constants.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
-import '../road_reports/report_dialog.dart';
-import '../road_reports/reports_screen.dart';
-import '../nidaa_al_tariq/nidaa_dialog.dart';
-import '../nidaa_al_tariq/nidaa_feed_sheet.dart';
+import '../../shared_widgets/glass_container.dart';
 import '../fuel/fuel_screen.dart';
 import '../places/places_screen.dart';
-import '../emergency/emergency_services_screen.dart';
 import '../profile/profile_screen.dart';
 import '../navigation/navigation_screen.dart';
+import '../nidaa_al_tariq/nidaa_feed_sheet.dart';
+import '../emergency/emergency_services_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,445 +19,306 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   int _currentTabIndex = 0;
-  final _searchController = TextEditingController();
   final MapController _mapController = MapController();
-  bool _hasCenteredMap = false;
+  bool _isMapReady = false;
 
-  void _navigateToDestination(String destination, double lat, double lng) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => NavigationScreen(
-          destinationName: destination,
-          destLat: lat,
-          destLng: lng,
-        ),
-      ),
-    );
+  late AnimationController _dockAnimationController;
+  late Animation<double> _dockAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _dockAnimationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 300));
+    _dockAnimation = CurvedAnimation(parent: _dockAnimationController, curve: Curves.easeOutBack);
+    _dockAnimationController.forward();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AppState>(context, listen: false).startLocationTracking();
+    });
+  }
+  
+  @override
+  void dispose() {
+    _dockAnimationController.dispose();
+    super.dispose();
   }
 
-  void _showCityPicker() {
+  void _onTabTapped(int index) {
+    setState(() => _currentTabIndex = index);
+    if (index != 0) {
+      _showBottomSheetForTab(index);
+    }
+  }
+
+  void _showBottomSheetForTab(int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
-        final appState = Provider.of<AppState>(context, listen: false);
-
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: isDark ? AppTheme.darkCard : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'اختر المحافظة / منطقة القيادة',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (_, controller) {
+            return GlassContainer(
+              isDark: isDark,
+              borderRadius: 30,
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  // Handle indicator
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 12, bottom: 8),
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
+                      child: Navigator(
+                        onGenerateRoute: (_) => MaterialPageRoute(
+                          builder: (ctx2) {
+                            if (index == 1) return const FuelScreen();
+                            if (index == 2) return const PlacesScreen();
+                            if (index == 3) return const ProfileScreen();
+                            return const SizedBox();
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: AppConstants.iraqiCities.entries.map((entry) {
-                  final name = entry.value['name'] as String;
-                  final isSelected = appState.currentCity == name;
-                  return ChoiceChip(
-                    label: Text(name, style: const TextStyle(fontFamily: 'Cairo')),
-                    selected: isSelected,
-                    selectedColor: AppTheme.primaryEmerald.withOpacity(0.2),
-                    onSelected: (selected) {
-                      if (selected) {
-                        appState.updateLocation(
-                          entry.value['lat'] as double,
-                          entry.value['lng'] as double,
-                          name,
-                        );
-                        Navigator.pop(ctx);
-                      }
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
+            );
+          },
         );
       },
-    );
+    ).whenComplete(() {
+      setState(() => _currentTabIndex = 0);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    if (!_hasCenteredMap && appState.currentLat != 36.191113) {
-      _hasCenteredMap = true;
-      Future.microtask(() {
-        _mapController.move(LatLng(appState.currentLat, appState.currentLng), 14.0);
-      });
+    
+    // Auto-center if tracking
+    if (_isMapReady && appState.currentLocation != null) {
+       _mapController.move(
+         LatLng(appState.currentLocation!.latitude, appState.currentLocation!.longitude), 
+         _mapController.camera.zoom
+       );
     }
 
-    final screens = [
-      _buildMapHomeScreen(appState, isDark),
-      const ReportsScreen(),
-      const FuelScreen(),
-      const PlacesScreen(),
-      const ProfileScreen(),
-    ];
-
     return Scaffold(
-      body: screens[_currentTabIndex],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentTabIndex,
-        onDestinationSelected: (idx) => setState(() => _currentTabIndex = idx),
-        backgroundColor: isDark ? AppTheme.darkCard : Colors.white,
-        indicatorColor: AppTheme.primaryEmerald.withOpacity(0.18),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map_rounded, color: AppTheme.primaryEmerald),
-            label: 'الخريطة',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.notification_important_outlined),
-            selectedIcon: Icon(Icons.notification_important_rounded, color: AppTheme.primaryEmerald),
-            label: 'البلاغات',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.local_gas_station_outlined),
-            selectedIcon: Icon(Icons.local_gas_station_rounded, color: AppTheme.primaryEmerald),
-            label: 'البنزين',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.storefront_outlined),
-            selectedIcon: Icon(Icons.storefront_rounded, color: AppTheme.primaryEmerald),
-            label: 'الأماكن',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded, color: AppTheme.primaryEmerald),
-            label: 'حسابي',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMapHomeScreen(AppState appState, bool isDark) {
-    return SafeArea(
-      child: Stack(
+      extendBodyBehindAppBar: true,
+      body: Stack(
         children: [
-          // Map Background Simulation View
-          Positioned.fill(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: LatLng(appState.currentLat, appState.currentLng),
-                initialZoom: 13.0,
-                onPositionChanged: (position, hasGesture) {
-                },
+          // LAYER 1: Full Screen Map
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: const LatLng(36.1901, 43.9930), // Default Erbil
+              initialZoom: 14.0,
+              onMapReady: () {
+                setState(() {
+                  _isMapReady = true;
+                });
+              },
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: isDark ? 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png' : 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.darb.iraq',
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.darb.iraq',
-                ),
+              if (appState.currentLocation != null)
                 MarkerLayer(
                   markers: [
                     Marker(
-                      point: LatLng(appState.currentLat, appState.currentLng),
+                      point: LatLng(appState.currentLocation!.latitude, appState.currentLocation!.longitude),
                       width: 60,
                       height: 60,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryEmerald,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primaryEmerald.withOpacity(0.5),
-                                  blurRadius: 16,
-                                  spreadRadius: 4,
-                                ),
-                              ],
-                            ),
-                            child: const Icon(Icons.navigation_rounded, color: Colors.white, size: 20),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ...appState.reports.map((r) => Marker(
-                      point: LatLng(r.latitude, r.longitude),
-                      width: 40,
-                      height: 40,
-                      child: GestureDetector(
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('⚠️  ( سواق أكدوا)'),
-                              backgroundColor: r.color,
-                            ),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: r.color,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: [
-                              BoxShadow(color: r.color.withOpacity(0.5), blurRadius: 8, offset: const Offset(0, 3)),
-                            ],
-                          ),
-                          child: Icon(r.icon, color: Colors.white, size: 16),
-                        ),
-                      ),
-                    )),
+                      child: _buildPulsingMarker(),
+                    )
                   ],
                 ),
-              ],
-            ),
-          ),
-          
-          Positioned(
-            bottom: 90,
-            right: 16,
-            child: FloatingActionButton(
-              heroTag: 'my_location_btn',
-              backgroundColor: isDark ? AppTheme.darkCard : Colors.white,
-              mini: true,
-              onPressed: () async {
-                await appState.startLocationTracking();
-                _mapController.move(
-                  LatLng(appState.currentLat, appState.currentLng),
-                  15.0,
-                );
-              },
-              child: const Icon(Icons.my_location_rounded, color: AppTheme.primaryEmerald),
-            ),
+            ],
           ),
 
-          // Top Header & Search
-          Positioned(
-            top: 12,
-            left: 16,
-            right: 16,
-            child: Column(
-              children: [
-                // Top Search Bar
-                Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkCard : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 4)),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onSubmitted: (query) {
-                      if (query.isNotEmpty) {
-                        _navigateToDestination(query, 36.8679, 42.9904);
-                      }
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'وين تريد تروح؟ (ابحث عن مكان، شارع، محطة...)',
-                      hintStyle: const TextStyle(fontFamily: 'Cairo', fontSize: 14),
-                      prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.primaryEmerald),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.location_city_rounded, color: AppTheme.secondarySandDark),
-                        onPressed: _showCityPicker,
-                        tooltip: 'تغيير المدينة',
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Quick Action Chips Row
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: AppConstants.homeQuickActions.map((action) {
-                      final key = action['key'] as String;
-                      final label = action['label'] as String;
-                      final icon = action['icon'] as IconData;
-                      final color = action['color'] as Color;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: Material(
-                          color: isDark ? AppTheme.darkCard : Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          elevation: 2,
-                          shadowColor: Colors.black.withOpacity(0.06),
-                          child: InkWell(
-                            onTap: () {
-                              if (key == 'nav') {
-                                _navigateToDestination('دهوك - طريق M10', 36.8679, 42.9904);
-                              } else if (key == 'fuel') {
-                                setState(() => _currentTabIndex = 2);
-                              } else if (key == 'tire_repair') {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const EmergencyServicesScreen()));
-                              } else {
-                                setState(() => _currentTabIndex = 3);
-                              }
-                            },
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              child: Row(
-                                children: [
-                                  Icon(icon, color: color, size: 20),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    label,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                      color: isDark ? AppTheme.textLightPrimary : AppTheme.textDarkPrimary,
-                                      fontFamily: 'Cairo',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Live Active Nidaa Floating Alert Banner (If Any)
-          if (appState.activeRoadQuestions.isNotEmpty)
-            Positioned(
-              top: 135,
-              left: 16,
-              right: 16,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const NidaaFeedSheet()));
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentOrange,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(color: AppTheme.accentOrange.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4)),
-                    ],
-                  ),
+          // LAYER 2: Floating Glass Search Bar (Top)
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: GlassContainer(
+                  isDark: isDark,
+                  borderRadius: 20,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
-                      const Icon(Icons.radar_rounded, color: Colors.white, size: 22),
-                      const SizedBox(width: 10),
-                      Expanded(
+                      const Icon(Icons.menu_rounded, color: Colors.grey),
+                      const SizedBox(width: 12),
+                      const Expanded(
                         child: Text(
-                          '📡 نداء طريق نشط أمامك: ${appState.activeRoadQuestions.first.title}',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Cairo'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          'إلى أين نذهب؟',
+                          style: TextStyle( fontSize: 16, color: Colors.grey),
                         ),
                       ),
-                      const Text('أجب الآن', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12, fontFamily: 'Cairo')),
-                      const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryEmerald.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.search_rounded, color: AppTheme.primaryEmerald, size: 20),
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
+          ),
 
-          // Bottom Floating Driver Tools Action Bar
+          // LAYER 3: Floating Action Buttons (Right Edge)
           Positioned(
-            bottom: 20,
-            left: 16,
             right: 16,
-            child: Row(
+            bottom: 120, // Above the dock
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // 1-Tap Incident Report Button (🚨)
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.alertRed,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(0, 54),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 4,
-                      shadowColor: AppTheme.alertRed.withOpacity(0.4),
-                    ),
-                    icon: const Icon(Icons.add_alert_rounded, size: 24),
-                    label: const Text(
-                      '🚨 إبلاغ فوري',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Cairo'),
-                    ),
-                    onPressed: () => ReportDialog.show(context),
-                  ),
-                ),
-                const SizedBox(width: 10),
+                _buildFab(Icons.warning_rounded, AppTheme.accentOrange, () {}, isDark),
+                const SizedBox(height: 16),
+                _buildFab(Icons.sos_rounded, AppTheme.alertRed, () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const EmergencyServicesScreen()));
+                }, isDark),
+                const SizedBox(height: 16),
+                _buildFab(Icons.my_location_rounded, isDark ? Colors.white : Colors.black87, () {
+                  if (appState.currentLocation != null) {
+                    _mapController.move(
+                      LatLng(appState.currentLocation!.latitude, appState.currentLocation!.longitude), 
+                      16.0
+                    );
+                  }
+                }, isDark),
+              ],
+            ),
+          ),
 
-                // 1-Tap Road Call Button (📡)
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.accentOrange,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(0, 54),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 4,
-                      shadowColor: AppTheme.accentOrange.withOpacity(0.4),
-                    ),
-                    icon: const Icon(Icons.radar_rounded, size: 24),
-                    label: const Text(
-                      '📡 نداء الطريق',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'Cairo'),
-                    ),
-                    onPressed: () => NidaaDialog.show(context),
-                  ),
-                ),
-                const SizedBox(width: 10),
-
-                // Emergency SOS Button (🆘)
-                Container(
-                  height: 54,
-                  width: 54,
-                  decoration: BoxDecoration(
-                    color: isDark ? AppTheme.darkCard : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4)),
+          // LAYER 4: Floating Animated Dock (Bottom)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24.0, left: 32.0, right: 32.0),
+              child: ScaleTransition(
+                scale: _dockAnimation,
+                child: GlassContainer(
+                  isDark: isDark,
+                  borderRadius: 30,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildDockIcon(Icons.map_rounded, 'الخريطة', 0, isDark),
+                      _buildDockIcon(Icons.local_gas_station_rounded, 'وقود', 1, isDark),
+                      _buildDockIcon(Icons.place_rounded, 'أماكن', 2, isDark),
+                      _buildDockIcon(Icons.person_rounded, 'حسابي', 3, isDark),
                     ],
                   ),
-                  child: IconButton(
-                    icon: const Icon(Icons.car_crash_rounded, color: AppTheme.primaryEmerald, size: 28),
-                    onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const EmergencyServicesScreen()));
-                    },
-                    tooltip: 'أحتاج مساعدة / سطحة',
-                  ),
                 ),
-              ],
+              ),
             ),
           ),
         ],
       ),
     );
   }
-}
 
+  Widget _buildFab(IconData icon, Color color, VoidCallback onTap, bool isDark) {
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassContainer(
+        isDark: isDark,
+        borderRadius: 24,
+        padding: const EdgeInsets.all(12),
+        child: Icon(icon, color: color, size: 26),
+      ),
+    );
+  }
+
+  Widget _buildDockIcon(IconData icon, String label, int index, bool isDark) {
+    final isSelected = _currentTabIndex == index;
+    final activeColor = AppTheme.primaryEmerald;
+    final inactiveColor = isDark ? Colors.white54 : Colors.black54;
+
+    return GestureDetector(
+      onTap: () => _onTabTapped(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor.withOpacity(0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: isSelected ? activeColor : inactiveColor, size: 24),
+            if (isSelected) ...[
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  color: activeColor,
+                  
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ]
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPulsingMarker() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppTheme.primaryEmerald.withOpacity(0.2),
+          ),
+        ),
+        Container(
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppTheme.primaryEmerald,
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: [
+              BoxShadow(color: AppTheme.primaryEmerald.withOpacity(0.5), blurRadius: 8),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}

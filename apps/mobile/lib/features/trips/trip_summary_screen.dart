@@ -90,12 +90,12 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
             const Text(
               'الحمد لله على سلامتك!',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, fontFamily: 'Cairo'),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
             ),
             Text(
               'وصلت إلى ${widget.endName} بنجاح',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary, fontFamily: 'Cairo'),
+              style: TextStyle(fontSize: 14, color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary),
             ),
             const SizedBox(height: 24),
 
@@ -125,9 +125,9 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(widget.startName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Cairo')),
+                        Text(widget.startName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                         const SizedBox(height: 16),
-                        Text(widget.endName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Cairo')),
+                        Text(widget.endName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                       ],
                     ),
                   ),
@@ -170,7 +170,7 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
                     Expanded(
                       child: Text(
                         'تم تصفية طفرة الـ GPS العشوائية (${maxRaw.toStringAsFixed(0)} كم/س) واحتساب السرعة الموثوقة (${p95.toStringAsFixed(0)} كم/س) بنظام الذكاء الاصطناعي.',
-                        style: const TextStyle(fontSize: 12, fontFamily: 'Cairo', fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -196,7 +196,7 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
                       const SizedBox(height: 8),
                       Text(
                         _isReplaying ? 'جارِ تشغيل الإعادة: ${( _replayProgress * 100).toStringAsFixed(0)}%' : 'مشاهدة إعادة مسار الرحلة (Trip Replay)',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -225,7 +225,7 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     icon: const Icon(Icons.replay_rounded),
-                    label: const Text('إعادة المسار', style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
+                    label: const Text('إعادة المسار', style: TextStyle( fontWeight: FontWeight.bold)),
                     onPressed: _isReplaying ? null : _triggerReplay,
                   ),
                 ),
@@ -260,9 +260,9 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
           children: [
             Icon(icon, color: AppTheme.primaryEmerald, size: 22),
             const SizedBox(height: 8),
-            Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Cairo')),
+            Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 2),
-            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, fontFamily: 'Cairo')),
+            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
           ],
         ),
       ),

@@ -41,7 +41,7 @@ class _ReportDialogState extends State<ReportDialog> {
               SizedBox(width: 8),
               Text(
                 'تم نشر البلاغ لجميع السائقين على الطريق (+10 نقاط سمعة)',
-                style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold),
+                style: TextStyle( fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -88,7 +88,7 @@ class _ReportDialogState extends State<ReportDialog> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Cairo',
+                    
                   ),
                 ),
               ],
@@ -99,7 +99,7 @@ class _ReportDialogState extends State<ReportDialog> {
               style: TextStyle(
                 fontSize: 13,
                 color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
-                fontFamily: 'Cairo',
+                
               ),
             ),
             const SizedBox(height: 20),
@@ -153,7 +153,7 @@ class _ReportDialogState extends State<ReportDialog> {
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                     color: color,
-                                    fontFamily: 'Cairo',
+                                    
                                   ),
                                 ),
                               ],

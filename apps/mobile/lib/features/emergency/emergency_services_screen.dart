@@ -132,14 +132,14 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
                                 children: [
                                   Text(
                                     p['name'],
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Cairo'),
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                   ),
                                   Text(
                                     p['typeLabel'],
                                     style: TextStyle(
                                       color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
                                       fontSize: 13,
-                                      fontFamily: 'Cairo',
+                                      
                                     ),
                                   ),
                                 ],
@@ -166,7 +166,7 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
                             Expanded(
                               child: Text(
                                 p['coverage'],
-                                style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Cairo'),
+                                style: const TextStyle(fontSize: 12, color: Colors.grey),
                               ),
                             ),
                             if (p['isAvailable24'])
@@ -178,7 +178,7 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
                                 ),
                                 child: const Text(
                                   'طوارئ 24/7',
-                                  style: TextStyle(color: AppTheme.successGreen, fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                                  style: TextStyle(color: AppTheme.successGreen, fontSize: 11, fontWeight: FontWeight.bold),
                                 ),
                               ),
                           ],
@@ -207,7 +207,7 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
   Widget _buildFilterChip(String key, String label) {
     final isSelected = _selectedCategory == key;
     return ChoiceChip(
-      label: Text(label, style: TextStyle(fontFamily: 'Cairo', fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      label: Text(label, style: TextStyle( fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
       selected: isSelected,
       selectedColor: AppTheme.primaryEmerald.withOpacity(0.2),
       onSelected: (selected) {

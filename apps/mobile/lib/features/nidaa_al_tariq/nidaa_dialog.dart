@@ -39,7 +39,7 @@ class _NidaaDialogState extends State<NidaaDialog> {
               SizedBox(width: 8),
               Text(
                 'تم إرسال نداء الطريق للسائقين الموجودين أمامك على نفس المسار!',
-                style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold),
+                style: TextStyle( fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -96,12 +96,12 @@ class _NidaaDialogState extends State<NidaaDialog> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'Cairo',
+                        
                       ),
                     ),
                     Text(
                       'يُرسل فقط للسائقين الموجودين أمامك على نفس الطريق',
-                      style: TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Cairo'),
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -136,7 +136,7 @@ class _NidaaDialogState extends State<NidaaDialog> {
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'Cairo',
+                                
                               ),
                             ),
                           ),
