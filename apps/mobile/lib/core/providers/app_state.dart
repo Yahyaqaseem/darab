@@ -28,7 +28,7 @@ class AppState extends ChangeNotifier {
   double _currentLng = 44.009167;
   String _currentCity = 'أربيل';
   double _currentSpeedKmh = 0.0;
-  List<double> _speedBuffer = [65, 70, 72, 75, 78];
+  List<double> _speedBuffer = [];
 
   // Navigation State
   TripState _tripState = TripState.IDLE;
@@ -354,7 +354,7 @@ class AppState extends ChangeNotifier {
       'questionType': type,
       'latitude': _currentLat,
       'longitude': _currentLng,
-      'roadName': 'طريق $_currentCity - دهوك M10',
+      'roadName': 'طريق $_currentCity',
       'customText': customText,
     };
 

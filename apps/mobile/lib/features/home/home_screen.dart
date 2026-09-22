@@ -11,6 +11,7 @@ import '../profile/profile_screen.dart';
 import '../navigation/navigation_screen.dart';
 import '../nidaa_al_tariq/nidaa_feed_sheet.dart';
 import '../emergency/emergency_services_screen.dart';
+import '../search/destination_search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -115,9 +116,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     // Auto-center if tracking
-    if (_isMapReady && appState.currentLocation != null) {
+    if (_isMapReady && appState.currentLat != 0) {
        _mapController.move(
-         LatLng(appState.currentLocation!.latitude, appState.currentLocation!.longitude), 
+         LatLng(appState.currentLat, appState.currentLng), 
          _mapController.camera.zoom
        );
     }
@@ -143,11 +144,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 urlTemplate: isDark ? 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png' : 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.darb.iraq',
               ),
-              if (appState.currentLocation != null)
+              if (appState.currentLat != 0)
                 MarkerLayer(
                   markers: [
                     Marker(
-                      point: LatLng(appState.currentLocation!.latitude, appState.currentLocation!.longitude),
+                      point: LatLng(appState.currentLat, appState.currentLng),
                       width: 60,
                       height: 60,
                       child: _buildPulsingMarker(),
@@ -163,29 +164,34 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               alignment: Alignment.topCenter,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                child: GlassContainer(
-                  isDark: isDark,
-                  borderRadius: 20,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.menu_rounded, color: Colors.grey),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'إلى أين نذهب؟',
-                          style: TextStyle( fontSize: 16, color: Colors.grey),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const DestinationSearchScreen()));
+                  },
+                  child: GlassContainer(
+                    isDark: isDark,
+                    borderRadius: 20,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.search_rounded, color: AppTheme.primaryEmerald),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'إلى أين نذهب؟',
+                            style: TextStyle(fontSize: 16, color: isDark ? Colors.white70 : Colors.grey),
+                          ),
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryEmerald.withOpacity(0.1),
-                          shape: BoxShape.circle,
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryEmerald.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.arrow_forward_ios_rounded, color: AppTheme.primaryEmerald, size: 16),
                         ),
-                        child: const Icon(Icons.search_rounded, color: AppTheme.primaryEmerald, size: 20),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -206,9 +212,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 }, isDark),
                 const SizedBox(height: 16),
                 _buildFab(Icons.my_location_rounded, isDark ? Colors.white : Colors.black87, () {
-                  if (appState.currentLocation != null) {
+                  if (appState.currentLat != 0) {
                     _mapController.move(
-                      LatLng(appState.currentLocation!.latitude, appState.currentLocation!.longitude), 
+                      LatLng(appState.currentLat, appState.currentLng), 
                       16.0
                     );
                   }
