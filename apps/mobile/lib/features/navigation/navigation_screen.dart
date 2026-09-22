@@ -12,6 +12,8 @@ import '../../shared_widgets/speed_hud_widget.dart';
 import '../../shared_widgets/driver_safe_button.dart';
 import '../nidaa_al_tariq/nidaa_dialog.dart';
 import '../road_reports/report_dialog.dart';
+import 'package:vector_map_tiles/vector_map_tiles.dart';
+import '../../core/theme/darb_vector_theme.dart';
 
 class NavigationScreen extends StatefulWidget {
   final String destinationName;
@@ -36,10 +38,14 @@ class _NavigationScreenState extends State<NavigationScreen> {
   Map<String, dynamic>? _routesData;
   bool _isLoading = true;
   List<LatLng> _routePoints = [];
+  Style? _vectorStyle;
 
   @override
   void initState() {
     super.initState();
+    DarbVectorTheme.loadStyle().then((style) {
+      if (mounted) setState(() => _vectorStyle = style);
+    });
     _fetchRoutes();
   }
 
@@ -162,23 +168,31 @@ class _NavigationScreenState extends State<NavigationScreen> {
               initialZoom: 15.0,
             ),
             children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.darb.iraq',
-                tileBuilder: isDark
-                    ? (context, tileWidget, tile) {
-                        return ColorFiltered(
-                          colorFilter: const ColorFilter.matrix(<double>[
-                            -0.8, 0, 0, 0, 210,
-                            0, -0.8, 0, 0, 210,
-                            0, 0, -0.8, 0, 220,
-                            0, 0, 0, 1, 0,
-                          ]),
-                          child: tileWidget,
-                        );
-                      }
-                    : null,
-              ),
+              if (_vectorStyle != null)
+                VectorTileLayer(
+                  theme: _vectorStyle!.theme,
+                  sprites: _vectorStyle!.sprites,
+                  tileProviders: _vectorStyle!.providers,
+                  layerMode: VectorTileLayerMode.raster,
+                )
+              else
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.darb.iraq',
+                  tileBuilder: isDark
+                      ? (context, tileWidget, tile) {
+                          return ColorFiltered(
+                            colorFilter: const ColorFilter.matrix(<double>[
+                              -0.8, 0, 0, 0, 210,
+                              0, -0.8, 0, 0, 210,
+                              0, 0, -0.8, 0, 220,
+                              0, 0, 0, 1, 0,
+                            ]),
+                            child: tileWidget,
+                          );
+                        }
+                      : null,
+                ),
               // Route Polyline (Green glowing path with border)
               if (_routePoints.isNotEmpty) ...[
                 PolylineLayer(

@@ -14,6 +14,8 @@ import '../navigation/navigation_screen.dart';
 import '../road_reports/report_dialog.dart';
 import '../emergency/emergency_services_screen.dart';
 import '../search/destination_search_screen.dart';
+import 'package:vector_map_tiles/vector_map_tiles.dart';
+import '../../core/theme/darb_vector_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,6 +27,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final MapController _mapController = MapController();
   bool _isMapReady = false;
+  Style? _vectorStyle;
 
   final List<Map<String, dynamic>> _recentPlaces = [
     {'name': 'مستشفى رزكاري', 'nameEn': 'Rizgary Hospital', 'subtitle': 'هەولێر - Erbil', 'lat': 36.1780, 'lng': 44.0250},
@@ -36,6 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    DarbVectorTheme.loadStyle().then((style) {
+      if (mounted) setState(() => _vectorStyle = style);
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<AppState>(context, listen: false).startLocationTracking();
     });
@@ -253,23 +259,31 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.darb.iraq',
-                tileBuilder: isDark
-                    ? (context, tileWidget, tile) {
-                        return ColorFiltered(
-                          colorFilter: const ColorFilter.matrix(<double>[
-                            -0.8, 0, 0, 0, 210,
-                            0, -0.8, 0, 0, 210,
-                            0, 0, -0.8, 0, 220,
-                            0, 0, 0, 1, 0,
-                          ]),
-                          child: tileWidget,
-                        );
-                      }
-                    : null,
-              ),
+              if (_vectorStyle != null)
+                VectorTileLayer(
+                  theme: _vectorStyle!.theme,
+                  sprites: _vectorStyle!.sprites,
+                  tileProviders: _vectorStyle!.providers,
+                  layerMode: VectorTileLayerMode.raster,
+                )
+              else
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.darb.iraq',
+                  tileBuilder: isDark
+                      ? (context, tileWidget, tile) {
+                          return ColorFiltered(
+                            colorFilter: const ColorFilter.matrix(<double>[
+                              -0.8, 0, 0, 0, 210,
+                              0, -0.8, 0, 0, 210,
+                              0, 0, -0.8, 0, 220,
+                              0, 0, 0, 1, 0,
+                            ]),
+                            child: tileWidget,
+                          );
+                        }
+                      : null,
+                ),
               MarkerLayer(
                 markers: [
                   // User Location (Waze 3D cyan navigation cursor!)
