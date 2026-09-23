@@ -121,4 +121,36 @@ class AppTheme {
       ),
     );
   }
+  static ThemeData get lightTheme {
+    return ThemeData(
+      brightness: Brightness.light,
+      primaryColor: DarbColors.primaryEmerald,
+      scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+      fontFamily: GoogleFonts.cairo().fontFamily,
+      
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: DarbColors.textInversePrimary),
+        titleTextStyle: DarbTypography.title.copyWith(color: DarbColors.textInversePrimary),
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
+      ),
+      colorScheme: const ColorScheme.light(
+        primary: DarbColors.primaryEmerald,
+        secondary: DarbColors.warningOrange,
+        surface: Colors.white,
+        background: Color(0xFFF8FAFC),
+        error: DarbColors.dangerRed,
+      ),
+      textTheme: TextTheme(
+        displayLarge: DarbTypography.display.copyWith(color: DarbColors.textInversePrimary),
+        titleLarge: DarbTypography.title.copyWith(color: DarbColors.textInversePrimary),
+        titleMedium: DarbTypography.section.copyWith(color: DarbColors.textInversePrimary),
+        bodyLarge: DarbTypography.body.copyWith(color: DarbColors.textInversePrimary),
+        bodyMedium: DarbTypography.body.copyWith(color: DarbColors.textInversePrimary),
+        bodySmall: DarbTypography.caption.copyWith(color: const Color(0xFF64748B)),
+      ),
+    );
+  }
 }
