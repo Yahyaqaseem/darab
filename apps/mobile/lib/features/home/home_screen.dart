@@ -589,7 +589,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   color: DarbColors.border,
                                   margin: const EdgeInsets.symmetric(horizontal: DarbSpacing.sm),
                                 ),
-                                const DarbIcon(DarbIconType.mic, color: DarbColors.textSecondary, size: 22),
+                                const Icon(Icons.mic_rounded, color: DarbColors.textSecondary, size: 22),
                               ],
                             ),
                           ),
