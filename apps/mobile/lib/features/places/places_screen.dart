@@ -4,6 +4,8 @@ import '../navigation/navigation_screen.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/darb_icons.dart';
+import '../../shared_widgets/darb_card.dart';
+import '../../shared_widgets/darb_button.dart';
 
 class PlacesScreen extends StatefulWidget {
   final String? initialCategory;
@@ -44,25 +46,38 @@ class _PlacesScreenState extends State<PlacesScreen> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('دليل الأماكن والخدمات'),
+        title: Text('دليل الأماكن والخدمات', style: DarbTypography.title),
       ),
       body: Column(
         children: [
           // Search Field
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.sm),
             child: TextField(
               controller: _searchController,
               onChanged: (_) => setState(() {}),
+              style: DarbTypography.body,
               decoration: InputDecoration(
                 hintText: 'ابحث عن مكان، ورشة، مطعم...',
+                hintStyle: DarbTypography.body.copyWith(color: DarbColors.textSecondary),
                 prefixIcon: const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: DarbIcon(DarbIconType.search, size: 18, color: Colors.grey),
+                  padding: EdgeInsets.all(DarbSpacing.md),
+                  child: DarbIcon(DarbIconType.search, size: 20, color: DarbColors.textSecondary),
                 ),
                 filled: true,
-                fillColor: isDark ? AppTheme.darkCard : AppTheme.lightSurface,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                fillColor: isDark ? DarbColors.surface : Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16), 
+                  borderSide: BorderSide(color: DarbColors.border.withOpacity(0.5))
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16), 
+                  borderSide: BorderSide(color: DarbColors.border.withOpacity(0.5))
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16), 
+                  borderSide: const BorderSide(color: DarbColors.primaryEmerald)
+                ),
               ),
             ),
           ),
@@ -70,38 +85,38 @@ class _PlacesScreenState extends State<PlacesScreen> {
           // Categories Bar
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.xs),
             child: Row(
               children: [
                 _buildCatChip('all', 'الكل', null),
-                const SizedBox(width: 8),
+                const SizedBox(width: DarbSpacing.sm),
                 _buildCatChip('tire_repair', 'بنجرجية', DarbIconType.tireRepair),
-                const SizedBox(width: 8),
+                const SizedBox(width: DarbSpacing.sm),
                 _buildCatChip('mechanic', 'ورش وميكانيك', DarbIconType.workshop),
-                const SizedBox(width: 8),
+                const SizedBox(width: DarbSpacing.sm),
                 _buildCatChip('towing', 'سطحة وإنقاذ', DarbIconType.brokenCar),
-                const SizedBox(width: 8),
+                const SizedBox(width: DarbSpacing.sm),
                 _buildCatChip('restaurant', 'مطاعم', DarbIconType.restaurant),
-                const SizedBox(width: 8),
+                const SizedBox(width: DarbSpacing.sm),
                 _buildCatChip('cafe', 'كافيهات', DarbIconType.cafe),
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: DarbSpacing.sm),
 
           Expanded(
             child: filtered.isEmpty
-                ? const Center(child: Text('لا توجد أماكن مطابقة', style: TextStyle()))
+                ? Center(child: Text('لا توجد أماكن مطابقة', style: DarbTypography.body))
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.sm),
                     itemCount: filtered.length,
                     itemBuilder: (ctx, idx) {
                       final p = filtered[idx];
 
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 14),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: DarbSpacing.md),
+                        child: DarbCard(
+                          padding: const EdgeInsets.all(DarbSpacing.lg),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -113,77 +128,79 @@ class _PlacesScreenState extends State<PlacesScreen> {
                                       children: [
                                         Text(
                                           p.nameAr,
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                          style: DarbTypography.section,
                                         ),
-                                        const SizedBox(height: 2),
+                                        const SizedBox(height: DarbSpacing.xs),
                                         Text(
                                           p.address,
-                                          style: TextStyle(
-                                            color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
-                                            fontSize: 12,
-                                            
-                                          ),
+                                          style: DarbTypography.caption,
                                         ),
                                       ],
                                     ),
                                   ),
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
-                                      const SizedBox(width: 2),
-                                      Text(
-                                        p.rating.toString(),
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                      ),
-                                    ],
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.sm, vertical: DarbSpacing.xs),
+                                    decoration: BoxDecoration(
+                                      color: DarbColors.warningOrange.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const DarbIcon(DarbIconType.starFilled, color: DarbColors.warningOrange, size: 14),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          p.rating.toString(),
+                                          style: DarbTypography.numeric.copyWith(color: DarbColors.warningOrange),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: DarbSpacing.md),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
-                                      const Icon(Icons.access_time_rounded, size: 16, color: Colors.grey),
+                                      const DarbIcon(DarbIconType.info, size: 14, color: DarbColors.textSecondary),
                                       const SizedBox(width: 4),
-                                      Text(p.openingHours, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                      Text(p.openingHours, style: DarbTypography.caption),
                                     ],
                                   ),
                                   if (p.distanceKm != null)
                                     Text(
-                                      '${p.distanceKm} كم من موقعك',
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryEmerald),
+                                      ' كم من موقعك',
+                                      style: DarbTypography.label.copyWith(color: DarbColors.primaryEmerald),
                                     ),
                                 ],
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: DarbSpacing.md),
                               Row(
                                 children: [
                                   Expanded(
-                                    child: ElevatedButton.icon(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppTheme.primaryEmerald,
-                                        foregroundColor: Colors.white,
-                                        minimumSize: const Size(0, 40),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                      ),
-                                      icon: const DarbIcon(DarbIconType.recenter, size: 16, color: Colors.white),
-                                      label: const Text('اذهب إليه', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    flex: 2,
+                                    child: DarbButton(
+                                      text: 'اذهب إليه',
+                                      icon: DarbIconType.route,
+                                      size: DarbButtonSize.small,
+                                      isFullWidth: true,
                                       onPressed: () {
                                         Navigator.push(context, MaterialPageRoute(builder: (_) => NavigationScreen(destinationName: p.nameAr, destLat: p.latitude, destLng: p.longitude,)));
                                       },
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  OutlinedButton.icon(
-                                    style: OutlinedButton.styleFrom(
-                                      minimumSize: const Size(0, 40),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  const SizedBox(width: DarbSpacing.sm),
+                                  Expanded(
+                                    flex: 1,
+                                    child: DarbButton(
+                                      text: 'اتصال',
+                                      icon: DarbIconType.phone,
+                                      variant: DarbButtonVariant.secondary,
+                                      size: DarbButtonSize.small,
+                                      isFullWidth: true,
+                                      onPressed: () {},
                                     ),
-                                    icon: const DarbIcon(DarbIconType.phone, size: 16, color: AppTheme.primaryEmerald),
-                                    label: const Text('اتصال', style: TextStyle()),
-                                    onPressed: () {},
                                   ),
                                 ],
                               ),
@@ -201,26 +218,41 @@ class _PlacesScreenState extends State<PlacesScreen> {
 
   Widget _buildCatChip(String key, String label, DarbIconType? icon) {
     final isSelected = _selectedCategory == key;
-    return ChoiceChip(
-      avatar: icon != null
-          ? DarbIcon(
-              icon,
-              size: 15,
-              color: isSelected ? Colors.white : AppTheme.primaryEmerald,
-            )
-          : null,
-      label: Text(
-        label,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? Colors.white : null,
+    return GestureDetector(
+      onTap: () {
+        setState(() => _selectedCategory = key);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.md, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? DarbColors.primaryEmerald : DarbColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? DarbColors.primaryEmerald : DarbColors.border.withOpacity(0.5),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              DarbIcon(
+                icon,
+                size: 16,
+                color: isSelected ? DarbColors.textInversePrimary : DarbColors.primaryEmerald,
+              ),
+              const SizedBox(width: DarbSpacing.xs),
+            ],
+            Text(
+              label,
+              style: DarbTypography.bodyMedium.copyWith(
+                color: isSelected ? DarbColors.textInversePrimary : DarbColors.textPrimary,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
-      selected: isSelected,
-      selectedColor: AppTheme.primaryEmerald,
-      onSelected: (selected) {
-        if (selected) setState(() => _selectedCategory = key);
-      },
     );
   }
 }

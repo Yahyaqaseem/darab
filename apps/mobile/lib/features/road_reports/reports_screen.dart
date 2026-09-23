@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/darb_icons.dart';
+import '../../shared_widgets/darb_card.dart';
+import '../../shared_widgets/darb_button.dart';
 import 'report_dialog.dart';
 
 class ReportsScreen extends StatelessWidget {
@@ -14,23 +17,22 @@ class ReportsScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('بلاغات الطريق الحية'),
+        backgroundColor: Colors.transparent,
+        title: Text('بلاغات الطريق الحية', style: DarbTypography.title),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const DarbIcon(DarbIconType.refresh, size: 24, color: DarbColors.primaryEmerald),
             onPressed: () => appState.loadNearbyData(),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppTheme.alertRed,
+        backgroundColor: DarbColors.dangerRed,
         foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_alert_rounded),
-        label: const Text(
-          'إبلاغ جديد',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        icon: const DarbIcon(DarbIconType.danger, color: Colors.white, size: 20),
+        label: Text('إبلاغ جديد', style: DarbTypography.section.copyWith(color: Colors.white)),
         onPressed: () => ReportDialog.show(context),
       ),
       body: reports.isEmpty
@@ -38,101 +40,80 @@ class ReportsScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_outline, size: 64, color: AppTheme.successGreen.withOpacity(0.6)),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'الطرق سالكة ولا توجد بلاغات حالياً',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
+                  DarbIcon(DarbIconType.verified, size: 64, color: DarbColors.successGreen.withOpacity(0.6)),
+                  const SizedBox(height: DarbSpacing.md),
+                  Text('الطرق سالكة ولا توجد بلاغات حالياً', style: DarbTypography.section),
+                  const SizedBox(height: DarbSpacing.xs),
                   Text(
                     'كن أول من يبلغ إذا صادفك أي عائق أو ازدحام',
-                    style: TextStyle(
-                      color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
-                      
-                    ),
+                    style: DarbTypography.body.copyWith(color: DarbColors.textSecondary),
                   ),
                 ],
               ),
             )
           : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.sm),
               itemCount: reports.length,
               itemBuilder: (ctx, idx) {
                 final r = reports[idx];
                 final remainingMins = r.expiresAt.difference(DateTime.now()).inMinutes;
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 14),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
+                // Simple icon mapping since we lack the old material icon
+                DarbIconType rIcon = DarbIconType.danger;
+                if (r.type.contains('ACCIDENT')) rIcon = DarbIconType.accident;
+                if (r.type.contains('TRAFFIC')) rIcon = DarbIconType.traffic;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: DarbSpacing.md),
+                  child: DarbCard(
+                    padding: const EdgeInsets.all(DarbSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(DarbSpacing.sm),
                               decoration: BoxDecoration(
                                 color: r.color.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Icon(r.icon, color: r.color, size: 24),
+                              child: DarbIcon(rIcon, color: r.color, size: 24),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: DarbSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    r.title,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      
-                                    ),
-                                  ),
+                                  Text(r.title, style: DarbTypography.section),
                                   const SizedBox(height: 2),
-                                  Text(
-                                    r.roadName,
-                                    style: TextStyle(
-                                      color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
-                                      fontSize: 13,
-                                      
-                                    ),
-                                  ),
+                                  Text(r.roadName, style: DarbTypography.caption),
                                 ],
                               ),
                             ),
                             if (r.distanceMeters != null) ...[
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.sm, vertical: DarbSpacing.xs),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                                  color: DarbColors.surface,
                                   borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: DarbColors.border.withOpacity(0.3)),
                                 ),
                                 child: Text(
-                                  '${(r.distanceMeters! / 1000).toStringAsFixed(1)} كم',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                  ' كم',
+                                  style: DarbTypography.label.copyWith(color: DarbColors.textPrimary),
                                 ),
                               ),
                             ],
                           ],
                         ),
                         if (r.description.isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          Text(
-                            r.description,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: isDark ? AppTheme.textLightPrimary : AppTheme.textDarkPrimary,
-                              
-                            ),
-                          ),
+                          const SizedBox(height: DarbSpacing.sm),
+                          Text(r.description, style: DarbTypography.body),
                         ],
-                        const SizedBox(height: 12),
-                        const Divider(height: 1),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: DarbSpacing.md),
+                        const Divider(height: 1, color: DarbColors.border),
+                        const SizedBox(height: DarbSpacing.md),
 
                         // Stats & Confidence
                         Row(
@@ -140,61 +121,49 @@ class ReportsScreen extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.people_alt_outlined, size: 18, color: AppTheme.primaryEmerald),
-                                const SizedBox(width: 6),
+                                const DarbIcon(DarbIconType.verified, size: 16, color: DarbColors.primaryEmerald),
+                                const SizedBox(width: DarbSpacing.xs),
                                 Text(
-                                  '${r.confirmationsCount} سواق أكدوا',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                    color: AppTheme.primaryEmerald,
-                                    
-                                  ),
+                                  ' سواق أكدوا',
+                                  style: DarbTypography.label.copyWith(color: DarbColors.primaryEmerald),
                                 ),
                               ],
                             ),
                             Row(
                               children: [
-                                const Icon(Icons.timer_outlined, size: 16, color: Colors.grey),
-                                const SizedBox(width: 4),
+                                const DarbIcon(DarbIconType.info, size: 14, color: DarbColors.textSecondary),
+                                const SizedBox(width: DarbSpacing.xs),
                                 Text(
-                                  remainingMins > 0 ? 'ينتهي بعد $remainingMins د' : 'أوشك على الانتهاء',
-                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  remainingMins > 0 ? 'ينتهي بعد  د' : 'أوشك على الانتهاء',
+                                  style: DarbTypography.caption,
                                 ),
                               ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: DarbSpacing.lg),
 
                         // Confirm / Reject Voting Bar
                         Row(
                           children: [
                             Expanded(
                               flex: 2,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primaryEmerald.withOpacity(0.12),
-                                  foregroundColor: AppTheme.primaryEmerald,
-                                  elevation: 0,
-                                  minimumSize: const Size(0, 42),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                ),
-                                icon: const Icon(Icons.check_circle_outline, size: 18),
-                                label: const Text('تأكيد البلاغ', style: TextStyle( fontWeight: FontWeight.bold)),
+                              child: DarbButton(
+                                text: 'تأكيد البلاغ',
+                                icon: DarbIconType.verified,
+                                size: DarbButtonSize.small,
+                                isFullWidth: true,
                                 onPressed: () => appState.confirmReport(r.id, 'CONFIRM'),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: DarbSpacing.sm),
                             Expanded(
-                              child: OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppTheme.alertRed,
-                                  side: BorderSide(color: AppTheme.alertRed.withOpacity(0.4)),
-                                  minimumSize: const Size(0, 42),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                ),
-                                child: const Text('غير موجود', style: TextStyle( fontSize: 12)),
+                              flex: 1,
+                              child: DarbButton(
+                                text: 'غير موجود',
+                                variant: DarbButtonVariant.danger,
+                                size: DarbButtonSize.small,
+                                isFullWidth: true,
                                 onPressed: () => appState.confirmReport(r.id, 'NOT_THERE_ANYMORE'),
                               ),
                             ),

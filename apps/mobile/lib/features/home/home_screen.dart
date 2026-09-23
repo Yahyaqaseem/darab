@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -18,6 +19,9 @@ import '../../core/theme/darb_vector_theme.dart';
 import '../../core/services/darb_tile_cache.dart';
 import '../../core/theme/darb_icons.dart';
 import '../../shared_widgets/darb_location_marker.dart';
+import '../../shared_widgets/darb_optimized_marker_layer.dart';
+import '../../shared_widgets/darb_bottom_nav.dart';
+import '../road_reports/reports_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final MapController _mapController = MapController();
   bool _isMapReady = false;
   Style? _vectorStyle;
-  double _currentZoom = 15.0;
+  Timer? _resumePrefetchTimer;
 
   final List<Map<String, dynamic>> _recentPlaces = [
     {'name': 'مستشفى رزكاري', 'nameEn': 'Rizgary Hospital', 'subtitle': 'هەولێر - Erbil', 'lat': 36.1780, 'lng': 44.0250},
@@ -65,6 +69,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         appState.loadNearbyData();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _resumePrefetchTimer?.cancel();
+    super.dispose();
   }
 
   void _animatedMapMove(LatLng destLocation, double destZoom) {
@@ -307,14 +317,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               onPositionChanged: (pos, hasGesture) {
                 if (hasGesture) {
+                  _resumePrefetchTimer?.cancel();
                   DarbTilePrefetcher.pausePrefetch();
                 } else if (DarbTilePrefetcher.isPrefetchPaused) {
-                  Future.delayed(const Duration(milliseconds: 500), () {
+                  _resumePrefetchTimer?.cancel();
+                  _resumePrefetchTimer = Timer(const Duration(milliseconds: 600), () {
                     DarbTilePrefetcher.resumePrefetch();
                   });
-                }
-                if (pos.zoom != null && (pos.zoom! - _currentZoom).abs() > 0.5) {
-                  setState(() => _currentZoom = pos.zoom!);
                 }
               },
               onMapReady: () {
@@ -328,11 +337,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     theme: _vectorStyle!.theme,
                     sprites: _vectorStyle!.sprites,
                     tileProviders: _vectorStyle!.providers,
-                    layerMode: VectorTileLayerMode.vector,
+                    layerMode: VectorTileLayerMode.raster,
                     memoryTileCacheMaxSize: 128 * 1024 * 1024,
-                    memoryTileDataCacheMaxSize: 500,
+                    memoryTileDataCacheMaxSize: 80,
                     fileCacheMaximumSizeInBytes: 256 * 1024 * 1024,
                     maximumTileSubstitutionDifference: 3,
+                    maximumZoom: 18.0,
                     textCacheMaxSize: 1000,
                     concurrency: 4,
                     cacheFolder: DarbCachingTileProvider.getCacheDirectory,
@@ -358,79 +368,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         : null,
                   ),
                 ),
-              // Static & POI Marker Layer
-              Consumer<AppState>(
-                builder: (context, state, _) {
-                  return MarkerLayer(
-                    markers: [
-                      // Road Reports / Incidents with intelligent zoom-density filtering
-                      ...state.reports
-                          .where((r) => _currentZoom >= 12.0 || r.type == 'ACCIDENT' || r.type == 'CLOSURE')
-                          .map((r) => Marker(
-                            point: LatLng(r.latitude, r.longitude),
-                            width: 38,
-                            height: 44,
-                            alignment: Alignment.topCenter,
-                            child: DarbReportMarker(report: r, size: 36),
-                          )),
-                      // Fuel Stations (Zoom-Adaptive: icon at distance, price pill at close zoom)
-                      if (_currentZoom >= 12.5)
-                        ...state.fuelStations.map((s) => Marker(
-                          point: LatLng(s.latitude, s.longitude),
-                          width: _currentZoom >= 14.5 ? 90 : 36,
-                          height: 36,
-                          alignment: Alignment.center,
-                          child: DarbFuelMarker(
-                            station: s,
-                            currentZoom: _currentZoom,
-                            onTap: () => _openScreenSheet(const FuelScreen(), isDark),
-                          ),
-                        )),
-                      // Verified Community Drivers Presence
-                      const Marker(
-                        point: LatLng(36.2015, 44.0040),
-                        width: 28,
-                        height: 28,
-                        alignment: Alignment.center,
-                        child: DarbPOIMarker(type: DarbIconType.myLocation, label: '', color: DarbIconColors.emerald),
-                      ),
-                      const Marker(
-                        point: LatLng(36.1850, 44.0210),
-                        width: 28,
-                        height: 28,
-                        alignment: Alignment.center,
-                        child: DarbPOIMarker(type: DarbIconType.myLocation, label: '', color: DarbIconColors.emerald),
-                      ),
-                      // Erbil Citadel Landmark Pin
-                      Marker(
-                        point: const LatLng(36.1911, 44.0094),
-                        width: 40,
-                        height: 48,
-                        alignment: Alignment.topCenter,
-                        child: DarbPOIMarker(
-                          type: DarbIconType.civic,
-                          label: 'قلعة أربيل',
-                          showLabel: _currentZoom >= 14.0,
-                          onTap: () => _navigateTo('قلعة أربيل', 36.1911, 44.0094),
-                        ),
-                      ),
-                      // Family Mall Pin
-                      Marker(
-                        point: const LatLng(36.2089, 44.0092),
-                        width: 40,
-                        height: 48,
-                        alignment: Alignment.topCenter,
-                        child: DarbPOIMarker(
-                          type: DarbIconType.store,
-                          label: 'فاميلي مول',
-                          color: DarbIconColors.checkpointBlue,
-                          showLabel: _currentZoom >= 14.0,
-                          onTap: () => _navigateTo('فاميلي مول', 36.2089, 44.0092),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+              // High-Performance Zoom-Adaptive & Viewport-Culled Marker Layer
+              DarbOptimizedMarkerLayer(
+                onOpenSheet: (screen, isDark) => _openScreenSheet(screen, isDark),
+                onNavigateTo: (name, lat, lng) => _navigateTo(name, lat, lng),
               ),
               // Real-Time GPS User Location Marker Layer (Isolated, ZERO full map rebuilds)
               ValueListenableBuilder<LatLng>(
@@ -520,7 +461,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           // LAYER 3: Re-center GPS Button (Bottom-Left)
           Positioned(
             left: 16,
-            bottom: 300,
+            bottom: 160,
             child: RepaintBoundary(
               child: DarbIconButton(
                 icon: DarbIconType.myLocation,
@@ -535,23 +476,86 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          // LAYER 4: Waze-Style Floating Bottom Sheet!
-          RepaintBoundary(
-            child: DraggableScrollableSheet(
-              initialChildSize: 0.35,
-              minChildSize: 0.16,
-              maxChildSize: 0.75,
-              builder: (context, scrollController) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF131D2E) : Colors.white,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.25),
-                      blurRadius: 16,
-                      offset: const Offset(0, -4),
-                    ),
+          // LAYER 4: Search Bar & Floating Bottom Nav
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Floating Search Bar & Quick Actions
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const DestinationSearchScreen()));
+                          },
+                          child: Container(
+                            height: 52,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: isDark ? DarbColors.surface : Colors.white,
+                              borderRadius: BorderRadius.circular(26),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.15),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                              border: Border.all(
+                                color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const DarbIcon(DarbIconType.search, color: DarbColors.textSecondary, size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    AppStrings.tr('where_to', lang),
+                                    style: DarbTypography.body.copyWith(
+                                      color: DarbColors.textSecondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 24,
+                                  color: DarbColors.border,
+                                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                                ),
+                                const Icon(Icons.mic_rounded, color: DarbColors.textSecondary, size: 22),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // Floating Bottom Nav
+                DarbBottomNav(
+                  currentIndex: 0,
+                  isDark: isDark,
+                  onTabSelected: (index) {
+                    if (index == 0) return; // Already on Map
+                    if (index == 1) _openScreenSheet(const ReportsScreen(), isDark);
+                    if (index == 2) _openScreenSheet(const FuelScreen(), isDark);
+                    if (index == 3) _openScreenSheet(const PlacesScreen(), isDark);
+                    if (index == 4) _openScreenSheet(const ProfileScreen(), isDark);
+                  },
+                ),
+              ],
+            ),
+          ),
                   ],
                 ),
                 child: ListView(

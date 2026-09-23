@@ -1,83 +1,123 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class AppTheme {
-  // Primary Palette
+class DarbSpacing {
+  static const double xs = 4.0;
+  static const double sm = 8.0;
+  static const double md = 12.0;
+  static const double lg = 16.0;
+  static const double xl = 20.0;
+  static const double xxl = 24.0;
+  static const double huge = 32.0;
+}
+
+class DarbColors {
+  // Brand
   static const Color primaryEmerald = Color(0xFF10B981);
   static const Color primaryEmeraldLight = Color(0xFF34D399);
   static const Color primaryEmeraldDark = Color(0xFF059669);
 
-  // Secondary Palette
-  static const Color secondarySand = Color(0xFFFDE68A);
-  static const Color secondarySandLight = Color(0xFFFEF3C7);
-  static const Color secondarySandDark = Color(0xFFB45309);
+  // Backgrounds & Surfaces (Dark Premium Base)
+  static const Color background = Color(0xFF0F172A);
+  static const Color surface = Color(0xFF1E293B);
+  static const Color card = Color(0xFF334155);
 
-  // Accents & Alerts
-  static const Color accentOrange = Color(0xFFF59E0B);
-  static const Color alertRed = Color(0xFFEF4444);
-  static const Color alertAmber = Color(0xFFF59E0B);
+  // Typography Colors
+  static const Color textPrimary = Color(0xFFF8FAFC);
+  static const Color textSecondary = Color(0xFF94A3B8);
+  static const Color textDisabled = Color(0xFF475569);
+  
+  // Inverse Typography
+  static const Color textInversePrimary = Color(0xFF0F172A);
+
+  // Status & Alerts
+  static const Color warningOrange = Color(0xFFF59E0B);
+  static const Color dangerRed = Color(0xFFEF4444);
   static const Color successGreen = Color(0xFF10B981);
   static const Color infoBlue = Color(0xFF3B82F6);
 
-  // Backgrounds & Surfaces
-  static const Color darkBackground = Color(0xFF0F172A);
-  static const Color darkCharcoal = Color(0xFF0F172A);
-  static const Color darkCard = Color(0xFF1E293B);
-  static const Color darkSurface = Color(0xFF334155);
+  // Utility
+  static const Color border = Color(0xFF475569);
+  static const Color divider = Color(0xFF1E293B);
+  static const Color overlay = Color(0x800F172A);
+}
 
-  static const Color lightBackground = Color(0xFFF8FAFC);
-  static const Color lightOffWhite = Color(0xFFF8FAFC);
-  static const Color lightCard = Color(0xFFFFFFFF);
-  static const Color lightSurface = Color(0xFFF1F5F9);
+class DarbTypography {
+  static final TextStyle _baseCairo = GoogleFonts.cairo();
 
-  // Text Colors
-  static const Color textDarkPrimary = Color(0xFF0F172A);
-  static const Color textDarkSecondary = Color(0xFF64748B);
-  static const Color textLightPrimary = Color(0xFFF8FAFC);
-  static const Color textLightSecondary = Color(0xFF94A3B8);
+  static TextStyle get display => _baseCairo.copyWith(
+    fontSize: 28,
+    fontWeight: FontWeight.w700,
+    color: DarbColors.textPrimary,
+  );
 
-  static ThemeData get lightTheme {
-    return ThemeData(
-      brightness: Brightness.light,
-      primaryColor: primaryEmerald,
-      scaffoldBackgroundColor: lightBackground,
-       // Assuming Cairo is loaded in pubspec
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: IconThemeData(color: darkBackground),
-        titleTextStyle: TextStyle(color: darkBackground, fontSize: 18, fontWeight: FontWeight.bold),
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
-      ),
-      colorScheme: ColorScheme.light(
-        primary: primaryEmerald,
-        secondary: accentOrange,
-        surface: lightCard,
-        background: lightBackground,
-      ),
-    );
-  }
+  static TextStyle get title => _baseCairo.copyWith(
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
+    color: DarbColors.textPrimary,
+  );
+
+  static TextStyle get section => _baseCairo.copyWith(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: DarbColors.textPrimary,
+  );
+
+  static TextStyle get body => _baseCairo.copyWith(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: DarbColors.textPrimary,
+  );
+
+  static TextStyle get caption => _baseCairo.copyWith(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: DarbColors.textSecondary,
+  );
+
+  static TextStyle get numeric => GoogleFonts.inter(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: DarbColors.textPrimary,
+  );
+}
+
+class AppTheme {
+  // Maintaining for backward compatibility until full refactor is done
+  static const Color primaryEmerald = DarbColors.primaryEmerald;
+  static const Color accentOrange = DarbColors.warningOrange;
+  static const Color darkBackground = DarbColors.background;
 
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
-      primaryColor: primaryEmerald,
-      scaffoldBackgroundColor: darkBackground,
+      primaryColor: DarbColors.primaryEmerald,
+      scaffoldBackgroundColor: DarbColors.background,
+      fontFamily: GoogleFonts.cairo().fontFamily,
       
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        iconTheme: IconThemeData(color: Colors.white),
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        iconTheme: const IconThemeData(color: DarbColors.textPrimary),
+        titleTextStyle: DarbTypography.title,
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
-      colorScheme: ColorScheme.dark(
-        primary: primaryEmerald,
-        secondary: accentOrange,
-        surface: darkCard,
-        background: darkBackground,
+      colorScheme: const ColorScheme.dark(
+        primary: DarbColors.primaryEmerald,
+        secondary: DarbColors.warningOrange,
+        surface: DarbColors.surface,
+        background: DarbColors.background,
+        error: DarbColors.dangerRed,
+      ),
+      textTheme: TextTheme(
+        displayLarge: DarbTypography.display,
+        titleLarge: DarbTypography.title,
+        titleMedium: DarbTypography.section,
+        bodyLarge: DarbTypography.body,
+        bodyMedium: DarbTypography.body,
+        bodySmall: DarbTypography.caption,
       ),
     );
   }

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/darb_icons.dart';
+import '../../shared_widgets/darb_card.dart';
+import '../../shared_widgets/darb_switch.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -9,149 +12,120 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('حسابي والسمعة', style: TextStyle()),
-        actions: [
-          IconButton(
-            icon: Icon(appState.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
-            onPressed: () => appState.toggleTheme(),
-          ),
-        ],
+        title: Text('حسابي والسمعة', style: DarbTypography.title),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Driver Profile Card
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkCard : Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 16, offset: const Offset(0, 6)),
-                ],
-              ),
+            DarbCard(
+              padding: const EdgeInsets.all(DarbSpacing.xxl),
               child: Column(
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundColor: AppTheme.primaryEmerald.withOpacity(0.15),
-                    child: const Icon(Icons.person_pin_rounded, size: 52, color: AppTheme.primaryEmerald),
+                    backgroundColor: DarbColors.primaryEmerald.withOpacity(0.15),
+                    child: const DarbIcon(DarbIconType.profile, size: 48, color: DarbColors.primaryEmerald),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: DarbSpacing.md),
                   Text(
                     appState.driverUsername,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: DarbTypography.title,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: DarbSpacing.xs),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.md, vertical: DarbSpacing.xs),
                     decoration: BoxDecoration(
-                      color: AppTheme.secondarySand.withOpacity(0.25),
+                      color: DarbColors.textSecondary.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.shield_rounded, color: AppTheme.secondarySandDark, size: 16),
-                        SizedBox(width: 6),
+                        const DarbIcon(DarbIconType.verified, color: DarbColors.textSecondary, size: 16),
+                        const SizedBox(width: DarbSpacing.xs),
                         Text(
                           'مستخدم جديد',
-                          style: TextStyle(
-                            color: AppTheme.secondarySandDark,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            
-                          ),
+                          style: DarbTypography.label.copyWith(color: DarbColors.textSecondary),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: DarbSpacing.xl),
 
                   // Points and Stats
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatColumn('نقاط السمعة', '${appState.reputationScore}', AppTheme.primaryEmerald),
-                      _buildStatColumn('البلاغات المؤكدة', '0', AppTheme.accentOrange),
-                      _buildStatColumn('إجابات مفيدة', '0', Colors.blue),
+                      _buildStatColumn('نقاط السمعة', '', DarbColors.primaryEmerald),
+                      _buildStatColumn('البلاغات المؤكدة', '0', DarbColors.warningOrange),
+                      _buildStatColumn('إجابات مفيدة', '0', DarbColors.infoBlue),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: DarbSpacing.xl),
 
             // Badges Section
-            const Text(
-              'الأوسمة المكتسبة',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Center(child: Text('لا توجد أوسمة بعد', style: TextStyle( color: Colors.grey))),
-            const SizedBox(height: 24),
-
-            // Garage (Vehicles) Section
-            const Text(
-              'مرآب سياراتي',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Center(child: Text('لا توجد مركبات مضافة', style: TextStyle( color: Colors.grey))),
-            const SizedBox(height: 24),
+            Text('الأوسمة المكتسبة', style: DarbTypography.section),
+            const SizedBox(height: DarbSpacing.md),
+            Center(child: Text('لا توجد أوسمة بعد', style: DarbTypography.caption)),
+            const SizedBox(height: DarbSpacing.xxl),
 
             // Settings & Preferences
-            const Text(
-              'الإعدادات والخصوصية',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkCard : Colors.white,
-                borderRadius: BorderRadius.circular(18),
-              ),
+            Text('الإعدادات والخصوصية', style: DarbTypography.section),
+            const SizedBox(height: DarbSpacing.md),
+            DarbCard(
+              padding: EdgeInsets.zero,
               child: Column(
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.language_rounded),
-                    title: const Text('لغة التطبيق', style: TextStyle()),
-                    trailing: Text(
-                      appState.currentLanguage == 'ar' ? 'العربية' :
-                      (appState.currentLanguage == 'ku' ? 'کوردی' : 'English'),
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryEmerald),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.xs),
+                    leading: const DarbIcon(DarbIconType.info, color: DarbColors.textPrimary), // Placeholder for globe/language
+                    title: Text('لغة التطبيق', style: DarbTypography.bodyMedium),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          appState.currentLanguage == 'ar' ? 'العربية' :
+                          (appState.currentLanguage == 'ku' ? 'کوردی' : 'English'),
+                          style: DarbTypography.bodyMedium.copyWith(color: DarbColors.primaryEmerald),
+                        ),
+                        const SizedBox(width: DarbSpacing.sm),
+                        const DarbIcon(DarbIconType.chevronLeft, size: 14, color: DarbColors.textSecondary),
+                      ],
                     ),
                     onTap: () {
                       showModalBottomSheet(
                         context: context,
                         backgroundColor: Colors.transparent,
                         builder: (ctx) => Container(
-                          decoration: BoxDecoration(
-                            color: isDark ? AppTheme.darkCard : Colors.white,
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                          decoration: const BoxDecoration(
+                            color: DarbColors.surface,
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                           ),
                           child: SafeArea(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Padding(
-                                  padding: EdgeInsets.all(16.0),
-                                  child: Text('اختر اللغة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                Padding(
+                                  padding: const EdgeInsets.all(DarbSpacing.lg),
+                                  child: Text('اختر اللغة', style: DarbTypography.title),
                                 ),
                                 _buildLanguageOption(context, 'العربية', 'ar', appState),
-                                const Divider(height: 1),
+                                const Divider(height: 1, color: DarbColors.border),
                                 _buildLanguageOption(context, 'کوردی (Kurdish)', 'ku', appState),
-                                const Divider(height: 1),
+                                const Divider(height: 1, color: DarbColors.border),
                                 _buildLanguageOption(context, 'English', 'en', appState),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: DarbSpacing.lg),
                               ],
                             ),
                           ),
@@ -159,11 +133,24 @@ class ProfileScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.volume_up_rounded),
-                    title: const Text('التوجيه الصوتي أثناء القيادة', style: TextStyle()),
-                    trailing: Switch(value: true, activeColor: AppTheme.primaryEmerald, onChanged: (_) {}),
+                  const Divider(height: 1, color: DarbColors.border),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg),
+                    child: DarbSwitch(
+                      label: 'التوجيه الصوتي أثناء القيادة',
+                      subtitle: 'سيتم تنبيهك صوتياً بالمنعطفات',
+                      value: true,
+                      onChanged: (_) {},
+                    ),
+                  ),
+                  const Divider(height: 1, color: DarbColors.border),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg),
+                    child: DarbSwitch(
+                      label: 'الوضع الليلي (Dark Mode)',
+                      value: appState.isDarkMode,
+                      onChanged: (_) => appState.toggleTheme(),
+                    ),
                   ),
                 ],
               ),
@@ -177,9 +164,12 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildStatColumn(String label, String value, Color color) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color)),
-        const SizedBox(height: 2),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(
+          value,
+          style: DarbTypography.numeric.copyWith(fontSize: 24, color: color),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: DarbTypography.caption),
       ],
     );
   }
@@ -187,12 +177,10 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildLanguageOption(BuildContext context, String label, String code, AppState appState) {
     final isSelected = appState.currentLanguage == code;
     return ListTile(
-      title: Text(label, textAlign: TextAlign.center, style: TextStyle(
-        fontSize: 18,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        color: isSelected ? AppTheme.primaryEmerald : null,
+      title: Text(label, textAlign: TextAlign.center, style: DarbTypography.section.copyWith(
+        color: isSelected ? DarbColors.primaryEmerald : DarbColors.textPrimary,
       )),
-      trailing: isSelected ? const Icon(Icons.check_circle, color: AppTheme.primaryEmerald) : null,
+      trailing: isSelected ? const DarbIcon(DarbIconType.verified, color: DarbColors.primaryEmerald) : null,
       onTap: () {
         appState.setLanguage(code);
         Navigator.pop(context);

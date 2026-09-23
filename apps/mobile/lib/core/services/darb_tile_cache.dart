@@ -68,7 +68,7 @@ class DarbCachingTileProvider extends VectorTileProvider {
 
   @override
   Future<Uint8List> provide(TileIdentity tile) async {
-    final key = "${tile.z}_${tile.x}_${tile.y}";
+    final key = '${tile.z}_${tile.x}_${tile.y}';
 
     // 1. TIER 1: Check In-Memory RAM Cache (Instant 0ms)
     final mem = _l1Cache[key];
@@ -77,19 +77,17 @@ class DarbCachingTileProvider extends VectorTileProvider {
       return mem;
     }
 
-    // 2. TIER 2: Check Persistent Disk Cache (Fast 1-2ms)
-    final dir = await getCacheDirectory();
-    final file = File("${dir.path}/$key.pbf");
-    if (await file.exists()) {
-      try {
-        final bytes = await file.readAsBytes();
-        if (bytes.isNotEmpty) {
-          _putL1(key, bytes);
-          return bytes;
-        }
-      } catch (e) {
-        debugPrint("[DarbTileCache] Disk read error for $key: $e");
+    // 2. TIER 2: Check Persistent Disk Cache (Fast direct read without extra exists syscall)
+    final dir = _diskCacheDir ?? await getCacheDirectory();
+    final file = File('${dir.path}/$key.pbf');
+    try {
+      final bytes = await file.readAsBytes();
+      if (bytes.isNotEmpty) {
+        _putL1(key, bytes);
+        return bytes;
       }
+    } catch (_) {
+      // File does not exist on disk yet, proceed to network
     }
 
     // 3. TIER 3: Check In-Flight Deduplication (Reuse pending network request)

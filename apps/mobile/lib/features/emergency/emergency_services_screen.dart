@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/darb_icons.dart';
-import '../../shared_widgets/driver_safe_button.dart';
+import '../../shared_widgets/darb_card.dart';
+import '../../shared_widgets/darb_button.dart';
 
 class EmergencyServicesScreen extends StatefulWidget {
   const EmergencyServicesScreen({super.key});
@@ -62,7 +63,7 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
   ];
 
   Future<void> _makeCall(String phone) async {
-    final uri = Uri.parse('tel:$phone');
+    final uri = Uri.parse('tel:');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
@@ -77,24 +78,24 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('أحتاج مساعدة / خدمات السيارات'),
+        title: Text('أحتاج مساعدة', style: DarbTypography.title),
       ),
       body: Column(
         children: [
           // Filter Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.sm),
             child: Row(
               children: [
                 _buildFilterChip('all', 'الكل', null),
-                const SizedBox(width: 8),
+                const SizedBox(width: DarbSpacing.sm),
                 _buildFilterChip('towing', 'سطحة وإنقاذ', DarbIconType.brokenCar),
-                const SizedBox(width: 8),
+                const SizedBox(width: DarbSpacing.sm),
                 _buildFilterChip('tire', 'بنجرجي متنقل', DarbIconType.tireRepair),
-                const SizedBox(width: 8),
+                const SizedBox(width: DarbSpacing.sm),
                 _buildFilterChip('battery', 'بطارية وكهرباء', DarbIconType.battery),
-                const SizedBox(width: 8),
+                const SizedBox(width: DarbSpacing.sm),
                 _buildFilterChip('mechanic', 'ميكانيكي سيارات', DarbIconType.workshop),
               ],
             ),
@@ -102,93 +103,92 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
 
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.sm),
               itemCount: filtered.length,
               itemBuilder: (ctx, idx) {
                 final p = filtered[idx];
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 14),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: DarbSpacing.md),
+                  child: DarbCard(
+                    padding: const EdgeInsets.all(DarbSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(DarbSpacing.sm),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryEmerald.withOpacity(0.12),
+                                color: DarbColors.primaryEmerald.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: DarbIcon(_getProviderIcon(p['type'] as String), color: AppTheme.primaryEmerald, size: 24),
+                              child: DarbIcon(_getProviderIcon(p['type'] as String), color: DarbColors.primaryEmerald, size: 24),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: DarbSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     p['name'],
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                    style: DarbTypography.section,
                                   ),
+                                  const SizedBox(height: 2),
                                   Text(
                                     p['typeLabel'],
-                                    style: TextStyle(
-                                      color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
-                                      fontSize: 13,
-                                      
-                                    ),
+                                    style: DarbTypography.caption,
                                   ),
                                 ],
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.sm, vertical: DarbSpacing.xs),
                               decoration: BoxDecoration(
-                                color: AppTheme.secondarySand.withOpacity(0.2),
+                                color: DarbColors.surface,
                                 borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: DarbColors.border.withOpacity(0.3)),
                               ),
                               child: Text(
-                                '${p['distanceKm']} كم',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                ' كم',
+                                style: DarbTypography.label.copyWith(color: DarbColors.textPrimary),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: DarbSpacing.md),
                         Row(
                           children: [
-                            const Icon(Icons.place_outlined, size: 16, color: Colors.grey),
+                            const DarbIcon(DarbIconType.info, size: 14, color: DarbColors.textSecondary),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 p['coverage'],
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                style: DarbTypography.caption,
                               ),
                             ),
                             if (p['isAvailable24'])
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.sm, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.successGreen.withOpacity(0.15),
+                                  color: DarbColors.successGreen.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'طوارئ 24/7',
-                                  style: TextStyle(color: AppTheme.successGreen, fontSize: 11, fontWeight: FontWeight.bold),
+                                  style: DarbTypography.label.copyWith(color: DarbColors.successGreen),
                                 ),
                               ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: DarbSpacing.lg),
 
                         // Large Call Button
-                        DriverSafeButton(
-                          label: 'اتصال فوري: ${p['phone']}',
-                          icon: Icons.phone_in_talk_rounded,
-                          height: 48,
+                        DarbButton(
+                          text: 'اتصال فوري: ',
+                          icon: DarbIconType.phone,
+                          size: DarbButtonSize.large,
+                          isFullWidth: true,
                           onPressed: () => _makeCall(p['phone']),
                         ),
                       ],
@@ -219,26 +219,41 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
 
   Widget _buildFilterChip(String key, String label, DarbIconType? icon) {
     final isSelected = _selectedCategory == key;
-    return ChoiceChip(
-      avatar: icon != null
-          ? DarbIcon(
-              icon,
-              size: 15,
-              color: isSelected ? Colors.white : AppTheme.primaryEmerald,
-            )
-          : null,
-      label: Text(
-        label,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? Colors.white : null,
+    return GestureDetector(
+      onTap: () {
+        setState(() => _selectedCategory = key);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.md, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? DarbColors.primaryEmerald : DarbColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? DarbColors.primaryEmerald : DarbColors.border.withOpacity(0.5),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              DarbIcon(
+                icon,
+                size: 16,
+                color: isSelected ? DarbColors.textInversePrimary : DarbColors.primaryEmerald,
+              ),
+              const SizedBox(width: DarbSpacing.xs),
+            ],
+            Text(
+              label,
+              style: DarbTypography.bodyMedium.copyWith(
+                color: isSelected ? DarbColors.textInversePrimary : DarbColors.textPrimary,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
-      selected: isSelected,
-      selectedColor: AppTheme.primaryEmerald,
-      onSelected: (selected) {
-        if (selected) setState(() => _selectedCategory = key);
-      },
     );
   }
 }

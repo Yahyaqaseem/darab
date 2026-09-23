@@ -61,6 +61,23 @@ enum DarbIconType {
   roadCall,
   quickReport,
   sos,
+
+  // System UI Icons
+  chevronRight,
+  chevronLeft,
+  chevronUp,
+  chevronDown,
+  star,
+  starFilled,
+  verified,
+  refresh,
+  filter,
+  sort,
+  history,
+  edit,
+  delete,
+  info,
+  warning,
 }
 
 /// Standardized DARB Icon Sizing System
@@ -678,6 +695,81 @@ class _DarbIconPainter extends CustomPainter {
           ..lineTo(12 * s, 12.5 * s)
           ..close();
         canvas.drawPath(bolt, paintStroke);
+        break;
+
+
+      // --- SYSTEM UI ICONS ---
+      case DarbIconType.chevronRight:
+        canvas.drawPath(Path()..moveTo(10*s, 6*s)..lineTo(16*s, 12*s)..lineTo(10*s, 18*s), paintStroke);
+        break;
+      case DarbIconType.chevronLeft:
+        canvas.drawPath(Path()..moveTo(14*s, 6*s)..lineTo(8*s, 12*s)..lineTo(14*s, 18*s), paintStroke);
+        break;
+      case DarbIconType.chevronUp:
+        canvas.drawPath(Path()..moveTo(6*s, 14*s)..lineTo(12*s, 8*s)..lineTo(18*s, 14*s), paintStroke);
+        break;
+      case DarbIconType.chevronDown:
+        canvas.drawPath(Path()..moveTo(6*s, 10*s)..lineTo(12*s, 16*s)..lineTo(18*s, 10*s), paintStroke);
+        break;
+      case DarbIconType.star:
+      case DarbIconType.starFilled:
+        final starPath = Path();
+        for (int i = 0; i < 10; i++) {
+          final radius = i.isEven ? 8.0 * s : 3.5 * s;
+          final angle = (i * math.pi / 5) - math.pi / 2;
+          final point = Offset(12 * s + radius * math.cos(angle), 12 * s + radius * math.sin(angle));
+          if (i == 0) starPath.moveTo(point.dx, point.dy);
+          else starPath.lineTo(point.dx, point.dy);
+        }
+        starPath.close();
+        if (type == DarbIconType.starFilled) {
+          canvas.drawPath(starPath, paintFill);
+        } else {
+          canvas.drawPath(starPath, paintStroke);
+        }
+        break;
+      case DarbIconType.verified:
+        canvas.drawCircle(Offset(12*s, 12*s), 8.5*s, paintFill);
+        canvas.drawPath(Path()..moveTo(8*s, 12*s)..lineTo(11*s, 15*s)..lineTo(16*s, 9*s), Paint()..color = (color.computeLuminance() > 0.5 ? Color(0xFF0F172A) : Colors.white)..style = PaintingStyle.stroke..strokeWidth = strokeWidth * s..strokeCap = StrokeCap.round..strokeJoin = StrokeJoin.round);
+        break;
+      case DarbIconType.refresh:
+        canvas.drawArc(Rect.fromCircle(center: Offset(12*s, 12*s), radius: 6.5*s), -math.pi/4, math.pi*1.5, false, paintStroke);
+        canvas.drawPath(Path()..moveTo(16*s, 5*s)..lineTo(16.5*s, 7.5*s)..lineTo(19*s, 7*s), paintStroke);
+        break;
+      case DarbIconType.filter:
+        canvas.drawPath(Path()..moveTo(4*s, 6*s)..lineTo(20*s, 6*s)..lineTo(14*s, 13*s)..lineTo(14*s, 19*s)..lineTo(10*s, 17*s)..lineTo(10*s, 13*s)..close(), paintStroke);
+        break;
+      case DarbIconType.sort:
+        canvas.drawLine(Offset(6*s, 8*s), Offset(18*s, 8*s), paintStroke);
+        canvas.drawLine(Offset(6*s, 12*s), Offset(14*s, 12*s), paintStroke);
+        canvas.drawLine(Offset(6*s, 16*s), Offset(10*s, 16*s), paintStroke);
+        break;
+      case DarbIconType.history:
+        canvas.drawCircle(Offset(12*s, 12*s), 7.5*s, paintStroke);
+        canvas.drawLine(Offset(12*s, 8*s), Offset(12*s, 12*s), paintStroke);
+        canvas.drawLine(Offset(12*s, 12*s), Offset(15*s, 12*s), paintStroke);
+        break;
+      case DarbIconType.edit:
+        final editPath = Path()..moveTo(16*s, 4*s)..lineTo(20*s, 8*s)..lineTo(9*s, 19*s)..lineTo(4*s, 20*s)..lineTo(5*s, 15*s)..close();
+        canvas.drawPath(editPath, paintStroke);
+        break;
+      case DarbIconType.delete:
+        canvas.drawPath(Path()..moveTo(5*s, 6*s)..lineTo(19*s, 6*s), paintStroke);
+        canvas.drawPath(Path()..moveTo(10*s, 4*s)..lineTo(14*s, 4*s), paintStroke);
+        canvas.drawPath(Path()..moveTo(7*s, 6*s)..lineTo(8*s, 19*s)..lineTo(16*s, 19*s)..lineTo(17*s, 6*s), paintStroke);
+        canvas.drawLine(Offset(10*s, 9*s), Offset(10*s, 16*s), paintStroke);
+        canvas.drawLine(Offset(14*s, 9*s), Offset(14*s, 16*s), paintStroke);
+        break;
+      case DarbIconType.info:
+        canvas.drawCircle(Offset(12*s, 12*s), 8.5*s, paintStroke);
+        canvas.drawLine(Offset(12*s, 8*s), Offset(12*s, 9*s), paintStroke);
+        canvas.drawLine(Offset(12*s, 11.5*s), Offset(12*s, 16*s), paintStroke);
+        break;
+      case DarbIconType.warning:
+        final warnPath = Path()..moveTo(12*s, 4*s)..lineTo(21*s, 19*s)..lineTo(3*s, 19*s)..close();
+        canvas.drawPath(warnPath, paintStroke);
+        canvas.drawLine(Offset(12*s, 9*s), Offset(12*s, 14*s), paintStroke);
+        canvas.drawCircle(Offset(12*s, 16.5*s), 1*s, paintFill);
         break;
 
       default:

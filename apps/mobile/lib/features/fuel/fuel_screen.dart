@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/darb_icons.dart';
+import '../../shared_widgets/darb_card.dart';
+import '../../shared_widgets/darb_button.dart';
 import 'update_fuel_sheet.dart';
 import '../navigation/navigation_screen.dart';
 
@@ -28,16 +31,15 @@ class _FuelScreenState extends State<FuelScreen> {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     final stations = appState.fuelStations;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('محطات الوقود والأسعار'),
+        title: Text('محطات الوقود والأسعار', style: DarbTypography.title),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const DarbIcon(DarbIconType.refresh, size: 24, color: DarbColors.primaryEmerald),
             onPressed: () => appState.loadNearbyData(),
           ),
         ],
@@ -47,30 +49,30 @@ class _FuelScreenState extends State<FuelScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.local_gas_station_rounded, size: 54, color: AppTheme.primaryEmerald),
-                  const SizedBox(height: 12),
-                  const Text('جاري جلب المحطات القريبة...', style: TextStyle(color: Colors.grey, fontSize: 16)),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryEmerald),
-                    icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-                    label: const Text('تحديث المحطات', style: TextStyle(color: Colors.white)),
+                  const DarbIcon(DarbIconType.fuel, size: 54, color: DarbColors.primaryEmerald),
+                  const SizedBox(height: DarbSpacing.md),
+                  Text('جاري جلب المحطات القريبة...', style: DarbTypography.body.copyWith(color: DarbColors.textSecondary)),
+                  const SizedBox(height: DarbSpacing.lg),
+                  DarbButton(
+                    text: 'تحديث المحطات',
+                    icon: DarbIconType.refresh,
+                    isFullWidth: false,
                     onPressed: () => appState.loadNearbyData(),
                   ),
                 ],
               ),
             )
           : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.md),
               itemCount: stations.length,
               itemBuilder: (ctx, idx) {
                 final s = stations[idx];
                 final updatedAgoMins = DateTime.now().difference(s.priceUpdatedAt).inMinutes;
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 14),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: DarbSpacing.md),
+                  child: DarbCard(
+                    padding: const EdgeInsets.all(DarbSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -78,14 +80,14 @@ class _FuelScreenState extends State<FuelScreen> {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(DarbSpacing.sm),
                               decoration: BoxDecoration(
-                                color: AppTheme.primaryEmerald.withOpacity(0.12),
+                                color: DarbColors.primaryEmerald.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.local_gas_station_rounded, color: AppTheme.primaryEmerald, size: 26),
+                              child: const DarbIcon(DarbIconType.fuel, color: DarbColors.primaryEmerald, size: 26),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: DarbSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,24 +97,20 @@ class _FuelScreenState extends State<FuelScreen> {
                                       Expanded(
                                         child: Text(
                                           s.nameAr,
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                          style: DarbTypography.section,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                       if (s.isVerified) ...[
-                                        const SizedBox(width: 4),
-                                        const Icon(Icons.verified_rounded, color: AppTheme.primaryEmerald, size: 18),
+                                        const SizedBox(width: DarbSpacing.xs),
+                                        const DarbIcon(DarbIconType.verified, color: DarbColors.primaryEmerald, size: 18),
                                       ],
                                     ],
                                   ),
                                   Text(
                                     s.address,
-                                    style: TextStyle(
-                                      color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
-                                      fontSize: 12,
-                                      
-                                    ),
+                                    style: DarbTypography.caption,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -121,38 +119,33 @@ class _FuelScreenState extends State<FuelScreen> {
                             ),
                             if (s.distanceKm != null) ...[
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.sm, vertical: DarbSpacing.xs),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.secondarySand.withOpacity(0.2),
+                                  color: DarbColors.surface,
                                   borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: DarbColors.border.withOpacity(0.3)),
                                 ),
                                 child: Text(
-                                  '${s.distanceKm!.toStringAsFixed(1)} كم',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                  ' كم',
+                                  style: DarbTypography.label.copyWith(color: DarbColors.textPrimary),
                                 ),
                               ),
                             ],
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: DarbSpacing.lg),
 
-                        // Fuel Prices Grid
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              _buildPriceTag('بنزين عادي', '${s.petrolPrice} د.ع', AppTheme.primaryEmerald),
-                              _buildPriceTag('بنزين محسن', '${s.premiumPrice} د.ع', AppTheme.accentOrange),
-                              _buildPriceTag('ديزل / كاز', '${s.dieselPrice} د.ع', Colors.blueGrey),
-                            ],
-                          ),
+                        // Fuel Prices Row
+                        Row(
+                          children: [
+                            Expanded(child: _buildPricePill('عادي', '', DarbColors.primaryEmerald)),
+                            const SizedBox(width: DarbSpacing.sm),
+                            Expanded(child: _buildPricePill('محسن', '', DarbColors.warningOrange)),
+                            const SizedBox(width: DarbSpacing.sm),
+                            Expanded(child: _buildPricePill('ديزل', '', DarbColors.textSecondary)),
+                          ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: DarbSpacing.md),
 
                         // Availability & Crowd Status
                         Row(
@@ -161,51 +154,53 @@ class _FuelScreenState extends State<FuelScreen> {
                             Row(
                               children: [
                                 Container(
-                                  width: 10,
-                                  height: 10,
+                                  width: 8,
+                                  height: 8,
                                   decoration: BoxDecoration(
-                                    color: s.isPetrolAvailable ? AppTheme.successGreen : AppTheme.alertRed,
+                                    color: s.isPetrolAvailable ? DarbColors.successGreen : DarbColors.dangerRed,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: DarbSpacing.xs),
                                 Text(
-                                  s.isPetrolAvailable ? 'الوقود متوفر' : 'غير متوفر حالياً',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    color: s.isPetrolAvailable ? AppTheme.successGreen : AppTheme.alertRed,
-                                    
+                                  s.isPetrolAvailable ? 'متوفر' : 'غير متوفر',
+                                  style: DarbTypography.label.copyWith(
+                                    color: s.isPetrolAvailable ? DarbColors.successGreen : DarbColors.dangerRed,
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: DarbSpacing.sm),
+                                  width: 4,
+                                  height: 4,
+                                  decoration: const BoxDecoration(
+                                    color: DarbColors.textDisabled,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
                                 Text(
-                                  'الازدحام: ${s.crowdText}',
-                                  style: TextStyle(fontSize: 12, color: s.crowdColor, fontWeight: FontWeight.bold),
+                                  s.crowdText,
+                                  style: DarbTypography.label.copyWith(color: s.crowdColor),
                                 ),
                               ],
                             ),
                             Text(
-                              updatedAgoMins > 0 ? 'قبل $updatedAgoMins دقيقة' : 'الآن',
-                              style: const TextStyle(fontSize: 11, color: Colors.grey),
+                              updatedAgoMins > 0 ? 'قبل  دقيقة' : 'الآن',
+                              style: DarbTypography.caption,
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: DarbSpacing.lg),
 
                         // Action Buttons
                         Row(
                           children: [
                             Expanded(
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primaryEmerald,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size(0, 42),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                ),
-                                icon: const Icon(Icons.navigation_rounded, size: 18),
-                                label: const Text('المسار إلى المحطة', style: TextStyle( fontWeight: FontWeight.bold)),
+                              flex: 2,
+                              child: DarbButton(
+                                text: 'ابدأ الملاحة',
+                                icon: DarbIconType.route,
+                                size: DarbButtonSize.small,
+                                isFullWidth: true,
                                 onPressed: () {
                                   Navigator.push(context, MaterialPageRoute(builder: (_) => NavigationScreen(
                                     destinationName: s.nameAr,
@@ -215,15 +210,16 @@ class _FuelScreenState extends State<FuelScreen> {
                                 },
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                minimumSize: const Size(0, 42),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            const SizedBox(width: DarbSpacing.sm),
+                            Expanded(
+                              flex: 1,
+                              child: DarbButton(
+                                text: 'تحديث',
+                                variant: DarbButtonVariant.secondary,
+                                size: DarbButtonSize.small,
+                                isFullWidth: true,
+                                onPressed: () => UpdateFuelSheet.show(context, s),
                               ),
-                              icon: const Icon(Icons.edit_note_rounded, size: 18),
-                              label: const Text('تحديث السعر', style: TextStyle( fontSize: 12)),
-                              onPressed: () => UpdateFuelSheet.show(context, s),
                             ),
                           ],
                         ),
@@ -236,16 +232,24 @@ class _FuelScreenState extends State<FuelScreen> {
     );
   }
 
-  Widget _buildPriceTag(String title, String price, Color color) {
-    return Column(
-      children: [
-        Text(title, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-        const SizedBox(height: 2),
-        Text(
-          price,
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: color),
-        ),
-      ],
+  Widget _buildPricePill(String title, String price, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: DarbSpacing.sm),
+      decoration: BoxDecoration(
+        color: DarbColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: DarbColors.border.withOpacity(0.5)),
+      ),
+      child: Column(
+        children: [
+          Text(title, style: DarbTypography.caption),
+          const SizedBox(height: 2),
+          Text(
+            price,
+            style: DarbTypography.numeric.copyWith(color: color, fontSize: 16),
+          ),
+        ],
+      ),
     );
   }
 }

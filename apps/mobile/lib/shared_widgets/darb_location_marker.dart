@@ -164,7 +164,7 @@ class _DarbVehicleMarkerPainter extends CustomPainter {
         ..style = PaintingStyle.fill,
     );
 
-    // 2. Left Wing (Bright Emerald Highlight)
+    // 2. Left Wing (Dark Charcoal Shield Facet)
     final leftWing = Path()
       ..moveTo(w * 0.5, h * 0.10)
       ..lineTo(w * 0.5, h * 0.70)
@@ -172,18 +172,11 @@ class _DarbVehicleMarkerPainter extends CustomPainter {
       ..close();
 
     final leftWingPaint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Color(0xFF34D399), // Emerald highlight
-          Color(0xFF10B981), // Emerald primary
-        ],
-      ).createShader(Rect.fromLTWH(w * 0.12, h * 0.10, w * 0.38, h * 0.74))
+      ..color = const Color(0xFF1E293B) // surface2 slightly lighter
       ..style = PaintingStyle.fill;
     canvas.drawPath(leftWing, leftWingPaint);
 
-    // 3. Right Wing (Deep Emerald Shadow Facet)
+    // 3. Right Wing (Deep Charcoal Core)
     final rightWing = Path()
       ..moveTo(w * 0.5, h * 0.10)
       ..lineTo(w * 0.88, h * 0.84)
@@ -191,18 +184,11 @@ class _DarbVehicleMarkerPainter extends CustomPainter {
       ..close();
 
     final rightWingPaint = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topRight,
-        end: Alignment.bottomLeft,
-        colors: [
-          Color(0xFF059669), // Rich emerald
-          Color(0xFF047857), // Deep emerald shade
-        ],
-      ).createShader(Rect.fromLTWH(w * 0.5, h * 0.10, w * 0.38, h * 0.74))
+      ..color = const Color(0xFF0F172A) // base canvas dark
       ..style = PaintingStyle.fill;
     canvas.drawPath(rightWing, rightWingPaint);
 
-    // 4. Razor Titanium Outer Hull Border (100% road contrast)
+    // 4. Emerald Perimeter Stroke (Premium accent)
     final outerHull = Path()
       ..moveTo(w * 0.5, h * 0.10)
       ..lineTo(w * 0.88, h * 0.84)
@@ -211,15 +197,15 @@ class _DarbVehicleMarkerPainter extends CustomPainter {
       ..close();
 
     final hullBorderPaint = Paint()
-      ..color = const Color(0xFF0F172A)
-      ..strokeWidth = 1.8
+      ..color = const Color(0xFF10B981) // Emerald Primary
+      ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke
       ..strokeJoin = StrokeJoin.round;
     canvas.drawPath(outerHull, hullBorderPaint);
 
-    // 5. White Navigation Dorsal Ridge / Center Spine
+    // 5. Cyan/Emerald Navigation Dorsal Ridge / Center Spine
     final spinePaint = Paint()
-      ..color = Colors.white
+      ..color = const Color(0xFF0EA5E9) // Cyan/Emerald glow
       ..strokeWidth = 1.6
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
