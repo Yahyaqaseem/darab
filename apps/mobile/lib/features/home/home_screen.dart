@@ -11,6 +11,7 @@ import '../places/places_screen.dart';
 import '../profile/profile_screen.dart';
 import '../navigation/navigation_screen.dart';
 import '../road_reports/report_dialog.dart';
+import '../road_reports/reports_screen.dart';
 import '../emergency/emergency_services_screen.dart';
 import '../search/destination_search_screen.dart';
 import 'package:vector_map_tiles/vector_map_tiles.dart';
@@ -18,6 +19,7 @@ import '../../core/theme/darb_vector_theme.dart';
 import '../../core/services/darb_tile_cache.dart';
 import '../../core/theme/darb_icons.dart';
 import '../../shared_widgets/darb_location_marker.dart';
+import '../../shared_widgets/darb_bottom_nav.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
