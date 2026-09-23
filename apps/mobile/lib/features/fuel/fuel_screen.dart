@@ -127,7 +127,7 @@ class _FuelScreenState extends State<FuelScreen> {
                                 ),
                                 child: Text(
                                   ' كم',
-                                  style: DarbTypography.label.copyWith(color: DarbColors.textPrimary),
+                                  style: DarbTypography.caption.copyWith(color: DarbColors.textPrimary),
                                 ),
                               ),
                             ],
@@ -164,7 +164,7 @@ class _FuelScreenState extends State<FuelScreen> {
                                 const SizedBox(width: DarbSpacing.xs),
                                 Text(
                                   s.isPetrolAvailable ? 'متوفر' : 'غير متوفر',
-                                  style: DarbTypography.label.copyWith(
+                                  style: DarbTypography.caption.copyWith(
                                     color: s.isPetrolAvailable ? DarbColors.successGreen : DarbColors.dangerRed,
                                   ),
                                 ),
@@ -179,7 +179,7 @@ class _FuelScreenState extends State<FuelScreen> {
                                 ),
                                 Text(
                                   s.crowdText,
-                                  style: DarbTypography.label.copyWith(color: s.crowdColor),
+                                  style: DarbTypography.caption.copyWith(color: s.crowdColor),
                                 ),
                               ],
                             ),

@@ -151,7 +151,7 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
                               ),
                               child: Text(
                                 ' كم',
-                                style: DarbTypography.label.copyWith(color: DarbColors.textPrimary),
+                                style: DarbTypography.caption.copyWith(color: DarbColors.textPrimary),
                               ),
                             ),
                           ],
@@ -176,7 +176,7 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
                                 ),
                                 child: Text(
                                   'طوارئ 24/7',
-                                  style: DarbTypography.label.copyWith(color: DarbColors.successGreen),
+                                  style: DarbTypography.caption.copyWith(color: DarbColors.successGreen),
                                 ),
                               ),
                           ],
@@ -246,7 +246,7 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
             ],
             Text(
               label,
-              style: DarbTypography.bodyMedium.copyWith(
+              style: DarbTypography.body.copyWith(
                 color: isSelected ? DarbColors.textInversePrimary : DarbColors.textPrimary,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),

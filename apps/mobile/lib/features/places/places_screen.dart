@@ -171,7 +171,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                                   if (p.distanceKm != null)
                                     Text(
                                       ' كم من موقعك',
-                                      style: DarbTypography.label.copyWith(color: DarbColors.primaryEmerald),
+                                      style: DarbTypography.caption.copyWith(color: DarbColors.primaryEmerald),
                                     ),
                                 ],
                               ),
@@ -245,7 +245,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
             ],
             Text(
               label,
-              style: DarbTypography.bodyMedium.copyWith(
+              style: DarbTypography.body.copyWith(
                 color: isSelected ? DarbColors.textInversePrimary : DarbColors.textPrimary,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),

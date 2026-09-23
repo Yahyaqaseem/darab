@@ -53,7 +53,7 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(width: DarbSpacing.xs),
                         Text(
                           'مستخدم جديد',
-                          style: DarbTypography.label.copyWith(color: DarbColors.textSecondary),
+                          style: DarbTypography.caption.copyWith(color: DarbColors.textSecondary),
                         ),
                       ],
                     ),
@@ -90,14 +90,14 @@ class ProfileScreen extends StatelessWidget {
                   ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.xs),
                     leading: const DarbIcon(DarbIconType.info, color: DarbColors.textPrimary), // Placeholder for globe/language
-                    title: Text('لغة التطبيق', style: DarbTypography.bodyMedium),
+                    title: Text('لغة التطبيق', style: DarbTypography.body),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           appState.currentLanguage == 'ar' ? 'العربية' :
                           (appState.currentLanguage == 'ku' ? 'کوردی' : 'English'),
-                          style: DarbTypography.bodyMedium.copyWith(color: DarbColors.primaryEmerald),
+                          style: DarbTypography.body.copyWith(color: DarbColors.primaryEmerald),
                         ),
                         const SizedBox(width: DarbSpacing.sm),
                         const DarbIcon(DarbIconType.chevronLeft, size: 14, color: DarbColors.textSecondary),

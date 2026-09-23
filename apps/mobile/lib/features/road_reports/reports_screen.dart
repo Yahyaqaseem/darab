@@ -101,7 +101,7 @@ class ReportsScreen extends StatelessWidget {
                                 ),
                                 child: Text(
                                   ' كم',
-                                  style: DarbTypography.label.copyWith(color: DarbColors.textPrimary),
+                                  style: DarbTypography.caption.copyWith(color: DarbColors.textPrimary),
                                 ),
                               ),
                             ],
@@ -125,7 +125,7 @@ class ReportsScreen extends StatelessWidget {
                                 const SizedBox(width: DarbSpacing.xs),
                                 Text(
                                   ' سواق أكدوا',
-                                  style: DarbTypography.label.copyWith(color: DarbColors.primaryEmerald),
+                                  style: DarbTypography.caption.copyWith(color: DarbColors.primaryEmerald),
                                 ),
                               ],
                             ),
