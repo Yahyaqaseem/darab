@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -19,9 +18,6 @@ import '../../core/theme/darb_vector_theme.dart';
 import '../../core/services/darb_tile_cache.dart';
 import '../../core/theme/darb_icons.dart';
 import '../../shared_widgets/darb_location_marker.dart';
-import '../../shared_widgets/darb_optimized_marker_layer.dart';
-import '../../shared_widgets/darb_bottom_nav.dart';
-import '../road_reports/reports_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final MapController _mapController = MapController();
   bool _isMapReady = false;
   Style? _vectorStyle;
-  Timer? _resumePrefetchTimer;
+  double _currentZoom = 15.0;
 
   final List<Map<String, dynamic>> _recentPlaces = [
     {'name': 'مستشفى رزكاري', 'nameEn': 'Rizgary Hospital', 'subtitle': 'هەولێر - Erbil', 'lat': 36.1780, 'lng': 44.0250},
@@ -69,12 +65,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         appState.loadNearbyData();
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _resumePrefetchTimer?.cancel();
-    super.dispose();
   }
 
   void _animatedMapMove(LatLng destLocation, double destZoom) {
@@ -317,13 +307,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               onPositionChanged: (pos, hasGesture) {
                 if (hasGesture) {
-                  _resumePrefetchTimer?.cancel();
                   DarbTilePrefetcher.pausePrefetch();
                 } else if (DarbTilePrefetcher.isPrefetchPaused) {
-                  _resumePrefetchTimer?.cancel();
-                  _resumePrefetchTimer = Timer(const Duration(milliseconds: 600), () {
+                  Future.delayed(const Duration(milliseconds: 500), () {
                     DarbTilePrefetcher.resumePrefetch();
                   });
+                }
+                if (pos.zoom != null && (pos.zoom! - _currentZoom).abs() > 0.5) {
+                  setState(() => _currentZoom = pos.zoom!);
                 }
               },
               onMapReady: () {
@@ -337,12 +328,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     theme: _vectorStyle!.theme,
                     sprites: _vectorStyle!.sprites,
                     tileProviders: _vectorStyle!.providers,
-                    layerMode: VectorTileLayerMode.raster,
+                    layerMode: VectorTileLayerMode.vector,
                     memoryTileCacheMaxSize: 128 * 1024 * 1024,
-                    memoryTileDataCacheMaxSize: 80,
+                    memoryTileDataCacheMaxSize: 500,
                     fileCacheMaximumSizeInBytes: 256 * 1024 * 1024,
                     maximumTileSubstitutionDifference: 3,
-                    maximumZoom: 18.0,
                     textCacheMaxSize: 1000,
                     concurrency: 4,
                     cacheFolder: DarbCachingTileProvider.getCacheDirectory,
@@ -368,10 +358,79 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         : null,
                   ),
                 ),
-              // High-Performance Zoom-Adaptive & Viewport-Culled Marker Layer
-              DarbOptimizedMarkerLayer(
-                onOpenSheet: (screen, isDark) => _openScreenSheet(screen, isDark),
-                onNavigateTo: (name, lat, lng) => _navigateTo(name, lat, lng),
+              // Static & POI Marker Layer
+              Consumer<AppState>(
+                builder: (context, state, _) {
+                  return MarkerLayer(
+                    markers: [
+                      // Road Reports / Incidents with intelligent zoom-density filtering
+                      ...state.reports
+                          .where((r) => _currentZoom >= 12.0 || r.type == 'ACCIDENT' || r.type == 'CLOSURE')
+                          .map((r) => Marker(
+                            point: LatLng(r.latitude, r.longitude),
+                            width: 38,
+                            height: 44,
+                            alignment: Alignment.topCenter,
+                            child: DarbReportMarker(report: r, size: 36),
+                          )),
+                      // Fuel Stations (Zoom-Adaptive: icon at distance, price pill at close zoom)
+                      if (_currentZoom >= 12.5)
+                        ...state.fuelStations.map((s) => Marker(
+                          point: LatLng(s.latitude, s.longitude),
+                          width: _currentZoom >= 14.5 ? 90 : 36,
+                          height: 36,
+                          alignment: Alignment.center,
+                          child: DarbFuelMarker(
+                            station: s,
+                            currentZoom: _currentZoom,
+                            onTap: () => _openScreenSheet(const FuelScreen(), isDark),
+                          ),
+                        )),
+                      // Verified Community Drivers Presence
+                      const Marker(
+                        point: LatLng(36.2015, 44.0040),
+                        width: 28,
+                        height: 28,
+                        alignment: Alignment.center,
+                        child: DarbPOIMarker(type: DarbIconType.myLocation, label: '', color: DarbIconColors.emerald),
+                      ),
+                      const Marker(
+                        point: LatLng(36.1850, 44.0210),
+                        width: 28,
+                        height: 28,
+                        alignment: Alignment.center,
+                        child: DarbPOIMarker(type: DarbIconType.myLocation, label: '', color: DarbIconColors.emerald),
+                      ),
+                      // Erbil Citadel Landmark Pin
+                      Marker(
+                        point: const LatLng(36.1911, 44.0094),
+                        width: 40,
+                        height: 48,
+                        alignment: Alignment.topCenter,
+                        child: DarbPOIMarker(
+                          type: DarbIconType.civic,
+                          label: 'قلعة أربيل',
+                          showLabel: _currentZoom >= 14.0,
+                          onTap: () => _navigateTo('قلعة أربيل', 36.1911, 44.0094),
+                        ),
+                      ),
+                      // Family Mall Pin
+                      Marker(
+                        point: const LatLng(36.2089, 44.0092),
+                        width: 40,
+                        height: 48,
+                        alignment: Alignment.topCenter,
+                        child: DarbPOIMarker(
+                          type: DarbIconType.store,
+                          label: 'فاميلي مول',
+                          color: DarbIconColors.checkpointBlue,
+                          showLabel: _currentZoom >= 14.0,
+                          onTap: () => _navigateTo('فاميلي مول', 36.2089, 44.0092),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
               // Real-Time GPS User Location Marker Layer (Isolated, ZERO full map rebuilds)
               ValueListenableBuilder<LatLng>(
@@ -461,7 +520,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           // LAYER 3: Re-center GPS Button (Bottom-Left)
           Positioned(
             left: 16,
-            bottom: 160,
+            bottom: 300,
             child: RepaintBoundary(
               child: DarbIconButton(
                 icon: DarbIconType.myLocation,
@@ -486,7 +545,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 // Floating Search Bar & Quick Actions
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg),
                   child: Row(
                     children: [
                       Expanded(
@@ -496,7 +555,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           },
                           child: Container(
                             height: 52,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg),
                             decoration: BoxDecoration(
                               color: isDark ? DarbColors.surface : Colors.white,
                               borderRadius: BorderRadius.circular(26),
@@ -514,7 +573,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             child: Row(
                               children: [
                                 const DarbIcon(DarbIconType.search, color: DarbColors.textSecondary, size: 20),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: DarbSpacing.sm),
                                 Expanded(
                                   child: Text(
                                     AppStrings.tr('where_to', lang),
@@ -528,9 +587,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   width: 1,
                                   height: 24,
                                   color: DarbColors.border,
-                                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                                  margin: const EdgeInsets.symmetric(horizontal: DarbSpacing.sm),
                                 ),
-                                const Icon(Icons.mic_rounded, color: DarbColors.textSecondary, size: 22),
+                                const DarbIcon(DarbIconType.mic, color: DarbColors.textSecondary, size: 22),
                               ],
                             ),
                           ),
@@ -539,7 +598,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: DarbSpacing.md),
                 
                 // Floating Bottom Nav
                 DarbBottomNav(
@@ -556,166 +615,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
-                  ],
-                ),
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  children: [
-                    // Sheet Drag Handle
-                    Center(
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 10, bottom: 12),
-                        width: 42,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.4),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-
-                    // Waze Search Bar: "إلى أين؟" / "Where to?"
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const DestinationSearchScreen()));
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          children: [
-                            const DarbIcon(DarbIconType.search, color: Colors.grey, size: 20),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                AppStrings.tr('where_to', lang),
-                                style: const TextStyle(fontSize: 17, color: Colors.grey, fontWeight: FontWeight.w500),
-                              ),
-                            ),
-                            const Icon(Icons.mic_rounded, color: Colors.grey, size: 20),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // Quick Chips Row: [المنزل 🏠], [العمل 💼], [+ جديد]
-                    Row(
-                      children: [
-                        _buildQuickChip(
-                          icon: DarbIconType.home,
-                          label: AppStrings.tr('home', lang),
-                          isDark: isDark,
-                          onTap: () => _navigateTo(AppStrings.tr('home', lang), 36.1911, 44.0094),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildQuickChip(
-                          icon: DarbIconType.work,
-                          label: AppStrings.tr('work', lang),
-                          isDark: isDark,
-                          onTap: () => _navigateTo(AppStrings.tr('work', lang), 36.2089, 44.0092),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildQuickChip(
-                          icon: DarbIconType.add,
-                          label: AppStrings.tr('new_place', lang),
-                          isDark: isDark,
-                          onTap: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const DestinationSearchScreen()));
-                          },
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    // Recent Destinations Header: "السابقة" / "Recent"
-                    Text(
-                      AppStrings.tr('recent', lang),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Recent Places List
-                    ..._recentPlaces.map(
-                      (p) => Container(
-                        margin: const EdgeInsets.only(bottom: 6),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          leading: Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: (isDark ? Colors.white10 : Colors.black.withOpacity(0.04)),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Center(
-                              child: DarbIcon(DarbIconType.route, size: 18, color: Colors.grey),
-                            ),
-                          ),
-                          title: Text(
-                            lang == 'en' ? p['nameEn'] : p['name'],
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                          ),
-                          subtitle: Text(
-                            p['subtitle'],
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
-                          onTap: () => _navigateTo(lang == 'en' ? p['nameEn'] : p['name'], p['lat'], p['lng']),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildQuickChip({
-    required DarbIconType icon,
-    required String label,
-    required bool isDark,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              DarbIcon(icon, size: 16, color: DarbIconColors.emerald),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
