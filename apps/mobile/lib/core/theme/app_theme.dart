@@ -88,6 +88,22 @@ class AppTheme {
   static const Color primaryEmerald = DarbColors.primaryEmerald;
   static const Color accentOrange = DarbColors.warningOrange;
   static const Color darkBackground = DarbColors.background;
+  static const Color lightBackground = Color(0xFFF8FAFC);
+  static const Color darkCard = DarbColors.card;
+  static const Color lightSurface = Colors.white;
+  static const Color darkSurface = DarbColors.surface;
+  static const Color textLightSecondary = Color(0xFF64748B);
+  static const Color textDarkSecondary = DarbColors.textSecondary;
+  static const Color textLightPrimary = Colors.black87;
+  static const Color textDarkPrimary = DarbColors.textPrimary;
+  static const Color secondarySand = Color(0xFFFDE68A);
+  static const Color secondarySandDark = Color(0xFFD97706);
+  static const Color alertRed = DarbColors.dangerRed;
+  static const Color successGreen = DarbColors.successGreen;
+
+
+
+
 
   static ThemeData get darkTheme {
     return ThemeData(
