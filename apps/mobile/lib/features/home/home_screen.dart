@@ -21,6 +21,7 @@ import '../../core/theme/darb_icons.dart';
 import '../../shared_widgets/darb_location_marker.dart';
 import '../../shared_widgets/darb_bottom_nav.dart';
 import '../nidaa_al_tariq/nidaa_dialog.dart';
+import '../../core/utils/darb_clusterer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -319,8 +320,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   return ValueListenableBuilder<double>(
                     valueListenable: _zoomNotifier,
                     builder: (context, zoom, _) {
+                      // Apply clustering
+                      
+                      final fuelClusters = DarbMapClusterer.clusterItems(
+                        items: state.fuelStations,
+                        getLat: (s) => (s as dynamic).latitude,
+                        getLng: (s) => (s as dynamic).longitude,
+                        currentZoom: zoom,
+                        clusterRadiusPixels: 60.0,
+                      );
+
                       return MarkerLayer(
                         markers: [
+                          // Reports
                           ...state.reports
                               .where((r) => zoom >= 12.0 || r.type == 'ACCIDENT' || r.type == 'CLOSURE')
                               .map((r) => Marker(
@@ -330,18 +342,56 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 alignment: Alignment.topCenter,
                                 child: DarbReportMarker(report: r, size: 36),
                               )),
-                          if (zoom >= 12.5)
-                            ...state.fuelStations.map((s) => Marker(
-                              point: LatLng(s.latitude, s.longitude),
-                              width: zoom >= 14.5 ? 90 : 36,
-                              height: 36,
-                              alignment: Alignment.center,
-                              child: DarbFuelMarker(
-                                station: s,
-                                currentZoom: zoom,
-                                onTap: () => _openScreenSheet(const FuelScreen(), isDark),
-                              ),
-                            )),
+                              
+                          // Fuel Stations / Clusters
+                          if (zoom >= 11.0)
+                            ...fuelClusters.map((cluster) {
+                              if (cluster.count > 1) {
+                                // Cluster Bubble
+                                return Marker(
+                                  point: cluster.position,
+                                  width: 48,
+                                  height: 48,
+                                  alignment: Alignment.center,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      _animatedMapMove(cluster.position, zoom + 2.0);
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: DarbColors.surface,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: DarbColors.primaryYellow, width: 2),
+                                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '${cluster.count}',
+                                        style: DarbTypography.numeric.copyWith(
+                                          color: DarbColors.primaryYellow,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                // Single POI
+                                final s = cluster.items.first;
+                                return Marker(
+                                  point: LatLng(s.latitude, s.longitude),
+                                  width: zoom >= 14.5 ? 90 : 36,
+                                  height: 36,
+                                  alignment: Alignment.center,
+                                  child: DarbFuelMarker(
+                                    station: s,
+                                    currentZoom: zoom,
+                                    onTap: () => _openScreenSheet(const FuelScreen(), isDark),
+                                  ),
+                                );
+                              }
+                            }),
                         ],
                       );
                     },
@@ -441,21 +491,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
                               ),
                             ),
-                            child: Row(
-                              children: [
-                                const DarbIcon(DarbIconType.search, color: DarbColors.textSecondary, size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    lang == 'ku' ? 'بۆ کوێ؟' : (lang == 'ar' ? 'إلى أين؟' : 'Where to?'),
-                                    style: DarbTypography.body.copyWith(
-                                      color: DarbColors.textSecondary,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
+                            child: Directionality(
+                              textDirection: (lang == 'ar' || lang == 'ku') ? TextDirection.rtl : TextDirection.ltr,
+                              child: Row(
+                                children: [
+                                  const DarbIcon(DarbIconType.search, color: DarbColors.textSecondary, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      lang == 'ku' ? 'بۆ کوێ؟' : (lang == 'ar' ? 'إلى أين؟' : 'Where to?'),
+                                      style: DarbTypography.body.copyWith(
+                                        color: DarbColors.textSecondary,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),

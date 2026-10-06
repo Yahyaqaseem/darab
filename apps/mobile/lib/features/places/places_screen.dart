@@ -103,7 +103,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                         distanceKm = distM / 1000.0;
                       }
                       
-                      return _buildPlaceRow(p, distanceKm, surfaceColor, textColor, isDark);
+                      return _buildPlaceRow(context, p, distanceKm, surfaceColor, textColor, isDark);
                     },
                   ),
           ),
@@ -134,7 +134,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
     );
   }
 
-  Widget _buildPlaceRow(PlaceModel place, double distanceKm, Color surfaceColor, Color textColor, bool isDark) {
+  Widget _buildPlaceRow(BuildContext context, PlaceModel place, double distanceKm, Color surfaceColor, Color textColor, bool isDark) {
     return Row(
       children: [
         // Clean Icon
@@ -197,7 +197,16 @@ class _PlacesScreenState extends State<PlacesScreen> {
             ),
             const SizedBox(height: 8),
             GestureDetector(
-              onTap: () {},
+              onTap: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context); // Close the places bottom sheet if it's a sheet
+                }
+                Navigator.push(context, MaterialPageRoute(builder: (_) => NavigationScreen(
+                  destinationName: place.nameAr,
+                  destLat: place.latitude,
+                  destLng: place.longitude,
+                )));
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(

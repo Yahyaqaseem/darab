@@ -5,6 +5,7 @@ import '../../core/providers/app_state.dart';
 import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/darb_icons.dart';
+import '../navigation/navigation_screen.dart';
 
 class FuelScreen extends StatelessWidget {
   const FuelScreen({super.key});
@@ -94,116 +95,135 @@ class FuelScreen extends StatelessWidget {
                         distanceKm = distM / 1000.0;
                       }
 
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: surfaceColor,
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            // Close bottom sheet if opened as a sheet
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => NavigationScreen(
+                              destinationName: s.nameAr,
+                              destLat: s.latitude,
+                              destLng: s.longitude,
+                            )));
+                          },
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
-                        ),
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Icon Column
-                            Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: DarbColors.surface,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
-                                  ),
-                                  child: const DarbIcon(DarbIconType.fuel, color: DarbColors.primaryYellow, size: 24),
-                                ),
-                              ],
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: surfaceColor,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
                             ),
-                            const SizedBox(width: 16),
-                            
-                            // Info Column
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    s.nameAr,
-                                    style: DarbTypography.body.copyWith(
-                                      color: textColor,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 16,
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Icon Column
+                                Column(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: DarbColors.surface,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+                                      ),
+                                      child: const DarbIcon(DarbIconType.fuel, color: DarbColors.primaryYellow, size: 24),
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
+                                  ],
+                                ),
+                                const SizedBox(width: 16),
+                                
+                                // Info Column
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '${distanceKm.toStringAsFixed(1)} km',
-                                        style: DarbTypography.caption.copyWith(
-                                          color: DarbColors.textSecondary,
-                                          fontWeight: FontWeight.w600,
+                                        s.nameAr,
+                                        style: DarbTypography.body.copyWith(
+                                          color: textColor,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16,
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(width: 8),
-                                      _getFreshnessIndicator(s.priceUpdatedAt, lang),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  
-                                  // Quality/Crowd Tags
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: s.crowdColor.withOpacity(0.15),
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          s.crowdText,
-                                          style: DarbTypography.caption.copyWith(
-                                            color: s.crowdColor,
-                                            fontWeight: FontWeight.w600,
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '${distanceKm.toStringAsFixed(1)} km',
+                                            style: DarbTypography.caption.copyWith(
+                                              color: DarbColors.textSecondary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                           ),
-                                        ),
+                                          const SizedBox(width: 8),
+                                          _getFreshnessIndicator(s.priceUpdatedAt, lang),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      
+                                      // Quality/Crowd Tags
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: s.crowdColor.withOpacity(0.15),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Text(
+                                              s.crowdText,
+                                              style: DarbTypography.caption.copyWith(
+                                                color: s.crowdColor,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
-                            ),
-                            
-                            // Price Column
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  s.petrolPrice > 0 ? '${s.petrolPrice}' : 'غير متوفر',
-                                  style: DarbTypography.numeric.copyWith(
-                                    color: s.petrolPrice > 0 ? textColor : DarbColors.textDisabled,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w800,
-                                  ),
                                 ),
-                                if (s.petrolPrice > 0)
-                                  Text(
-                                    'IQD/L',
-                                    style: DarbTypography.caption.copyWith(
-                                      color: DarbColors.primaryYellow,
-                                      fontWeight: FontWeight.w700,
+                                
+                                // Price Column
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      s.petrolPrice > 0 ? '${s.petrolPrice}' : 'غير متوفر',
+                                      style: DarbTypography.numeric.copyWith(
+                                        color: s.petrolPrice > 0 ? textColor : DarbColors.textDisabled,
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                      ),
                                     ),
-                                  ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'بنزين عادي',
-                                  style: DarbTypography.caption.copyWith(
-                                    color: DarbColors.textSecondary,
-                                  ),
+                                    if (s.petrolPrice > 0)
+                                      Text(
+                                        'IQD/L',
+                                        style: DarbTypography.caption.copyWith(
+                                          color: DarbColors.primaryYellow,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'بنزين عادي',
+                                      style: DarbTypography.caption.copyWith(
+                                        color: DarbColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.navigation, color: DarbColors.primaryYellow, size: 24),
                               ],
                             ),
-                          ],
+                          ),
                         ),
                       );
                     },

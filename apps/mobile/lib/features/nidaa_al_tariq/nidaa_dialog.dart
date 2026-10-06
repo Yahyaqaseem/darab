@@ -108,34 +108,59 @@ class _NidaaDialogState extends State<NidaaDialog> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            
             if (_isSent)
-              // Sent confirmation state
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 32),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: DarbColors.successGreen.withOpacity(0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.check, color: DarbColors.successGreen, size: 40),
+              // Sent confirmation state (Animated)
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.elasticOut,
+                builder: (context, value, child) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    child: Column(
+                      children: [
+                        Transform.scale(
+                          scale: value,
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: DarbColors.successGreen.withOpacity(0.15),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: DarbColors.successGreen.withOpacity(0.3 * value),
+                                  blurRadius: 20 * value,
+                                  spreadRadius: 2 * value,
+                                )
+                              ],
+                            ),
+                            child: const Icon(Icons.check, color: DarbColors.successGreen, size: 48),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Opacity(
+                          opacity: value.clamp(0.0, 1.0),
+                          child: Transform.translate(
+                            offset: Offset(0, 10 * (1 - value)),
+                            child: Column(
+                              children: [
+                                Text(
+                                  '✓ تم إرسال نداء الطريق',
+                                  style: DarbTypography.title.copyWith(color: DarbColors.successGreen, fontSize: 22),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'بانتظار إجابات السائقين...',
+                                  style: DarbTypography.body.copyWith(color: DarbColors.textSecondary),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      '✓ تم إرسال نداء الطريق',
-                      style: DarbTypography.title.copyWith(color: DarbColors.successGreen),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'بانتظار إجابات السائقين',
-                      style: DarbTypography.body.copyWith(color: DarbColors.textSecondary),
-                    ),
-                  ],
-                ),
+                  );
+                },
               )
             else
               // Question selection state

@@ -269,8 +269,8 @@ class _DestinationSearchScreenState extends State<DestinationSearchScreen> {
 
         // Shorten the display name
         final parts = name.split(',');
-        final shortName = parts.length > 2 ? ', ' : name;
-        final detail = parts.length > 2 ? parts.sublist(2).join(',').trim() : '';
+        final shortName = parts.isNotEmpty ? parts[0].trim() : name.trim();
+        final detail = parts.length > 1 ? parts.sublist(1).join(',').trim() : '';
 
         return Padding(
           padding: const EdgeInsets.only(bottom: DarbSpacing.sm),

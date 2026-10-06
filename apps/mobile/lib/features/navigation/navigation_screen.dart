@@ -394,22 +394,34 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                         : null,
                   ),
                 ),
-              // Route Polyline (Waze Vibrant High-Contrast Green Path)
+              // Active Navigation Route (Premium Barzani Style)
               if (_routePoints.isNotEmpty)
                 RepaintBoundary(
                   child: PolylineLayer(
                     polylines: [
-                      // Polyline dark casing / shadow for maximum contrast
+                      // Outer dark shadow/casing
                       Polyline(
                         points: _routePoints,
-                        strokeWidth: 8.5,
-                        color: const Color(0xFF042F2E),
+                        strokeWidth: 10.0,
+                        color: const Color(0xFF040A14).withOpacity(0.8),
+                        strokeCap: StrokeCap.round,
+                        strokeJoin: StrokeJoin.round,
                       ),
-                      // Polyline vibrant green core
+                      // Core golden route
                       Polyline(
                         points: _routePoints,
-                        strokeWidth: 5.5,
-                        color: const Color(0xFFEAB308),
+                        strokeWidth: 6.0,
+                        color: DarbColors.primaryYellow,
+                        strokeCap: StrokeCap.round,
+                        strokeJoin: StrokeJoin.round,
+                      ),
+                      // Subtle inner highlight
+                      Polyline(
+                        points: _routePoints,
+                        strokeWidth: 2.0,
+                        color: Colors.white.withOpacity(0.3),
+                        strokeCap: StrokeCap.round,
+                        strokeJoin: StrokeJoin.round,
                       ),
                     ],
                   ),

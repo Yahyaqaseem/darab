@@ -121,12 +121,14 @@ class _DarbLocationMarkerState extends State<DarbLocationMarker>
                 ),
               ),
 
-              // 2. Sleek Aerodynamic DARB Stealth Vehicle Arrow
+              // 2. Sleek Professional Navigation Puck or Chevron
               Transform.rotate(
                 angle: _currentBearing * (3.141592653589793 / 180.0),
                 child: CustomPaint(
                   size: Size(widget.size, widget.size),
-                  painter: _DarbVehicleMarkerPainter(),
+                  painter: _DarbVehicleMarkerPainter(
+                    isStationary: widget.speedKmh < 2.0,
+                  ),
                 ),
               ),
             ],
@@ -138,86 +140,72 @@ class _DarbLocationMarkerState extends State<DarbLocationMarker>
 }
 
 class _DarbVehicleMarkerPainter extends CustomPainter {
+  final bool isStationary;
+  _DarbVehicleMarkerPainter({required this.isStationary});
+
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+    final center = Offset(w * 0.5, h * 0.5);
 
-    // 1. Soft Aerodynamic Drop Shadow Under Vehicle (Dual-pass alpha, zero GPU blur stall)
-    final shadowPath = Path()
-      ..moveTo(w * 0.5, h * 0.16)
-      ..lineTo(w * 0.88, h * 0.86)
-      ..lineTo(w * 0.5, h * 0.72)
-      ..lineTo(w * 0.12, h * 0.86)
-      ..close();
+    if (isStationary) {
+      // 1. Stationary Professional Puck (Blue/White Dot)
+      // Outer shadow
+      canvas.drawCircle(
+        center.translate(0, 2),
+        w * 0.28,
+        Paint()..color = Colors.black.withOpacity(0.3)..style = PaintingStyle.fill,
+      );
+      // White casing
+      canvas.drawCircle(
+        center,
+        w * 0.28,
+        Paint()..color = Colors.white..style = PaintingStyle.fill,
+      );
+      // Inner blue dot
+      canvas.drawCircle(
+        center,
+        w * 0.18,
+        Paint()..color = const Color(0xFF3B82F6)..style = PaintingStyle.fill,
+      );
+    } else {
+      // 2. Refined Directional Chevron (Not a paper airplane)
+      // Uses a modern chevron shape with depth
+      final chevronPath = Path()
+        ..moveTo(w * 0.5, h * 0.15) // Tip
+        ..lineTo(w * 0.85, h * 0.85) // Bottom right
+        ..quadraticBezierTo(w * 0.5, h * 0.70, w * 0.15, h * 0.85) // Bottom arc
+        ..close();
 
-    canvas.drawPath(
-      shadowPath.shift(const Offset(0, 3)),
-      Paint()
-        ..color = Colors.black.withOpacity(0.22)
-        ..style = PaintingStyle.fill,
-    );
-    canvas.drawPath(
-      shadowPath.shift(const Offset(0, 1.5)),
-      Paint()
-        ..color = Colors.black.withOpacity(0.32)
-        ..style = PaintingStyle.fill,
-    );
+      // Shadow
+      canvas.drawPath(
+        chevronPath.shift(const Offset(0, 3)),
+        Paint()..color = Colors.black.withOpacity(0.35)..style = PaintingStyle.fill,
+      );
 
-    // 2. Left Wing (Dark Charcoal Shield Facet)
-    final leftWing = Path()
-      ..moveTo(w * 0.5, h * 0.10)
-      ..lineTo(w * 0.5, h * 0.70)
-      ..lineTo(w * 0.12, h * 0.84)
-      ..close();
+      // Casing (White outer stroke)
+      canvas.drawPath(
+        chevronPath,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.5
+          ..strokeJoin = StrokeJoin.round,
+      );
 
-    final leftWingPaint = Paint()
-      ..color = const Color(0xFFF8FAFC) // White center facet
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(leftWing, leftWingPaint);
-
-    // 3. Right Wing (Deep Charcoal Core)
-    final rightWing = Path()
-      ..moveTo(w * 0.5, h * 0.10)
-      ..lineTo(w * 0.88, h * 0.84)
-      ..lineTo(w * 0.5, h * 0.70)
-      ..close();
-
-    final rightWingPaint = Paint()
-      ..color = const Color(0xFFE2E8F0) // Slightly darker white/gray facet
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(rightWing, rightWingPaint);
-
-    // 4. Emerald Perimeter Stroke (Premium accent)
-    final outerHull = Path()
-      ..moveTo(w * 0.5, h * 0.10)
-      ..lineTo(w * 0.88, h * 0.84)
-      ..lineTo(w * 0.5, h * 0.70)
-      ..lineTo(w * 0.12, h * 0.84)
-      ..close();
-
-    final hullBorderPaint = Paint()
-      ..color = const Color(0xFFEAB308) // Emerald Primary
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke
-      ..strokeJoin = StrokeJoin.round;
-    canvas.drawPath(outerHull, hullBorderPaint);
-
-    // 5. Cyan/Emerald Navigation Dorsal Ridge / Center Spine
-    final spinePaint = Paint()
-      ..color = const Color(0xFFEAB308) // Yellow core spine glow
-      ..strokeWidth = 1.6
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(Offset(w * 0.5, h * 0.12), Offset(w * 0.5, h * 0.68), spinePaint);
-
-    // 6. Navigation Radar Pulse Core Dot
-    final coreDotPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(w * 0.5, h * 0.44), 2.2, coreDotPaint);
+      // Core (Blue/Golden fill)
+      canvas.drawPath(
+        chevronPath,
+        Paint()
+          ..color = const Color(0xFF3B82F6) // Deep blue nav arrow
+          ..style = PaintingStyle.fill,
+      );
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _DarbVehicleMarkerPainter oldDelegate) => 
+      isStationary != oldDelegate.isStationary;
 }
+
