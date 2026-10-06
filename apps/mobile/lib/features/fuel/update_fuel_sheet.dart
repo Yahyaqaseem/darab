@@ -59,7 +59,7 @@ class _UpdateFuelSheetState extends State<UpdateFuelSheet> {
             'شكراً لك! تم تحديث بيانات الوقود وحصلت على +5 نقاط سمعة',
             style: TextStyle( fontWeight: FontWeight.bold),
           ),
-          backgroundColor: AppTheme.primaryEmerald,
+          backgroundColor: AppTheme.primaryYellow,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -109,10 +109,10 @@ class _UpdateFuelSheetState extends State<UpdateFuelSheet> {
                 title: const Text('هل الوقود متوفر حالياً؟', style: TextStyle( fontWeight: FontWeight.bold)),
                 subtitle: Text(
                   _isAvailable ? 'متوفر' : 'غير متوفر / نفد الوقود',
-                  style: TextStyle(color: _isAvailable ? AppTheme.successGreen : AppTheme.alertRed),
+                  style: TextStyle(color: _isAvailable ? AppTheme.primaryYellow : AppTheme.alertRed),
                 ),
                 value: _isAvailable,
-                activeColor: AppTheme.primaryEmerald,
+                activeColor: AppTheme.primaryYellow,
                 onChanged: (val) => setState(() => _isAvailable = val),
               ),
               const SizedBox(height: 14),
@@ -182,7 +182,7 @@ class _UpdateFuelSheetState extends State<UpdateFuelSheet> {
       child: ChoiceChip(
         label: Text(title, style: TextStyle( fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
         selected: isSelected,
-        selectedColor: AppTheme.primaryEmerald.withOpacity(0.2),
+        selectedColor: AppTheme.primaryYellow.withOpacity(0.2),
         onSelected: (selected) {
           if (selected) setState(() => _selectedCrowd = value);
         },

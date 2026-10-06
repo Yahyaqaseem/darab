@@ -76,7 +76,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16), 
-                  borderSide: const BorderSide(color: DarbColors.primaryEmerald)
+                  borderSide: const BorderSide(color: DarbColors.primaryYellow)
                 ),
               ),
             ),
@@ -171,7 +171,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
                                   if (p.distanceKm != null)
                                     Text(
                                       ' كم من موقعك',
-                                      style: DarbTypography.caption.copyWith(color: DarbColors.primaryEmerald),
+                                      style: DarbTypography.caption.copyWith(color: DarbColors.primaryYellow),
                                     ),
                                 ],
                               ),
@@ -226,10 +226,10 @@ class _PlacesScreenState extends State<PlacesScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.md, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? DarbColors.primaryEmerald : DarbColors.surface,
+          color: isSelected ? DarbColors.primaryYellow : DarbColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? DarbColors.primaryEmerald : DarbColors.border.withOpacity(0.5),
+            color: isSelected ? DarbColors.primaryYellow : DarbColors.border.withOpacity(0.5),
           ),
         ),
         child: Row(
@@ -239,7 +239,7 @@ class _PlacesScreenState extends State<PlacesScreen> {
               DarbIcon(
                 icon,
                 size: 16,
-                color: isSelected ? DarbColors.textInversePrimary : DarbColors.primaryEmerald,
+                color: isSelected ? DarbColors.textInversePrimary : DarbColors.primaryYellow,
               ),
               const SizedBox(width: DarbSpacing.xs),
             ],

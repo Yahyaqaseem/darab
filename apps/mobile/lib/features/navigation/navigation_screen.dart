@@ -409,7 +409,7 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                       Polyline(
                         points: _routePoints,
                         strokeWidth: 5.5,
-                        color: const Color(0xFF10B981),
+                        color: const Color(0xFFEAB308),
                       ),
                     ],
                   ),
@@ -551,7 +551,7 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                           children: [
                             DarbIcon(
                               _isRouteSelecting ? DarbIconType.route : DarbIconType.recenter,
-                              color: DarbColors.primaryEmerald,
+                              color: DarbColors.primaryYellow,
                               size: 20,
                             ),
                             const SizedBox(width: DarbSpacing.sm),
@@ -634,7 +634,7 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.primaryEmerald)),
+                            const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.primaryYellow)),
                             const SizedBox(width: 16),
                             Text(
                               lang == 'en' ? 'Calculating best route...' : (lang == 'ku' ? 'خەریکی دۆزینەوەی باشترین ڕێگایە...' : 'جارِ حساب أفضل مسار...'),
@@ -656,7 +656,7 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                                     _buildMetric(
                                       routeToDisplay?['durationFormatted'] ?? '15 دقيقة',
                                       AppStrings.tr('duration', lang),
-                                      AppTheme.primaryEmerald,
+                                      AppTheme.primaryYellow,
                                     ),
                                     Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.2)),
                                     _buildMetric(

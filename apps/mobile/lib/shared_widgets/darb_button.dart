@@ -5,26 +5,55 @@ import '../core/theme/darb_icons.dart';
 enum DarbButtonVariant { primary, secondary, danger, ghost, outline }
 enum DarbButtonSize { small, medium, large }
 
-class DarbButton extends StatelessWidget {
+class DarbButton extends StatefulWidget {
+  
+
+  @override
+  State<DarbButton> createState() => _DarbButtonState();
+}
+
+class _DarbButtonState extends State<DarbButton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      reverseDuration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   final String text;
-  final VoidCallback? onPressed;
+  final VoidCallback? widget.onPressed;
   final DarbButtonVariant variant;
   final DarbButtonSize size;
   final DarbIconType? icon;
   final DarbIconType? trailingIcon;
   final bool isLoading;
-  final bool isFullWidth;
+  final bool widget.isFullWidth;
 
   const DarbButton({
     super.key,
-    required this.text,
-    required this.onPressed,
+    required this.widget.text,
+    required this.widget.onPressed,
     this.variant = DarbButtonVariant.primary,
     this.size = DarbButtonSize.medium,
     this.icon,
     this.trailingIcon,
     this.isLoading = false,
-    this.isFullWidth = true,
+    this.widget.isFullWidth = true,
   });
 
   @override
@@ -61,11 +90,11 @@ class DarbButton extends StatelessWidget {
     Color textColor;
     Color borderColor = Colors.transparent;
 
-    final isDisabled = onPressed == null || isLoading;
+    final isDisabled = widget.onPressed == null || isLoading;
 
     switch (variant) {
       case DarbButtonVariant.primary:
-        backgroundColor = DarbColors.primaryEmerald;
+        backgroundColor = DarbColors.primaryYellow;
         textColor = DarbColors.textInversePrimary;
         break;
       case DarbButtonVariant.secondary:
@@ -79,7 +108,7 @@ class DarbButton extends StatelessWidget {
         break;
       case DarbButtonVariant.ghost:
         backgroundColor = Colors.transparent;
-        textColor = DarbColors.primaryEmerald;
+        textColor = DarbColors.primaryYellow;
         break;
       case DarbButtonVariant.outline:
         backgroundColor = Colors.transparent;
@@ -96,7 +125,7 @@ class DarbButton extends StatelessWidget {
 
     // 3. Build inner content
     Widget content = Row(
-      mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
+      mainAxisSize: widget.isFullWidth ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (isLoading) ...[
@@ -109,34 +138,43 @@ class DarbButton extends StatelessWidget {
             ),
           ),
           const SizedBox(width: DarbSpacing.md),
-        ] else if (icon != null) ...[
-          DarbIcon(icon!, size: iconSize, color: textColor),
+        ] else if (widget.icon != null) ...[
+          DarbIcon(widget.icon!, size: iconSize, color: textColor),
           const SizedBox(width: DarbSpacing.md),
         ],
         Text(
-          text,
+          widget.text,
           style: DarbTypography.section.copyWith(
             color: textColor,
             fontSize: fontSize,
             height: 1.2,
           ),
         ),
-        if (!isLoading && trailingIcon != null) ...[
+        if (!isLoading && widget.trailingIcon != null) ...[
           const SizedBox(width: DarbSpacing.md),
-          DarbIcon(trailingIcon!, size: iconSize, color: textColor),
+          DarbIcon(widget.trailingIcon!, size: iconSize, color: textColor),
         ],
       ],
     );
 
     // 4. Wrap with material button
-    final button = Material(
+    final button = ScaleTransition(
+      scale: _scaleAnimation,
+      child: Material(
       color: backgroundColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: borderColor, width: 1.5),
       ),
-      child: InkWell(
-        onTap: isDisabled ? null : onPressed,
+      child: GestureDetector(
+          onTapDown: isDisabled ? null : (_) => _controller.forward(),
+          onTapUp: isDisabled ? null : (_) {
+            _controller.reverse();
+            widget.onPressed?.call();
+          },
+          onTapCancel: isDisabled ? null : () => _controller.reverse(),
+          child: InkWell(
+        onTap: isDisabled ? null : () {}, // Empty tap to enable ripple, action handled by GestureDetector
         borderRadius: BorderRadius.circular(12),
         splashColor: textColor.withOpacity(0.1),
         highlightColor: textColor.withOpacity(0.05),
@@ -149,6 +187,7 @@ class DarbButton extends StatelessWidget {
       ),
     );
 
-    return isFullWidth ? SizedBox(width: double.infinity, child: button) : button;
+    );
+    return widget.isFullWidth ? SizedBox(width: double.infinity, child: button) : button;
   }
 }

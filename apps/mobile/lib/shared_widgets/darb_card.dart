@@ -1,7 +1,38 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 
-class DarbCard extends StatelessWidget {
+class DarbCard extends StatefulWidget {
+  
+
+  
+
+  @override
+  State<DarbCard> createState() => _DarbCardState();
+}
+
+class _DarbCardState extends State<DarbCard> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 120),
+      reverseDuration: const Duration(milliseconds: 120),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
@@ -11,17 +42,7 @@ class DarbCard extends StatelessWidget {
   final double borderRadius;
   final bool hasShadow;
 
-  const DarbCard({
-    super.key,
-    required this.child,
-    this.padding = const EdgeInsets.all(DarbSpacing.lg),
-    this.margin,
-    this.onTap,
-    this.backgroundColor,
-    this.borderColor,
-    this.borderRadius = 16.0,
-    this.hasShadow = false,
-  });
+  
 
   @override
   Widget build(BuildContext context) {
@@ -50,8 +71,8 @@ class DarbCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(borderRadius),
           child: Padding(
-            padding: padding ?? EdgeInsets.zero,
-            child: child,
+            padding: widget.padding ?? EdgeInsets.zero,
+            child: widget.child,
           ),
         ),
       ),

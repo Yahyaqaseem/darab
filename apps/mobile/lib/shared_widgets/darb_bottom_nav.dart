@@ -48,7 +48,7 @@ class DarbBottomNav extends StatelessWidget {
   Widget _buildNavItem(int index, DarbIconType icon, String label) {
     final isSelected = currentIndex == index;
     final color = isSelected
-        ? DarbColors.primaryEmerald
+        ? DarbColors.primaryYellow
         : (isDark ? DarbColors.textSecondary : DarbColors.textDisabled);
 
     return GestureDetector(
@@ -59,7 +59,7 @@ class DarbBottomNav extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? DarbColors.primaryEmerald.withOpacity(0.15)
+              ? DarbColors.primaryYellow.withOpacity(0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),

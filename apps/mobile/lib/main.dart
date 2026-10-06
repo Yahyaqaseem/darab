@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'core/providers/app_state.dart';
 import 'core/theme/app_theme.dart';
 import 'features/home/home_screen.dart';
+import 'features/splash/splash_screen.dart';
 import 'features/auth/login_screen.dart';
 
 void main() {
@@ -44,9 +45,7 @@ class DarbApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       
-      home: appState.isAuthenticated
-          ? const HomeScreen()
-          : LoginScreen(onLoginSuccess: () => appState.loadInitialData()),
+      home: const SplashScreen(),
     );
   }
 }

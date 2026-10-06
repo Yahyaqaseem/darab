@@ -14,9 +14,10 @@ class DarbSpacing {
 
 class DarbColors {
   // Brand
-  static const Color primaryEmerald = Color(0xFF10B981);
-  static const Color primaryEmeraldLight = Color(0xFF34D399);
-  static const Color primaryEmeraldDark = Color(0xFF059669);
+  static const Color primaryYellow = Color(0xFFEAB308);
+  static const Color successGreen = Color(0xFF10B981);
+  static const Color primaryYellowLight = Color(0xFFFDE047);
+  static const Color primaryYellowDark = Color(0xFFCA8A04);
 
   // Backgrounds & Surfaces (Dark Premium Base)
   static const Color background = Color(0xFF0F172A);
@@ -85,7 +86,7 @@ class DarbTypography {
 
 class AppTheme {
   // Maintaining for backward compatibility until full refactor is done
-  static const Color primaryEmerald = DarbColors.primaryEmerald;
+  static const Color primaryYellow = DarbColors.primaryYellow;
   static const Color accentOrange = DarbColors.warningOrange;
   static const Color darkBackground = DarbColors.background;
   static const Color lightBackground = Color(0xFFF8FAFC);
@@ -99,7 +100,7 @@ class AppTheme {
   static const Color secondarySand = Color(0xFFFDE68A);
   static const Color secondarySandDark = Color(0xFFD97706);
   static const Color alertRed = DarbColors.dangerRed;
-  static const Color successGreen = DarbColors.successGreen;
+  static const Color primaryYellow = DarbColors.primaryYellow;
 
 
 
@@ -108,7 +109,7 @@ class AppTheme {
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
-      primaryColor: DarbColors.primaryEmerald,
+      primaryColor: DarbColors.primaryYellow,
       scaffoldBackgroundColor: DarbColors.background,
       fontFamily: GoogleFonts.cairo().fontFamily,
       
@@ -121,7 +122,7 @@ class AppTheme {
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       colorScheme: const ColorScheme.dark(
-        primary: DarbColors.primaryEmerald,
+        primary: DarbColors.primaryYellow,
         secondary: DarbColors.warningOrange,
         surface: DarbColors.surface,
         background: DarbColors.background,
@@ -140,7 +141,7 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,
-      primaryColor: DarbColors.primaryEmerald,
+      primaryColor: DarbColors.primaryYellow,
       scaffoldBackgroundColor: const Color(0xFFF8FAFC),
       fontFamily: GoogleFonts.cairo().fontFamily,
       
@@ -153,7 +154,7 @@ class AppTheme {
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
       colorScheme: const ColorScheme.light(
-        primary: DarbColors.primaryEmerald,
+        primary: DarbColors.primaryYellow,
         secondary: DarbColors.warningOrange,
         surface: Colors.white,
         background: Color(0xFFF8FAFC),

@@ -99,7 +99,7 @@ class RoadReportModel {
       case 'WATER_ACCUMULATION':
         return const Color(0xFF06B6D4);
       default:
-        return const Color(0xFF10B981);
+        return const Color(0xFFEAB308);
     }
   }
 }

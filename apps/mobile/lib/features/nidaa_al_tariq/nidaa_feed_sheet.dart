@@ -163,7 +163,7 @@ class NidaaFeedSheet extends StatelessWidget {
                             Expanded(
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.primaryEmerald,
+                                  backgroundColor: AppTheme.primaryYellow,
                                   foregroundColor: Colors.white,
                                   minimumSize: const Size(0, 42),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

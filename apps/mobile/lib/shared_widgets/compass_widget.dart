@@ -127,7 +127,7 @@ class _DarbCompassPainter extends CustomPainter {
 
     // 5. Center Pivot Jewel
     canvas.drawCircle(Offset(cx, cy), 3.0, Paint()..color = const Color(0xFF0F172A));
-    canvas.drawCircle(Offset(cx, cy), 1.6, Paint()..color = const Color(0xFF10B981));
+    canvas.drawCircle(Offset(cx, cy), 1.6, Paint()..color = const Color(0xFFEAB308));
   }
 
   @override

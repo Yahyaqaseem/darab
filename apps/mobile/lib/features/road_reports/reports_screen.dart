@@ -23,7 +23,7 @@ class ReportsScreen extends StatelessWidget {
         title: Text('بلاغات الطريق الحية', style: DarbTypography.title),
         actions: [
           IconButton(
-            icon: const DarbIcon(DarbIconType.refresh, size: 24, color: DarbColors.primaryEmerald),
+            icon: const DarbIcon(DarbIconType.refresh, size: 24, color: DarbColors.primaryYellow),
             onPressed: () => appState.loadNearbyData(),
           ),
         ],
@@ -40,7 +40,7 @@ class ReportsScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  DarbIcon(DarbIconType.verified, size: 64, color: DarbColors.successGreen.withOpacity(0.6)),
+                  DarbIcon(DarbIconType.verified, size: 64, color: DarbColors.primaryYellow.withOpacity(0.6)),
                   const SizedBox(height: DarbSpacing.md),
                   Text('الطرق سالكة ولا توجد بلاغات حالياً', style: DarbTypography.section),
                   const SizedBox(height: DarbSpacing.xs),
@@ -121,11 +121,11 @@ class ReportsScreen extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                const DarbIcon(DarbIconType.verified, size: 16, color: DarbColors.primaryEmerald),
+                                const DarbIcon(DarbIconType.verified, size: 16, color: DarbColors.primaryYellow),
                                 const SizedBox(width: DarbSpacing.xs),
                                 Text(
                                   ' سواق أكدوا',
-                                  style: DarbTypography.caption.copyWith(color: DarbColors.primaryEmerald),
+                                  style: DarbTypography.caption.copyWith(color: DarbColors.primaryYellow),
                                 ),
                               ],
                             ),

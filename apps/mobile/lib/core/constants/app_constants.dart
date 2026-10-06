@@ -101,7 +101,7 @@ class AppConstants {
       'type': 'OTHER',
       'label': 'بلاغ آخر',
       'icon': Icons.info_outline,
-      'color': Color(0xFF10B981),
+      'color': Color(0xFFEAB308),
       'desc': 'ملاحظة عامة عن حالة السير',
     },
   ];

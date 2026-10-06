@@ -83,10 +83,10 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
               child: Container(
                 padding: const EdgeInsets.all(DarbSpacing.lg),
                 decoration: BoxDecoration(
-                  color: DarbColors.primaryEmerald.withOpacity(0.12),
+                  color: DarbColors.primaryYellow.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const DarbIcon(DarbIconType.route, color: DarbColors.primaryEmerald, size: 48),
+                child: const DarbIcon(DarbIconType.route, color: DarbColors.primaryYellow, size: 48),
               ),
             ),
             const SizedBox(height: DarbSpacing.sm),
@@ -109,7 +109,7 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
                 children: [
                   Column(
                     children: [
-                      const DarbIcon(DarbIconType.route, color: DarbColors.primaryEmerald, size: 14),
+                      const DarbIcon(DarbIconType.route, color: DarbColors.primaryYellow, size: 14),
                       const SizedBox(height: 4),
                       Container(width: 2, height: 24, color: DarbColors.border),
                       const SizedBox(height: 4),
@@ -155,18 +155,18 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
               Container(
                 padding: const EdgeInsets.all(DarbSpacing.md),
                 decoration: BoxDecoration(
-                  color: DarbColors.primaryEmerald.withOpacity(0.1),
+                  color: DarbColors.primaryYellow.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: DarbColors.primaryEmerald.withOpacity(0.3)),
+                  border: Border.all(color: DarbColors.primaryYellow.withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
-                    const DarbIcon(DarbIconType.verified, color: DarbColors.primaryEmerald, size: 26),
+                    const DarbIcon(DarbIconType.verified, color: DarbColors.primaryYellow, size: 26),
                     const SizedBox(width: DarbSpacing.sm),
                     Expanded(
                       child: Text(
                         'تم تصفية طفرة الـ GPS العشوائية ( كم/س) واحتساب السرعة الموثوقة ( كم/س) بنظام الذكاء الاصطناعي.',
-                        style: DarbTypography.caption.copyWith(color: DarbColors.primaryEmerald, fontWeight: FontWeight.bold),
+                        style: DarbTypography.caption.copyWith(color: DarbColors.primaryYellow, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -188,7 +188,7 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      DarbIcon(DarbIconType.route, size: 48, color: DarbColors.primaryEmerald.withOpacity(0.8)),
+                      DarbIcon(DarbIconType.route, size: 48, color: DarbColors.primaryYellow.withOpacity(0.8)),
                       const SizedBox(height: DarbSpacing.sm),
                       Text(
                         _isReplaying ? 'جارِ تشغيل الإعادة: %' : 'مشاهدة إعادة مسار الرحلة',
@@ -203,7 +203,7 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
                       right: 0,
                       child: LinearProgressIndicator(
                         value: _replayProgress,
-                        color: DarbColors.primaryEmerald,
+                        color: DarbColors.primaryYellow,
                         backgroundColor: Colors.transparent,
                       ),
                     ),
@@ -248,7 +248,7 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DarbIcon(icon, color: DarbColors.primaryEmerald, size: 22),
+            DarbIcon(icon, color: DarbColors.primaryYellow, size: 22),
             const SizedBox(height: DarbSpacing.sm),
             Text(label, style: DarbTypography.caption),
             const SizedBox(height: 2),

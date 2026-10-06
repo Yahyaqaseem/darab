@@ -139,7 +139,7 @@ class _DestinationSearchScreenState extends State<DestinationSearchScreen> {
                           hintText: 'ابحث عن مكان، شارع، مدينة...',
                           hintStyle: DarbTypography.body.copyWith(color: DarbColors.textSecondary),
                           border: InputBorder.none,
-                          icon: const DarbIcon(DarbIconType.search, color: DarbColors.primaryEmerald, size: 20),
+                          icon: const DarbIcon(DarbIconType.search, color: DarbColors.primaryYellow, size: 20),
                         ),
                         onChanged: _onSearchChanged,
                       ),
@@ -152,7 +152,7 @@ class _DestinationSearchScreenState extends State<DestinationSearchScreen> {
             // Results
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: DarbColors.primaryEmerald))
+                  ? const Center(child: CircularProgressIndicator(color: DarbColors.primaryYellow))
                   : _searchController.text.trim().length < 2
                       ? _buildQuickDestinations(isDark)
                       : _results.isEmpty
@@ -208,10 +208,10 @@ class _DestinationSearchScreenState extends State<DestinationSearchScreen> {
               Container(
                 padding: const EdgeInsets.all(DarbSpacing.sm),
                 decoration: BoxDecoration(
-                  color: DarbColors.primaryEmerald.withOpacity(0.1),
+                  color: DarbColors.primaryYellow.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: DarbIcon(icon, color: DarbColors.primaryEmerald, size: 22),
+                child: DarbIcon(icon, color: DarbColors.primaryYellow, size: 22),
               ),
               const SizedBox(width: DarbSpacing.md),
               Expanded(
@@ -284,10 +284,10 @@ class _DestinationSearchScreenState extends State<DestinationSearchScreen> {
                   Container(
                     padding: const EdgeInsets.all(DarbSpacing.sm),
                     decoration: BoxDecoration(
-                      color: DarbColors.primaryEmerald.withOpacity(0.1),
+                      color: DarbColors.primaryYellow.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: DarbIcon(icon, color: DarbColors.primaryEmerald, size: 22),
+                    child: DarbIcon(icon, color: DarbColors.primaryYellow, size: 22),
                   ),
                   const SizedBox(width: DarbSpacing.md),
                   Expanded(

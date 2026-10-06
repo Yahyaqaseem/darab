@@ -113,9 +113,9 @@ class _DarbLocationMarkerState extends State<DarbLocationMarker>
                 height: widget.size * haloScale,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF10B981).withOpacity(0.08),
+                  color: const Color(0xFFEAB308).withOpacity(0.08),
                   border: Border.all(
-                    color: const Color(0xFF10B981).withOpacity(0.22),
+                    color: const Color(0xFFEAB308).withOpacity(0.22),
                     width: 1.0,
                   ),
                 ),
@@ -197,7 +197,7 @@ class _DarbVehicleMarkerPainter extends CustomPainter {
       ..close();
 
     final hullBorderPaint = Paint()
-      ..color = const Color(0xFF10B981) // Emerald Primary
+      ..color = const Color(0xFFEAB308) // Emerald Primary
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke
       ..strokeJoin = StrokeJoin.round;

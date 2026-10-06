@@ -39,7 +39,7 @@ class _FuelScreenState extends State<FuelScreen> {
         title: Text('محطات الوقود والأسعار', style: DarbTypography.title),
         actions: [
           IconButton(
-            icon: const DarbIcon(DarbIconType.refresh, size: 24, color: DarbColors.primaryEmerald),
+            icon: const DarbIcon(DarbIconType.refresh, size: 24, color: DarbColors.primaryYellow),
             onPressed: () => appState.loadNearbyData(),
           ),
         ],
@@ -49,7 +49,7 @@ class _FuelScreenState extends State<FuelScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const DarbIcon(DarbIconType.fuel, size: 54, color: DarbColors.primaryEmerald),
+                  const DarbIcon(DarbIconType.fuel, size: 54, color: DarbColors.primaryYellow),
                   const SizedBox(height: DarbSpacing.md),
                   Text('جاري جلب المحطات القريبة...', style: DarbTypography.body.copyWith(color: DarbColors.textSecondary)),
                   const SizedBox(height: DarbSpacing.lg),
@@ -82,10 +82,10 @@ class _FuelScreenState extends State<FuelScreen> {
                             Container(
                               padding: const EdgeInsets.all(DarbSpacing.sm),
                               decoration: BoxDecoration(
-                                color: DarbColors.primaryEmerald.withOpacity(0.12),
+                                color: DarbColors.primaryYellow.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const DarbIcon(DarbIconType.fuel, color: DarbColors.primaryEmerald, size: 26),
+                              child: const DarbIcon(DarbIconType.fuel, color: DarbColors.primaryYellow, size: 26),
                             ),
                             const SizedBox(width: DarbSpacing.md),
                             Expanded(
@@ -104,7 +104,7 @@ class _FuelScreenState extends State<FuelScreen> {
                                       ),
                                       if (s.isVerified) ...[
                                         const SizedBox(width: DarbSpacing.xs),
-                                        const DarbIcon(DarbIconType.verified, color: DarbColors.primaryEmerald, size: 18),
+                                        const DarbIcon(DarbIconType.verified, color: DarbColors.primaryYellow, size: 18),
                                       ],
                                     ],
                                   ),
@@ -138,7 +138,7 @@ class _FuelScreenState extends State<FuelScreen> {
                         // Fuel Prices Row
                         Row(
                           children: [
-                            Expanded(child: _buildPricePill('عادي', '', DarbColors.primaryEmerald)),
+                            Expanded(child: _buildPricePill('عادي', '', DarbColors.primaryYellow)),
                             const SizedBox(width: DarbSpacing.sm),
                             Expanded(child: _buildPricePill('محسن', '', DarbColors.warningOrange)),
                             const SizedBox(width: DarbSpacing.sm),
@@ -157,7 +157,7 @@ class _FuelScreenState extends State<FuelScreen> {
                                   width: 8,
                                   height: 8,
                                   decoration: BoxDecoration(
-                                    color: s.isPetrolAvailable ? DarbColors.successGreen : DarbColors.dangerRed,
+                                    color: s.isPetrolAvailable ? DarbColors.primaryYellow : DarbColors.dangerRed,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -165,7 +165,7 @@ class _FuelScreenState extends State<FuelScreen> {
                                 Text(
                                   s.isPetrolAvailable ? 'متوفر' : 'غير متوفر',
                                   style: DarbTypography.caption.copyWith(
-                                    color: s.isPetrolAvailable ? DarbColors.successGreen : DarbColors.dangerRed,
+                                    color: s.isPetrolAvailable ? DarbColors.primaryYellow : DarbColors.dangerRed,
                                   ),
                                 ),
                                 Container(

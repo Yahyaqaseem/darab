@@ -31,8 +31,8 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundColor: DarbColors.primaryEmerald.withOpacity(0.15),
-                    child: const DarbIcon(DarbIconType.profile, size: 48, color: DarbColors.primaryEmerald),
+                    backgroundColor: DarbColors.primaryYellow.withOpacity(0.15),
+                    child: const DarbIcon(DarbIconType.profile, size: 48, color: DarbColors.primaryYellow),
                   ),
                   const SizedBox(height: DarbSpacing.md),
                   Text(
@@ -64,7 +64,7 @@ class ProfileScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatColumn('نقاط السمعة', '', DarbColors.primaryEmerald),
+                      _buildStatColumn('نقاط السمعة', '', DarbColors.primaryYellow),
                       _buildStatColumn('البلاغات المؤكدة', '0', DarbColors.warningOrange),
                       _buildStatColumn('إجابات مفيدة', '0', DarbColors.infoBlue),
                     ],
@@ -97,7 +97,7 @@ class ProfileScreen extends StatelessWidget {
                         Text(
                           appState.currentLanguage == 'ar' ? 'العربية' :
                           (appState.currentLanguage == 'ku' ? 'کوردی' : 'English'),
-                          style: DarbTypography.body.copyWith(color: DarbColors.primaryEmerald),
+                          style: DarbTypography.body.copyWith(color: DarbColors.primaryYellow),
                         ),
                         const SizedBox(width: DarbSpacing.sm),
                         const DarbIcon(DarbIconType.chevronLeft, size: 14, color: DarbColors.textSecondary),
@@ -178,9 +178,9 @@ class ProfileScreen extends StatelessWidget {
     final isSelected = appState.currentLanguage == code;
     return ListTile(
       title: Text(label, textAlign: TextAlign.center, style: DarbTypography.section.copyWith(
-        color: isSelected ? DarbColors.primaryEmerald : DarbColors.textPrimary,
+        color: isSelected ? DarbColors.primaryYellow : DarbColors.textPrimary,
       )),
-      trailing: isSelected ? const DarbIcon(DarbIconType.verified, color: DarbColors.primaryEmerald) : null,
+      trailing: isSelected ? const DarbIcon(DarbIconType.verified, color: DarbColors.primaryYellow) : null,
       onTap: () {
         appState.setLanguage(code);
         Navigator.pop(context);

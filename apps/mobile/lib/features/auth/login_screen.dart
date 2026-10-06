@@ -170,11 +170,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 90,
                     height: 90,
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryEmerald,
+                      color: AppTheme.primaryYellow,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primaryEmerald.withOpacity(0.4),
+                          color: AppTheme.primaryYellow.withOpacity(0.4),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),

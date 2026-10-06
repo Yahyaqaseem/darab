@@ -92,8 +92,8 @@ class DarbIconSizes {
 
 /// Standardized DARB Semantic Colors
 class DarbIconColors {
-  static const Color emerald = Color(0xFF10B981);
-  static const Color emeraldDark = Color(0xFF059669);
+  static const Color emerald = Color(0xFFEAB308);
+  static const Color emeraldDark = Color(0xFFCA8A04);
   static const Color charcoal = Color(0xFF1E293B);
   static const Color darkNavy = Color(0xFF0F172A);
   static const Color offWhite = Color(0xFFF8FAFC);

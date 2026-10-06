@@ -43,7 +43,7 @@ class _NidaaDialogState extends State<NidaaDialog> {
               ),
             ],
           ),
-          backgroundColor: AppTheme.primaryEmerald,
+          backgroundColor: AppTheme.primaryYellow,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -144,7 +144,7 @@ class _NidaaDialogState extends State<NidaaDialog> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       child: Row(
                         children: [
-                          DarbIcon(_getQuestionIcon(item['type'] as String), color: AppTheme.primaryEmerald, size: 24),
+                          DarbIcon(_getQuestionIcon(item['type'] as String), color: AppTheme.primaryYellow, size: 24),
                           const SizedBox(width: 14),
                           Expanded(
                             child: Text(

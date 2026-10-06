@@ -47,7 +47,7 @@ class _ReportDialogState extends State<ReportDialog> {
               ),
             ],
           ),
-          backgroundColor: DarbColors.primaryEmerald,
+          backgroundColor: DarbColors.primaryYellow,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),

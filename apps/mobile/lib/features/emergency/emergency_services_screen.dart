@@ -120,10 +120,10 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
                             Container(
                               padding: const EdgeInsets.all(DarbSpacing.sm),
                               decoration: BoxDecoration(
-                                color: DarbColors.primaryEmerald.withOpacity(0.12),
+                                color: DarbColors.primaryYellow.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: DarbIcon(_getProviderIcon(p['type'] as String), color: DarbColors.primaryEmerald, size: 24),
+                              child: DarbIcon(_getProviderIcon(p['type'] as String), color: DarbColors.primaryYellow, size: 24),
                             ),
                             const SizedBox(width: DarbSpacing.md),
                             Expanded(
@@ -171,12 +171,12 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.sm, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: DarbColors.successGreen.withOpacity(0.15),
+                                  color: DarbColors.primaryYellow.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   'طوارئ 24/7',
-                                  style: DarbTypography.caption.copyWith(color: DarbColors.successGreen),
+                                  style: DarbTypography.caption.copyWith(color: DarbColors.primaryYellow),
                                 ),
                               ),
                           ],
@@ -227,10 +227,10 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.md, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? DarbColors.primaryEmerald : DarbColors.surface,
+          color: isSelected ? DarbColors.primaryYellow : DarbColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? DarbColors.primaryEmerald : DarbColors.border.withOpacity(0.5),
+            color: isSelected ? DarbColors.primaryYellow : DarbColors.border.withOpacity(0.5),
           ),
         ),
         child: Row(
@@ -240,7 +240,7 @@ class _EmergencyServicesScreenState extends State<EmergencyServicesScreen> {
               DarbIcon(
                 icon,
                 size: 16,
-                color: isSelected ? DarbColors.textInversePrimary : DarbColors.primaryEmerald,
+                color: isSelected ? DarbColors.textInversePrimary : DarbColors.primaryYellow,
               ),
               const SizedBox(width: DarbSpacing.xs),
             ],

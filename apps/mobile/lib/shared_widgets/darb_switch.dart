@@ -21,7 +21,7 @@ class DarbSwitch extends StatelessWidget {
     final switchWidget = CupertinoSwitch(
       value: value,
       onChanged: onChanged,
-      activeColor: DarbColors.primaryEmerald,
+      activeColor: DarbColors.primaryYellow,
       trackColor: DarbColors.card,
     );
 
