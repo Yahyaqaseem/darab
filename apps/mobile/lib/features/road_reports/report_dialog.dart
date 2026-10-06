@@ -48,7 +48,7 @@ class _ReportDialogState extends State<ReportDialog> with SingleTickerProviderSt
     
     // Actually submit the report via appState
     final appState = Provider.of<AppState>(context, listen: false);
-    appState.addReport(type, 'مجهول', 'User call from Road Call feature');
+    appState.submitReport(type, description: 'User call');
     
     await Future.delayed(const Duration(milliseconds: 1500));
     if (context.mounted) Navigator.pop(context);
