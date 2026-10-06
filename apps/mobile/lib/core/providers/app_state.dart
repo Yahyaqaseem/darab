@@ -78,6 +78,8 @@ class AppState extends ChangeNotifier {
   Map<String, dynamic>? get activeRoute => _activeRoute;
   String? get destinationName => _destinationName;
   List<RoadReportModel> get reports => _reports;
+  final Set<String> _votedReportIds = {};
+  bool hasVotedOnReport(String reportId) => _votedReportIds.contains(reportId);
   List<RoadQuestionModel> get activeRoadQuestions => _activeRoadQuestions;
   List<FuelStationModel> get fuelStations => _fuelStations;
   List<PlaceModel> get places => _places;
@@ -367,6 +369,8 @@ class AppState extends ChangeNotifier {
 
   // Confirm or Dispute Report
   Future<void> confirmReport(String reportId, String vote) async {
+    if (_votedReportIds.contains(reportId)) return;
+    _votedReportIds.add(reportId);
     try {
       await _apiService.confirmReport(reportId, vote);
     } catch (e) {

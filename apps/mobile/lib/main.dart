@@ -29,7 +29,7 @@ class DarbApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: appState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      themeMode: ThemeMode.dark, // Locked to Dark Mode for Barzani Map premium identity
       
       // Multi-Language RTL/LTR Configuration (maps 'ku' safely to avoid Flutter crash)
       locale: appState.currentLanguage == 'en'

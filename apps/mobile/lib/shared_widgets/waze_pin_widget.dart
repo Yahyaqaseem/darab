@@ -162,56 +162,91 @@ class WazePinWidget extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: DarbIconColors.emerald,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      icon: const Icon(Icons.thumb_up_alt_rounded, size: 18),
-                      label: Text(
-                        lang == 'en' ? 'Still There' : (lang == 'ku' ? 'هێشتا هەیە' : 'موجود 👍'),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      onPressed: () {
-                        appState.confirmReport(report!.id, 'CONFIRM');
-                        Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(lang == 'en' ? 'Thank you for confirming!' : (lang == 'ku' ? 'سوپاس بۆ پشتڕاستکردنەوە!' : 'شكراً لتأكيدك! ساعدت السائقين')),
-                            backgroundColor: DarbIconColors.emerald,
-                            duration: const Duration(seconds: 2),
+              TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 1.0, end: 0.0),
+                  duration: const Duration(seconds: 30),
+                  onEnd: () {
+                    if (ctx.mounted && Navigator.canPop(ctx)) {
+                      Navigator.pop(ctx);
+                    }
+                  },
+                  builder: (context, value, child) {
+                    return Column(
+                      children: [
+                        Stack(
+                          children: [
+                            Container(
+                              height: 48,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: DarbColors.surface,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            Container(
+                              height: 48,
+                              width: MediaQuery.of(context).size.width * value,
+                              decoration: BoxDecoration(
+                                color: DarbColors.primaryYellow.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 48,
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: DarbColors.primaryYellow,
+                                  shadowColor: Colors.transparent,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                    side: const BorderSide(color: DarbColors.primaryYellow, width: 1.5),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.thumb_up_alt_rounded, size: 20),
+                                label: Text(
+                                  lang == 'en' ? 'Still There' : (lang == 'ku' ? 'ھێشتا لێرەیە' : 'موجود 💯'),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                onPressed: () {
+                                  appState.confirmReport(report!.id, 'CONFIRM');
+                                  Navigator.pop(ctx);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: TextButton.icon(
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.white60,
+                              backgroundColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            icon: const Icon(Icons.thumb_down_alt_rounded, size: 20),
+                            label: Text(
+                              lang == 'en' ? 'Cleared' : (lang == 'ku' ? 'نەماوە' : 'غير موجود ❌'),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            onPressed: () {
+                              appState.confirmReport(report!.id, 'DENY');
+                              Navigator.pop(ctx);
+                            },
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey,
-                        side: BorderSide(color: Colors.grey.withOpacity(0.4)),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      icon: const Icon(Icons.thumb_down_alt_rounded, size: 18),
-                      label: Text(
-                        lang == 'en' ? 'Cleared' : (lang == 'ku' ? 'نەماوە' : 'غير موجود 👎'),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      onPressed: () {
-                        appState.confirmReport(report!.id, 'DENY');
-                        Navigator.pop(ctx);
-                      },
-                    ),
-                  ),
-                ],
-              ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
             ],
           ),
         ),
