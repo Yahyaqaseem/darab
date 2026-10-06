@@ -15,7 +15,6 @@ class DarbSpacing {
 class DarbColors {
   // Brand
   static const Color primaryYellow = Color(0xFFEAB308);
-  static const Color successGreen = Color(0xFF10B981);
   static const Color primaryYellowLight = Color(0xFFFDE047);
   static const Color primaryYellowDark = Color(0xFFCA8A04);
 
