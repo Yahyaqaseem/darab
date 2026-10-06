@@ -9,6 +9,7 @@ class DarbCard extends StatefulWidget {
   final Color? backgroundColor;
   final bool hasShadow;
   final double borderRadius;
+  final Color? borderColor;
 
   const DarbCard({
     super.key,
@@ -19,6 +20,7 @@ class DarbCard extends StatefulWidget {
     this.backgroundColor,
     this.hasShadow = true,
     this.borderRadius = 16.0,
+    this.borderColor,
   });
 
   @override
@@ -58,7 +60,7 @@ class _DarbCardState extends State<DarbCard> with SingleTickerProviderStateMixin
         color: widget.backgroundColor ?? (isDark ? DarbColors.card : Colors.white),
         borderRadius: BorderRadius.circular(widget.borderRadius),
         border: Border.all(
-          color: isDark ? DarbColors.border.withOpacity(0.5) : const Color(0xFFE2E8F0),
+          color: widget.borderColor ?? (isDark ? DarbColors.border.withOpacity(0.5) : const Color(0xFFE2E8F0)),
           width: 1,
         ),
         boxShadow: [
