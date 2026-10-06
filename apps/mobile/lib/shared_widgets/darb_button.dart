@@ -2,11 +2,30 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 import '../core/theme/darb_icons.dart';
 
-enum DarbButtonVariant { primary, secondary, danger, ghost, outline }
+enum DarbButtonVariant { primary, secondary, outlined, danger }
 enum DarbButtonSize { small, medium, large }
 
 class DarbButton extends StatefulWidget {
-  
+  const DarbButton({
+    super.key,
+    required this.text,
+    this.onPressed,
+    this.variant = DarbButtonVariant.primary,
+    this.size = DarbButtonSize.medium,
+    this.icon,
+    this.trailingIcon,
+    this.isLoading = false,
+    this.isFullWidth = false,
+  });
+
+  final String text;
+  final VoidCallback? onPressed;
+  final DarbButtonVariant variant;
+  final DarbButtonSize size;
+  final DarbIconType? icon;
+  final DarbIconType? trailingIcon;
+  final bool isLoading;
+  final bool isFullWidth;
 
   @override
   State<DarbButton> createState() => _DarbButtonState();
@@ -35,105 +54,82 @@ class _DarbButtonState extends State<DarbButton> with SingleTickerProviderStateM
     super.dispose();
   }
 
-  final String text;
-  final VoidCallback? widget.onPressed;
-  final DarbButtonVariant variant;
-  final DarbButtonSize size;
-  final DarbIconType? icon;
-  final DarbIconType? trailingIcon;
-  final bool isLoading;
-  final bool widget.isFullWidth;
-
-  const DarbButton({
-    super.key,
-    required this.widget.text,
-    required this.widget.onPressed,
-    this.variant = DarbButtonVariant.primary,
-    this.size = DarbButtonSize.medium,
-    this.icon,
-    this.trailingIcon,
-    this.isLoading = false,
-    this.widget.isFullWidth = true,
-  });
-
   @override
   Widget build(BuildContext context) {
-    // 1. Determine sizes
-    double height = 48.0;
-    double fontSize = 16.0;
-    double iconSize = 20.0;
-    EdgeInsets padding = const EdgeInsets.symmetric(horizontal: DarbSpacing.xl);
+    final isDisabled = widget.onPressed == null || widget.isLoading;
 
-    switch (size) {
-      case DarbButtonSize.small:
-        height = 36.0;
-        fontSize = 14.0;
-        iconSize = 16.0;
-        padding = const EdgeInsets.symmetric(horizontal: DarbSpacing.lg);
-        break;
-      case DarbButtonSize.medium:
-        height = 48.0;
-        fontSize = 16.0;
-        iconSize = 20.0;
-        padding = const EdgeInsets.symmetric(horizontal: DarbSpacing.xl);
-        break;
-      case DarbButtonSize.large:
-        height = 56.0;
-        fontSize = 18.0;
-        iconSize = 24.0;
-        padding = const EdgeInsets.symmetric(horizontal: DarbSpacing.xxl);
-        break;
-    }
-
-    // 2. Determine colors based on variant
+    // 1. Determine Colors based on variant
     Color backgroundColor;
     Color textColor;
-    Color borderColor = Colors.transparent;
+    Color borderColor;
 
-    final isDisabled = widget.onPressed == null || isLoading;
-
-    switch (variant) {
+    switch (widget.variant) {
       case DarbButtonVariant.primary:
         backgroundColor = DarbColors.primaryYellow;
-        textColor = DarbColors.textInversePrimary;
+        textColor = DarbColors.textInversePrimary; // Dark text on yellow
+        borderColor = DarbColors.primaryYellow;
         break;
       case DarbButtonVariant.secondary:
         backgroundColor = DarbColors.surface;
         textColor = DarbColors.textPrimary;
+        borderColor = DarbColors.border;
         break;
-      case DarbButtonVariant.danger:
-        backgroundColor = DarbColors.dangerRed.withOpacity(0.15);
-        textColor = DarbColors.dangerRed;
-        borderColor = DarbColors.dangerRed.withOpacity(0.3);
-        break;
-      case DarbButtonVariant.ghost:
-        backgroundColor = Colors.transparent;
-        textColor = DarbColors.primaryYellow;
-        break;
-      case DarbButtonVariant.outline:
+      case DarbButtonVariant.outlined:
         backgroundColor = Colors.transparent;
         textColor = DarbColors.textPrimary;
         borderColor = DarbColors.border;
+        break;
+      case DarbButtonVariant.danger:
+        backgroundColor = DarbColors.dangerRed;
+        textColor = Colors.white;
+        borderColor = DarbColors.dangerRed;
         break;
     }
 
     if (isDisabled) {
       backgroundColor = DarbColors.surface.withOpacity(0.5);
       textColor = DarbColors.textDisabled;
-      borderColor = Colors.transparent;
+      borderColor = DarbColors.border.withOpacity(0.5);
     }
 
-    // 3. Build inner content
+    // 2. Determine Sizes
+    double height;
+    EdgeInsetsGeometry padding;
+    TextStyle textStyle;
+    double iconSize;
+
+    switch (widget.size) {
+      case DarbButtonSize.small:
+        height = 36;
+        padding = const EdgeInsets.symmetric(horizontal: DarbSpacing.md);
+        textStyle = DarbTypography.caption.copyWith(fontWeight: FontWeight.w600);
+        iconSize = 16;
+        break;
+      case DarbButtonSize.medium:
+        height = 48;
+        padding = const EdgeInsets.symmetric(horizontal: DarbSpacing.lg);
+        textStyle = DarbTypography.body.copyWith(fontWeight: FontWeight.w700);
+        iconSize = 20;
+        break;
+      case DarbButtonSize.large:
+        height = 56;
+        padding = const EdgeInsets.symmetric(horizontal: DarbSpacing.xl);
+        textStyle = DarbTypography.section.copyWith(fontWeight: FontWeight.w700);
+        iconSize = 24;
+        break;
+    }
+
+    // 3. Build Content
     Widget content = Row(
-      mainAxisSize: widget.isFullWidth ? MainAxisSize.max : MainAxisSize.min,
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (isLoading) ...[
+        if (widget.isLoading) ...[
           SizedBox(
             width: iconSize,
             height: iconSize,
             child: CircularProgressIndicator(
-              strokeWidth: 2.0,
+              strokeWidth: 2.5,
               valueColor: AlwaysStoppedAnimation<Color>(textColor),
             ),
           ),
@@ -142,15 +138,14 @@ class _DarbButtonState extends State<DarbButton> with SingleTickerProviderStateM
           DarbIcon(widget.icon!, size: iconSize, color: textColor),
           const SizedBox(width: DarbSpacing.md),
         ],
-        Text(
-          widget.text,
-          style: DarbTypography.section.copyWith(
-            color: textColor,
-            fontSize: fontSize,
-            height: 1.2,
+        Flexible(
+          child: Text(
+            widget.text,
+            style: textStyle.copyWith(color: textColor),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-        if (!isLoading && widget.trailingIcon != null) ...[
+        if (!widget.isLoading && widget.trailingIcon != null) ...[
           const SizedBox(width: DarbSpacing.md),
           DarbIcon(widget.trailingIcon!, size: iconSize, color: textColor),
         ],
@@ -161,12 +156,12 @@ class _DarbButtonState extends State<DarbButton> with SingleTickerProviderStateM
     final button = ScaleTransition(
       scale: _scaleAnimation,
       child: Material(
-      color: backgroundColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: borderColor, width: 1.5),
-      ),
-      child: GestureDetector(
+        color: backgroundColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: borderColor, width: 1.5),
+        ),
+        child: GestureDetector(
           onTapDown: isDisabled ? null : (_) => _controller.forward(),
           onTapUp: isDisabled ? null : (_) {
             _controller.reverse();
@@ -174,20 +169,21 @@ class _DarbButtonState extends State<DarbButton> with SingleTickerProviderStateM
           },
           onTapCancel: isDisabled ? null : () => _controller.reverse(),
           child: InkWell(
-        onTap: isDisabled ? null : () {}, // Empty tap to enable ripple, action handled by GestureDetector
-        borderRadius: BorderRadius.circular(12),
-        splashColor: textColor.withOpacity(0.1),
-        highlightColor: textColor.withOpacity(0.05),
-        child: Container(
-          height: height,
-          padding: padding,
-          alignment: Alignment.center,
-          child: content,
+            onTap: isDisabled ? null : () {},
+            borderRadius: BorderRadius.circular(12),
+            splashColor: textColor.withOpacity(0.1),
+            highlightColor: textColor.withOpacity(0.05),
+            child: Container(
+              height: height,
+              padding: padding,
+              alignment: Alignment.center,
+              child: content,
+            ),
+          ),
         ),
       ),
     );
 
-    );
     return widget.isFullWidth ? SizedBox(width: double.infinity, child: button) : button;
   }
 }
