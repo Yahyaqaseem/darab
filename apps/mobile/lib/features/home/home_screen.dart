@@ -333,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     sprites: _vectorStyle!.sprites,
                     tileProviders: _vectorStyle!.providers,
                     layerMode: VectorTileLayerMode.raster,
-                    rasterImageScale: 2.0,
+                    
                     memoryTileCacheMaxSize: 128 * 1024 * 1024,
                     memoryTileDataCacheMaxSize: 500,
                     fileCacheMaximumSizeInBytes: 256 * 1024 * 1024,
