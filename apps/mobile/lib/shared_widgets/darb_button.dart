@@ -56,6 +56,7 @@ class _DarbButtonState extends State<DarbButton> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isDisabled = widget.onPressed == null || widget.isLoading;
 
     // 1. Determine Colors based on variant
@@ -70,13 +71,13 @@ class _DarbButtonState extends State<DarbButton> with SingleTickerProviderStateM
         borderColor = DarbColors.primaryYellow;
         break;
       case DarbButtonVariant.secondary:
-        backgroundColor = DarbColors.surface;
-        textColor = DarbColors.textPrimary;
+        backgroundColor = isDark ? DarbColors.surface : const Color(0xFFF1F5F9);
+        textColor = isDark ? DarbColors.textPrimary : DarbColors.textInversePrimary;
         borderColor = DarbColors.border;
         break;
       case DarbButtonVariant.outlined:
         backgroundColor = Colors.transparent;
-        textColor = DarbColors.textPrimary;
+        textColor = isDark ? DarbColors.textPrimary : DarbColors.textInversePrimary;
         borderColor = DarbColors.border;
         break;
       case DarbButtonVariant.danger:
@@ -88,7 +89,7 @@ class _DarbButtonState extends State<DarbButton> with SingleTickerProviderStateM
 
     if (isDisabled) {
       backgroundColor = DarbColors.surface.withOpacity(0.5);
-      textColor = DarbColors.textDisabled;
+      textColor = isDark ? DarbColors.textDisabled : const Color(0xFF94A3B8);
       borderColor = DarbColors.border.withOpacity(0.5);
     }
 

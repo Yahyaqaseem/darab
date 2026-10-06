@@ -4,6 +4,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
+import '../../main.dart';
+import 'package:flutter/cupertino.dart';
+import '../../core/theme/app_theme.dart';
 
 enum TripState { IDLE, DESTINATION_SELECTED, ROUTE_PREVIEW, NAVIGATING, ARRIVING, COMPLETED, CANCELLED }
 
@@ -14,6 +17,11 @@ class AppState extends ChangeNotifier {
   // Theme & Locale
   bool _isDarkMode = true;
   String _currentLanguage = 'ar';
+
+  // Gas Station Geofencing
+  String? _stoppedStationId;
+  DateTime? _lastStationStopStart;
+  String? _promptedStationId;
 
   // Auth & Profile
   bool _isAuthenticated = false;

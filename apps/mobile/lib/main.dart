@@ -17,6 +17,8 @@ void main() {
   );
 }
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class DarbApp extends StatelessWidget {
   const DarbApp({super.key});
 
@@ -27,9 +29,10 @@ class DarbApp extends StatelessWidget {
     return MaterialApp(
       title: 'دَرْب — DARB',
       debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark, // Locked to Dark Mode for Barzani Map premium identity
+      themeMode: appState.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       
       // Multi-Language RTL/LTR Configuration (maps 'ku' safely to avoid Flutter crash)
       locale: appState.currentLanguage == 'en'

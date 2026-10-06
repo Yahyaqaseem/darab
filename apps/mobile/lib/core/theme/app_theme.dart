@@ -49,37 +49,37 @@ class DarbTypography {
   static TextStyle get display => _baseCairo.copyWith(
     fontSize: 28,
     fontWeight: FontWeight.w700,
-    color: DarbColors.textPrimary,
+    
   );
 
   static TextStyle get title => _baseCairo.copyWith(
     fontSize: 22,
     fontWeight: FontWeight.w700,
-    color: DarbColors.textPrimary,
+    
   );
 
   static TextStyle get section => _baseCairo.copyWith(
     fontSize: 18,
     fontWeight: FontWeight.w600,
-    color: DarbColors.textPrimary,
+    
   );
 
   static TextStyle get body => _baseCairo.copyWith(
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    color: DarbColors.textPrimary,
+    
   );
 
   static TextStyle get caption => _baseCairo.copyWith(
     fontSize: 12,
     fontWeight: FontWeight.w400,
-    color: DarbColors.textSecondary,
+    
   );
 
   static TextStyle get numeric => GoogleFonts.inter(
     fontSize: 16,
     fontWeight: FontWeight.w600,
-    color: DarbColors.textPrimary,
+    
   );
 }
 
@@ -112,7 +112,7 @@ class AppTheme {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: DarbColors.textPrimary),
+        iconTheme: const IconThemeData(),
         titleTextStyle: DarbTypography.title,
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
@@ -124,12 +124,12 @@ class AppTheme {
         error: DarbColors.dangerRed,
       ),
       textTheme: TextTheme(
-        displayLarge: DarbTypography.display,
-        titleLarge: DarbTypography.title,
-        titleMedium: DarbTypography.section,
-        bodyLarge: DarbTypography.body,
-        bodyMedium: DarbTypography.body,
-        bodySmall: DarbTypography.caption,
+        displayLarge: DarbTypography.display.copyWith(color: DarbColors.textPrimary),
+        titleLarge: DarbTypography.title.copyWith(color: DarbColors.textPrimary),
+        titleMedium: DarbTypography.section.copyWith(color: DarbColors.textPrimary),
+        bodyLarge: DarbTypography.body.copyWith(color: DarbColors.textPrimary),
+        bodyMedium: DarbTypography.body.copyWith(color: DarbColors.textPrimary),
+        bodySmall: DarbTypography.caption.copyWith(color: DarbColors.textSecondary),
       ),
     );
   }
