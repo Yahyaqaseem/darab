@@ -172,7 +172,7 @@ class _DarbVehicleMarkerPainter extends CustomPainter {
       ..close();
 
     final leftWingPaint = Paint()
-      ..color = const Color(0xFF1E293B) // surface2 slightly lighter
+      ..color = const Color(0xFFF8FAFC) // White center facet
       ..style = PaintingStyle.fill;
     canvas.drawPath(leftWing, leftWingPaint);
 
@@ -184,7 +184,7 @@ class _DarbVehicleMarkerPainter extends CustomPainter {
       ..close();
 
     final rightWingPaint = Paint()
-      ..color = const Color(0xFF0F172A) // base canvas dark
+      ..color = const Color(0xFFE2E8F0) // Slightly darker white/gray facet
       ..style = PaintingStyle.fill;
     canvas.drawPath(rightWing, rightWingPaint);
 
@@ -205,7 +205,7 @@ class _DarbVehicleMarkerPainter extends CustomPainter {
 
     // 5. Cyan/Emerald Navigation Dorsal Ridge / Center Spine
     final spinePaint = Paint()
-      ..color = const Color(0xFF0EA5E9) // Cyan/Emerald glow
+      ..color = const Color(0xFFEAB308) // Yellow core spine glow
       ..strokeWidth = 1.6
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;

@@ -13,7 +13,7 @@
       "id": "background",
       "type": "background",
       "paint": {
-        "background-color": "#262E3B"
+        "background-color": "#0F172A"
       }
     },
     {
@@ -45,7 +45,7 @@
         ]
       ],
       "paint": {
-        "fill-color": "#1A2E44",
+        "fill-color": "#0B1224",
         "fill-antialias": false
       }
     },
@@ -697,7 +697,7 @@
         "line-join": "round"
       },
       "paint": {
-        "line-color": "#364A62",
+        "line-color": "#1E293B",
         "line-opacity": 0.85,
         "line-width": [
           "interpolate",
@@ -751,7 +751,7 @@
         ]
       ],
       "paint": {
-        "line-color": "#3E5771",
+        "line-color": "#475569",
         "line-opacity": 0.9,
         "line-width": [
           "interpolate",
@@ -802,7 +802,7 @@
         ]
       ],
       "paint": {
-        "line-color": "#1E2633",
+        "line-color": "#3F2C0B",
         "line-width": [
           "interpolate",
           [
@@ -852,7 +852,7 @@
         ]
       ],
       "paint": {
-        "line-color": "#D4AF37",
+        "line-color": "#CA8A04",
         "line-width": [
           "interpolate",
           [
@@ -907,7 +907,7 @@
         ]
       ],
       "paint": {
-        "line-color": "#1F2937",
+        "line-color": "#713F12",
         "line-width": [
           "interpolate",
           [
@@ -1578,8 +1578,8 @@
       ],
       "paint": {
         "text-color": "#F8FAFC",
-        "text-halo-color": "#182230",
-        "text-halo-width": 2.2,
+        "text-halo-color": "#0F172A",
+        "text-halo-width": 1.5,
         "text-translate": [
           0,
           0
@@ -1662,9 +1662,9 @@
         ]
       ],
       "paint": {
-        "text-color": "#E2E8F0",
-        "text-halo-color": "#182230",
-        "text-halo-width": 1.8,
+        "text-color": "#F8FAFC",
+        "text-halo-color": "#0F172A",
+        "text-halo-width": 1.5,
         "text-translate": [
           0,
           0
@@ -1750,8 +1750,8 @@
         ]
       ],
       "paint": {
-        "text-color": "#94A3B8",
-        "text-halo-color": "#1E293B",
+        "text-color": "#F8FAFC",
+        "text-halo-color": "#0F172A",
         "text-halo-width": 1.5,
         "text-translate": [
           0,
@@ -1846,9 +1846,9 @@
         "text-size": 13
       },
       "paint": {
-        "text-color": "#FFFFFF",
+        "text-color": "#F8FAFC",
         "text-halo-color": "#0F172A",
-        "text-halo-width": 2.5
+        "text-halo-width": 1.5
       },
       "minzoom": 8
     },
