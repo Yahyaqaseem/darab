@@ -99,11 +99,7 @@ class AppTheme {
   static const Color secondarySand = Color(0xFFFDE68A);
   static const Color secondarySandDark = Color(0xFFD97706);
   static const Color alertRed = DarbColors.dangerRed;
-  static const Color primaryYellow = DarbColors.primaryYellow;
-
-
-
-
+  static const Color successGreen = DarbColors.successGreen;
 
   static ThemeData get darkTheme {
     return ThemeData(
