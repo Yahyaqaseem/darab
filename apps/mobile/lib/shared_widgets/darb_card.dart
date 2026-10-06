@@ -6,6 +6,9 @@ class DarbCard extends StatefulWidget {
   final EdgeInsetsGeometry? padding;
   final VoidCallback? onTap;
   final bool isInteractive;
+  final Color? backgroundColor;
+  final bool hasShadow;
+  final double borderRadius;
 
   const DarbCard({
     super.key,
@@ -13,6 +16,9 @@ class DarbCard extends StatefulWidget {
     this.padding = const EdgeInsets.all(DarbSpacing.lg),
     this.onTap,
     this.isInteractive = false,
+    this.backgroundColor,
+    this.hasShadow = true,
+    this.borderRadius = 16.0,
   });
 
   @override
@@ -49,14 +55,14 @@ class _DarbCardState extends State<DarbCard> with SingleTickerProviderStateMixin
     final cardContent = Container(
       padding: widget.padding ?? EdgeInsets.zero,
       decoration: BoxDecoration(
-        color: isDark ? DarbColors.card : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: widget.backgroundColor ?? (isDark ? DarbColors.card : Colors.white),
+        borderRadius: BorderRadius.circular(widget.borderRadius),
         border: Border.all(
           color: isDark ? DarbColors.border.withOpacity(0.5) : const Color(0xFFE2E8F0),
           width: 1,
         ),
         boxShadow: [
-          if (!isDark)
+          if (!isDark && widget.hasShadow)
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
               blurRadius: 10,
@@ -81,7 +87,7 @@ class _DarbCardState extends State<DarbCard> with SingleTickerProviderStateMixin
             onTapCancel: () => _controller.reverse(),
             child: InkWell(
               onTap: () {},
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(widget.borderRadius),
               child: cardContent,
             ),
           ),
