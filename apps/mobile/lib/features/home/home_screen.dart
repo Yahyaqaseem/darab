@@ -404,7 +404,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             width: 28,
                             height: 28,
                             alignment: Alignment.center,
-                            child: DarbPOIMarker(type: DarbIconType.trafficFlow, label: '', color: DarbIconColors.warningAmber),
+                            child: DarbPOIMarker(type: DarbIconType.trafficFlow, label: '', color: DarbIconColors.warningOrange),
                           ),
                         ],
                       );
