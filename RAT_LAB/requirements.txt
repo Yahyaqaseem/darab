@@ -1,0 +1,10 @@
+# RAT_LAB — Requirements
+# Core
+pycryptodome>=3.19.0
+
+# GUI C2 Server
+customtkinter>=5.2.0
+Pillow>=10.0.0
+
+# Builder
+pyinstaller>=6.0.0

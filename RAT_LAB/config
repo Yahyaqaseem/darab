@@ -1,0 +1,20 @@
+[core]
+	bare = true
+	repositoryformatversion = 0
+	filemode = false
+	symlinks = false
+	ignorecase = true
+	logallrefupdates = true
+	longpaths = true
+[remote "origin"]
+	url = https://github.com/Yahyaqaseem/RAT_LAB.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+[branch "develop"]
+	remote = origin
+	merge = refs/heads/develop
+[branch "main"]
+	remote = origin
+	merge = refs/heads/main

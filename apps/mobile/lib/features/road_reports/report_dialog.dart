@@ -4,6 +4,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/darb_icons.dart';
+import '../../shared_widgets/darb_card.dart';
 
 class ReportDialog extends StatefulWidget {
   const ReportDialog({super.key});
@@ -34,17 +35,19 @@ class _ReportDialogState extends State<ReportDialog> {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 8),
-              Text(
-                'تم نشر البلاغ لجميع السائقين على الطريق (+10 نقاط سمعة)',
-                style: TextStyle( fontWeight: FontWeight.bold),
+              const DarbIcon(DarbIconType.verified, color: Colors.white, size: 24),
+              const SizedBox(width: DarbSpacing.sm),
+              Expanded(
+                child: Text(
+                  'تم نشر البلاغ لجميع السائقين على الطريق (+10 نقاط سمعة)',
+                  style: DarbTypography.body.copyWith(fontWeight: FontWeight.bold, color: Colors.white),
+                ),
               ),
             ],
           ),
-          backgroundColor: AppTheme.primaryEmerald,
+          backgroundColor: DarbColors.primaryEmerald,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -87,9 +90,9 @@ class _ReportDialogState extends State<ReportDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.xl, vertical: DarbSpacing.xxl),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkCard : Colors.white,
+        color: DarbColors.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
@@ -102,34 +105,28 @@ class _ReportDialogState extends State<ReportDialog> {
                 width: 44,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: DarbColors.border,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            const Row(
+            const SizedBox(height: DarbSpacing.lg),
+            Row(
               children: [
-                DarbIcon(DarbIconType.quickReport, color: DarbIconColors.criticalRed, size: 26),
-                SizedBox(width: 10),
+                const DarbIcon(DarbIconType.quickReport, color: DarbColors.dangerRed, size: 26),
+                const SizedBox(width: DarbSpacing.sm),
                 Text(
                   'إبلاغ فوري عن حالة الطريق',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: DarbTypography.title,
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: DarbSpacing.xs),
             Text(
               'اختر نوع الحدث بضغطة واحدة ليظهر فوراً للسائقين المتجهين لنفس المسار:',
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary,
-              ),
+              style: DarbTypography.body.copyWith(color: DarbColors.textSecondary),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: DarbSpacing.xl),
 
             // 1-Tap Grid of Incident Buttons
             GridView.builder(
@@ -138,8 +135,8 @@ class _ReportDialogState extends State<ReportDialog> {
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 childAspectRatio: 2.3,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
+                crossAxisSpacing: DarbSpacing.sm,
+                mainAxisSpacing: DarbSpacing.sm,
               ),
               itemCount: AppConstants.reportTypes.length,
               itemBuilder: (ctx, idx) {
@@ -153,7 +150,7 @@ class _ReportDialogState extends State<ReportDialog> {
                     onTap: _isSubmitting ? null : () => _submit(item['type']),
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.sm, vertical: DarbSpacing.sm),
                       decoration: BoxDecoration(
                         border: Border.all(color: color.withOpacity(0.35), width: 1.5),
                         borderRadius: BorderRadius.circular(16),
@@ -161,14 +158,14 @@ class _ReportDialogState extends State<ReportDialog> {
                       child: Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(DarbSpacing.xs),
                             decoration: BoxDecoration(
                               color: color.withOpacity(0.2),
                               shape: BoxShape.circle,
                             ),
                             child: DarbIcon(_getReportIcon(item['type'] as String), color: color, size: 20),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: DarbSpacing.xs),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,9 +173,8 @@ class _ReportDialogState extends State<ReportDialog> {
                               children: [
                                 Text(
                                   item['label'],
-                                  style: TextStyle(
+                                  style: DarbTypography.body.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14,
                                     color: color,
                                   ),
                                 ),
@@ -192,7 +188,7 @@ class _ReportDialogState extends State<ReportDialog> {
                 );
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DarbSpacing.md),
           ],
         ),
       ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
-import '../../shared_widgets/driver_safe_button.dart';
+import '../../core/theme/darb_icons.dart';
+import '../../shared_widgets/darb_card.dart';
+import '../../shared_widgets/darb_button.dart';
 
 class TripSummaryScreen extends StatefulWidget {
   final String startName;
@@ -59,131 +61,125 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
 
     final hours = widget.durationSeconds ~/ 3600;
     final mins = (widget.durationSeconds % 3600) ~/ 60;
-    final durationFormatted = hours > 0 ? '$hours س $mins د' : '$mins دقيقة';
+    final durationFormatted = hours > 0 ? ' س  د' : ' دقيقة';
     final avgSpeed = (widget.distanceKm / (widget.durationSeconds / 3600)).clamp(20.0, 140.0);
 
     return Scaffold(
+      backgroundColor: DarbColors.background,
       appBar: AppBar(
-        title: const Text('ملخص الرحلة'),
+        title: Text('ملخص الرحلة', style: DarbTypography.title),
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
+          icon: const DarbIcon(DarbIconType.close, size: 24, color: DarbColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(DarbSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Success Header
             Center(
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(DarbSpacing.lg),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryEmerald.withOpacity(0.12),
+                  color: DarbColors.primaryEmerald.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.flag_rounded, color: AppTheme.primaryEmerald, size: 48),
+                child: const DarbIcon(DarbIconType.route, color: DarbColors.primaryEmerald, size: 48),
               ),
             ),
-            const SizedBox(height: 14),
-            const Text(
+            const SizedBox(height: DarbSpacing.sm),
+            Text(
               'الحمد لله على سلامتك!',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+              style: DarbTypography.display,
             ),
             Text(
-              'وصلت إلى ${widget.endName} بنجاح',
+              'وصلت إلى  بنجاح',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: isDark ? AppTheme.textLightSecondary : AppTheme.textDarkSecondary),
+              style: DarbTypography.body.copyWith(color: DarbColors.textSecondary),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DarbSpacing.xl),
 
             // Route Path Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkCard : Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
-                ],
-              ),
+            DarbCard(
+              padding: const EdgeInsets.all(DarbSpacing.lg),
               child: Row(
                 children: [
-                  const Column(
+                  Column(
                     children: [
-                      Icon(Icons.circle, color: AppTheme.primaryEmerald, size: 14),
-                      SizedBox(height: 4),
-                      SizedBox(height: 24, child: VerticalDivider(color: Colors.grey, thickness: 1.5)),
-                      SizedBox(height: 4),
-                      Icon(Icons.location_on_rounded, color: AppTheme.alertRed, size: 18),
+                      const DarbIcon(DarbIconType.route, color: DarbColors.primaryEmerald, size: 14),
+                      const SizedBox(height: 4),
+                      Container(width: 2, height: 24, color: DarbColors.border),
+                      const SizedBox(height: 4),
+                      const DarbIcon(DarbIconType.route, color: DarbColors.dangerRed, size: 18),
                     ],
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: DarbSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(widget.startName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        const SizedBox(height: 16),
-                        Text(widget.endName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text(widget.startName, style: DarbTypography.section),
+                        const SizedBox(height: DarbSpacing.lg),
+                        Text(widget.endName, style: DarbTypography.section),
                       ],
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DarbSpacing.md),
 
             // Stats Grid
             Row(
               children: [
-                _buildStatTile('المسافة الكلية', '${widget.distanceKm.toStringAsFixed(1)} كم', Icons.route_rounded, isDark),
-                const SizedBox(width: 12),
-                _buildStatTile('مدة الرحلة', durationFormatted, Icons.timer_outlined, isDark),
+                _buildStatTile('المسافة الكلية', ' كم', DarbIconType.route, isDark),
+                const SizedBox(width: DarbSpacing.sm),
+                _buildStatTile('مدة الرحلة', durationFormatted, DarbIconType.refresh, isDark), // Re-using refresh temporarily for timer
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: DarbSpacing.sm),
             Row(
               children: [
-                _buildStatTile('السرعة المتوسطة', '${avgSpeed.toStringAsFixed(0)} كم/س', Icons.speed_rounded, isDark),
-                const SizedBox(width: 12),
-                _buildStatTile('السرعة الموثوقة', '${p95.toStringAsFixed(0)} كم/س', Icons.verified_user_rounded, isDark),
+                _buildStatTile('السرعة المتوسطة', ' كم/س', DarbIconType.radar, isDark),
+                const SizedBox(width: DarbSpacing.sm),
+                _buildStatTile('السرعة الموثوقة', ' كم/س', DarbIconType.verified, isDark),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: DarbSpacing.lg),
 
             // Anomaly Filter Notice
             if (hasAnomaly) ...[
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(DarbSpacing.md),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryEmerald.withOpacity(0.1),
+                  color: DarbColors.primaryEmerald.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.primaryEmerald.withOpacity(0.3)),
+                  border: Border.all(color: DarbColors.primaryEmerald.withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.shield_outlined, color: AppTheme.primaryEmerald, size: 26),
-                    const SizedBox(width: 12),
+                    const DarbIcon(DarbIconType.verified, color: DarbColors.primaryEmerald, size: 26),
+                    const SizedBox(width: DarbSpacing.sm),
                     Expanded(
                       child: Text(
-                        'تم تصفية طفرة الـ GPS العشوائية (${maxRaw.toStringAsFixed(0)} كم/س) واحتساب السرعة الموثوقة (${p95.toStringAsFixed(0)} كم/س) بنظام الذكاء الاصطناعي.',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        'تم تصفية طفرة الـ GPS العشوائية ( كم/س) واحتساب السرعة الموثوقة ( كم/س) بنظام الذكاء الاصطناعي.',
+                        style: DarbTypography.caption.copyWith(color: DarbColors.primaryEmerald, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: DarbSpacing.lg),
             ],
 
             // Trip Replay Preview Box
             Container(
               height: 160,
               decoration: BoxDecoration(
-                color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                color: DarbColors.surface,
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Stack(
@@ -192,11 +188,11 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.play_circle_fill_rounded, size: 48, color: AppTheme.primaryEmerald.withOpacity(0.8)),
-                      const SizedBox(height: 8),
+                      DarbIcon(DarbIconType.route, size: 48, color: DarbColors.primaryEmerald.withOpacity(0.8)),
+                      const SizedBox(height: DarbSpacing.sm),
                       Text(
-                        _isReplaying ? 'جارِ تشغيل الإعادة: ${( _replayProgress * 100).toStringAsFixed(0)}%' : 'مشاهدة إعادة مسار الرحلة (Trip Replay)',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        _isReplaying ? 'جارِ تشغيل الإعادة: %' : 'مشاهدة إعادة مسار الرحلة',
+                        style: DarbTypography.body.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -207,32 +203,33 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
                       right: 0,
                       child: LinearProgressIndicator(
                         value: _replayProgress,
-                        color: AppTheme.primaryEmerald,
+                        color: DarbColors.primaryEmerald,
                         backgroundColor: Colors.transparent,
                       ),
                     ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: DarbSpacing.xxl),
 
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, 52),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    icon: const Icon(Icons.replay_rounded),
-                    label: const Text('إعادة المسار', style: TextStyle( fontWeight: FontWeight.bold)),
+                  child: DarbButton(
+                    text: 'إعادة المسار',
+                    icon: DarbIconType.refresh,
+                    variant: DarbButtonVariant.secondary,
+                    size: DarbButtonSize.large,
+                    isFullWidth: true,
                     onPressed: _isReplaying ? null : _triggerReplay,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: DarbSpacing.sm),
                 Expanded(
-                  child: DriverSafeButton(
-                    label: 'تم والعودة',
+                  child: DarbButton(
+                    text: 'تم والعودة',
+                    size: DarbButtonSize.large,
+                    isFullWidth: true,
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
@@ -244,25 +241,18 @@ class _TripSummaryScreenState extends State<TripSummaryScreen> {
     );
   }
 
-  Widget _buildStatTile(String label, String value, IconData icon, bool isDark) {
+  Widget _buildStatTile(String label, String value, DarbIconType icon, bool isDark) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark ? AppTheme.darkCard : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
-          ],
-        ),
+      child: DarbCard(
+        padding: const EdgeInsets.all(DarbSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: AppTheme.primaryEmerald, size: 22),
-            const SizedBox(height: 8),
-            Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            DarbIcon(icon, color: DarbColors.primaryEmerald, size: 22),
+            const SizedBox(height: DarbSpacing.sm),
+            Text(label, style: DarbTypography.caption),
             const SizedBox(height: 2),
-            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            Text(value, style: DarbTypography.numeric),
           ],
         ),
       ),
