@@ -23,6 +23,8 @@ class NidaaDialog extends StatefulWidget {
 
 class _NidaaDialogState extends State<NidaaDialog> {
   bool _isSending = false;
+  bool _isSent = false;
+  String _sentType = '';
 
   Future<void> _sendQuestion(String type) async {
     setState(() => _isSending = true);
@@ -30,42 +32,55 @@ class _NidaaDialogState extends State<NidaaDialog> {
     await appState.askRoadQuestion(type);
 
     if (mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.radar_rounded, color: Colors.white),
-              SizedBox(width: 8),
-              Text(
-                'تم إرسال نداء الطريق للسائقين الموجودين أمامك على نفس المسار!',
-                style: TextStyle( fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          backgroundColor: AppTheme.primaryYellow,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      setState(() {
+        _isSending = false;
+        _isSent = true;
+        _sentType = type;
+      });
+      
+      // Close after short delay
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted && Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+      });
     }
   }
 
-  DarbIconType _getQuestionIcon(String type) {
-    switch (type) {
-      case 'TRAFFIC':
-        return DarbIconType.traffic;
-      case 'ROAD_CONDITION':
-        return DarbIconType.badRoad;
-      case 'ACCIDENT':
-        return DarbIconType.accident;
-      case 'CHECKPOINT':
-        return DarbIconType.checkpoint;
-      case 'FUEL_AVAILABILITY':
-        return DarbIconType.fuel;
-      default:
-        return DarbIconType.roadCall;
-    }
+  // Use simple icons matching the user prompt examples
+  Widget _buildQuestionButton(String text, String type, bool isDark) {
+    return Material(
+      color: isDark ? DarbColors.surface : const Color(0xFFF1F5F9),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: _isSending ? null : () => _sendQuestion(type),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  text,
+                  style: DarbTypography.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : DarbColors.textInversePrimary,
+                  ),
+                ),
+              ),
+              if (_isSending)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Icon(Icons.arrow_forward_ios, size: 14, color: DarbColors.textSecondary),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -73,10 +88,10 @@ class _NidaaDialogState extends State<NidaaDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 32),
       decoration: BoxDecoration(
-        color: isDark ? AppTheme.darkCard : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        color: isDark ? AppTheme.darkBackground : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
         child: Column(
@@ -85,7 +100,7 @@ class _NidaaDialogState extends State<NidaaDialog> {
           children: [
             Center(
               child: Container(
-                width: 44,
+                width: 40,
                 height: 5,
                 decoration: BoxDecoration(
                   color: Colors.grey.withOpacity(0.3),
@@ -94,76 +109,83 @@ class _NidaaDialogState extends State<NidaaDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentOrange.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const DarbIcon(DarbIconType.roadCall, color: AppTheme.accentOrange, size: 26),
-                ),
-                const SizedBox(width: 12),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            
+            if (_isSent)
+              // Sent confirmation state
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Column(
                   children: [
-                    Text(
-                      'نداء الطريق (سؤال السائقين أمامك)',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: DarbColors.successGreen.withOpacity(0.15),
+                        shape: BoxShape.circle,
                       ),
+                      child: const Icon(Icons.check, color: DarbColors.successGreen, size: 40),
                     ),
+                    const SizedBox(height: 16),
                     Text(
-                      'يُرسل فقط للسائقين الموجودين أمامك على نفس الطريق',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      '✓ تم إرسال نداء الطريق',
+                      style: DarbTypography.title.copyWith(color: DarbColors.successGreen),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'بانتظار إجابات السائقين',
+                      style: DarbTypography.body.copyWith(color: DarbColors.textSecondary),
                     ),
                   ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Question Templates List
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: AppConstants.roadCallTemplates.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (ctx, idx) {
-                final item = AppConstants.roadCallTemplates[idx];
-
-                return Material(
-                  color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-                  borderRadius: BorderRadius.circular(14),
-                  child: InkWell(
-                    onTap: _isSending ? null : () => _sendQuestion(item['type']),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      child: Row(
+              )
+            else
+              // Question selection state
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      const DarbIcon(DarbIconType.roadCall, color: DarbColors.primaryYellow, size: 28),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          DarbIcon(_getQuestionIcon(item['type'] as String), color: AppTheme.primaryYellow, size: 24),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              item['title'],
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          Text(
+                            'نداء الطريق',
+                            style: DarbTypography.title.copyWith(
+                              fontSize: 20,
+                              color: isDark ? Colors.white : DarbColors.textInversePrimary,
                             ),
                           ),
-                          const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
+                          Text(
+                            'السائقين على هذا الطريق الآن', // We omit the number as backend lacks matching API to avoid faking
+                            style: DarbTypography.caption.copyWith(
+                              color: DarbColors.textSecondary,
+                            ),
+                          ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
-                );
-              },
-            ),
-            const SizedBox(height: 14),
+                  const SizedBox(height: 24),
+                  
+                  // Question Grid / List
+                  _buildQuestionButton('🚗 هل يوجد زحام؟', 'TRAFFIC', isDark),
+                  const SizedBox(height: 8),
+                  _buildQuestionButton('🚧 هل يوجد إغلاق بالطريق؟', 'CLOSURE', isDark),
+                  const SizedBox(height: 8),
+                  _buildQuestionButton('⚠️ هل يوجد حادث؟', 'ACCIDENT', isDark),
+                  const SizedBox(height: 8),
+                  _buildQuestionButton('👮 هل يوجد سيطرة / نقطة تفتيش؟', 'CHECKPOINT', isDark),
+                  const SizedBox(height: 8),
+                  _buildQuestionButton('💧 هل يوجد تجمع مياه؟', 'FLOOD', isDark),
+                  const SizedBox(height: 8),
+                  _buildQuestionButton('⛽ هل توجد مشكلة بمحطات الوقود؟', 'FUEL_ISSUE', isDark),
+                  const SizedBox(height: 8),
+                  _buildQuestionButton('🔧 هل توجد سيارة متعطلة؟', 'BROKEN_CAR', isDark),
+                  const SizedBox(height: 8),
+                  _buildQuestionButton('🛣️ كيف وضع الطريق؟', 'ROAD_CONDITION', isDark),
+                ],
+              ),
           ],
         ),
       ),

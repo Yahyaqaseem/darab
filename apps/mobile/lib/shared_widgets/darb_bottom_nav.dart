@@ -18,10 +18,10 @@ class DarbBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : Colors.white,
-        border: Border(top: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0), width: 1)),
+        color: isDark ? DarbColors.background : Colors.white,
+        border: Border(top: BorderSide(color: isDark ? Colors.white10 : Colors.black12, width: 1)),
       ),
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom, top: 8),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 8, top: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -37,7 +37,7 @@ class DarbBottomNav extends StatelessWidget {
 
   Widget _buildItem(int index, DarbIconType icon, String label, BuildContext context) {
     final isSelected = currentIndex == index;
-    final color = isSelected ? DarbColors.primaryYellow : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8));
+    final color = isSelected ? DarbColors.primaryYellow : DarbColors.textDisabled;
     
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -51,9 +51,9 @@ class DarbBottomNav extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
+              style: DarbTypography.caption.copyWith(
                 fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: color,
               ),
             ),

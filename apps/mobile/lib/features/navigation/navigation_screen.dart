@@ -634,11 +634,11 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.primaryYellow)),
+                            const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: DarbColors.primaryYellow)),
                             const SizedBox(width: 16),
                             Text(
                               lang == 'en' ? 'Calculating best route...' : (lang == 'ku' ? 'خەریکی دۆزینەوەی باشترین ڕێگایە...' : 'جارِ حساب أفضل مسار...'),
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: DarbTypography.body.copyWith(fontWeight: FontWeight.w700),
                             ),
                           ],
                         )
@@ -648,46 +648,116 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                             final routeToDisplay = activeRoute ?? currentRoute;
                             return Column(
                               mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                // Maneuver / Next Step (Mocked as continue if no steps provided by API)
+                                if (!_isRouteSelecting) ...[
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: DarbColors.successGreen.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: DarbColors.successGreen.withOpacity(0.2)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.turn_slight_right, color: DarbColors.successGreen, size: 28),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'استمر في القيادة',
+                                                style: DarbTypography.body.copyWith(
+                                                  color: isDark ? Colors.white : Colors.black,
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 18,
+                                                ),
+                                              ),
+                                              Text(
+                                                'بناءً على مسار OSRM الحالي',
+                                                style: DarbTypography.caption.copyWith(color: DarbColors.successGreen),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+
                                 // Route Metrics Row
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    _buildMetric(
-                                      routeToDisplay?['durationFormatted'] ?? '15 دقيقة',
-                                      AppStrings.tr('duration', lang),
-                                      AppTheme.primaryYellow,
+                                    // Primary: Duration
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            routeToDisplay?['durationFormatted'] ?? '15 دقيقة',
+                                            style: DarbTypography.numeric.copyWith(
+                                              color: DarbColors.successGreen,
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.2)),
-                                    _buildMetric(
-                                      '${routeToDisplay?['distanceKm'] ?? 5.2} كم',
-                                      AppStrings.tr('distance', lang),
-                                      isDark ? Colors.white : Colors.black87,
-                                    ),
-                                    Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.2)),
-                                    _buildMetric(
-                                      routeToDisplay?['eta'] ?? '09:20',
-                                      AppStrings.tr('eta', lang),
-                                      isDark ? Colors.white70 : Colors.black54,
+                                    // Secondary & Third: Distance & ETA
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          '${routeToDisplay?['distanceKm'] ?? 5.2} كم',
+                                          style: DarbTypography.numeric.copyWith(
+                                            color: isDark ? Colors.white : Colors.black,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'وصول ${routeToDisplay?['eta'] ?? '09:20'}',
+                                          style: DarbTypography.caption.copyWith(
+                                            color: DarbColors.textSecondary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 20),
+                                
                                 // Big Action Button
                                 if (_isRouteSelecting)
-                                  DarbButton(
-                                    text: AppStrings.tr('start_navigation', lang),
-                                    icon: DarbIconType.route,
-                                    size: DarbButtonSize.large,
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: DarbColors.primaryYellow,
+                                      foregroundColor: DarbColors.textInversePrimary,
+                                      elevation: 0,
+                                      minimumSize: const Size.fromHeight(54),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    ),
                                     onPressed: _startDrive,
+                                    child: const Text('ابدأ الملاحة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                                   )
                                 else
-                                  DarbButton(
-                                    text: AppStrings.tr('end_trip', lang),
-                                    icon: DarbIconType.close,
-                                    variant: DarbButtonVariant.danger,
-                                    size: DarbButtonSize.large,
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: isDark ? DarbColors.background : const Color(0xFFF1F5F9),
+                                      foregroundColor: DarbColors.dangerRed,
+                                      elevation: 0,
+                                      minimumSize: const Size.fromHeight(54),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    ),
                                     onPressed: _finishTrip,
+                                    child: const Text('إنهاء الرحلة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                                   ),
                               ],
                             );
