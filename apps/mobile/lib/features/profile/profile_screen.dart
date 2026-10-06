@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/darb_icons.dart';
-import '../../shared_widgets/darb_card.dart';
-import '../../shared_widgets/darb_switch.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -12,179 +10,120 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lang = appState.currentLanguage;
+    final bgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
+    final surfaceColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: Text('حسابي والسمعة', style: DarbTypography.title),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Driver Profile Card
-            DarbCard(
-              padding: const EdgeInsets.all(DarbSpacing.xxl),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: DarbColors.primaryYellow.withOpacity(0.15),
-                    child: const DarbIcon(DarbIconType.profile, size: 48, color: DarbColors.primaryYellow),
-                  ),
-                  const SizedBox(height: DarbSpacing.md),
-                  Text(
-                    appState.driverUsername,
-                    style: DarbTypography.title,
-                  ),
-                  const SizedBox(height: DarbSpacing.xs),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.md, vertical: DarbSpacing.xs),
-                    decoration: BoxDecoration(
-                      color: DarbColors.textSecondary.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const DarbIcon(DarbIconType.verified, color: DarbColors.textSecondary, size: 16),
-                        const SizedBox(width: DarbSpacing.xs),
-                        Text(
-                          'مستخدم جديد',
-                          style: DarbTypography.caption.copyWith(color: DarbColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: DarbSpacing.xl),
-
-                  // Points and Stats
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStatColumn('نقاط السمعة', '', DarbColors.primaryYellow),
-                      _buildStatColumn('البلاغات المؤكدة', '0', DarbColors.warningOrange),
-                      _buildStatColumn('إجابات مفيدة', '0', DarbColors.infoBlue),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: DarbSpacing.xl),
-
-            // Badges Section
-            Text('الأوسمة المكتسبة', style: DarbTypography.section),
-            const SizedBox(height: DarbSpacing.md),
-            Center(child: Text('لا توجد أوسمة بعد', style: DarbTypography.caption)),
-            const SizedBox(height: DarbSpacing.xxl),
-
-            // Settings & Preferences
-            Text('الإعدادات والخصوصية', style: DarbTypography.section),
-            const SizedBox(height: DarbSpacing.md),
-            DarbCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.xs),
-                    leading: const DarbIcon(DarbIconType.info, color: DarbColors.textPrimary), // Placeholder for globe/language
-                    title: Text('لغة التطبيق', style: DarbTypography.body),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          appState.currentLanguage == 'ar' ? 'العربية' :
-                          (appState.currentLanguage == 'ku' ? 'کوردی' : 'English'),
-                          style: DarbTypography.body.copyWith(color: DarbColors.primaryYellow),
-                        ),
-                        const SizedBox(width: DarbSpacing.sm),
-                        const DarbIcon(DarbIconType.chevronLeft, size: 14, color: DarbColors.textSecondary),
-                      ],
-                    ),
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        backgroundColor: Colors.transparent,
-                        builder: (ctx) => Container(
-                          decoration: const BoxDecoration(
-                            color: DarbColors.surface,
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                          ),
-                          child: SafeArea(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(DarbSpacing.lg),
-                                  child: Text('اختر اللغة', style: DarbTypography.title),
-                                ),
-                                _buildLanguageOption(context, 'العربية', 'ar', appState),
-                                const Divider(height: 1, color: DarbColors.border),
-                                _buildLanguageOption(context, 'کوردی (Kurdish)', 'ku', appState),
-                                const Divider(height: 1, color: DarbColors.border),
-                                _buildLanguageOption(context, 'English', 'en', appState),
-                                const SizedBox(height: DarbSpacing.lg),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1, color: DarbColors.border),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg),
-                    child: DarbSwitch(
-                      label: 'التوجيه الصوتي أثناء القيادة',
-                      subtitle: 'سيتم تنبيهك صوتياً بالمنعطفات',
-                      value: true,
-                      onChanged: (_) {},
-                    ),
-                  ),
-                  const Divider(height: 1, color: DarbColors.border),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg),
-                    child: DarbSwitch(
-                      label: 'الوضع الليلي (Dark Mode)',
-                      value: appState.isDarkMode,
-                      onChanged: (_) => appState.toggleTheme(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        backgroundColor: bgColor,
+        title: Text(
+          lang == 'en' ? 'My Profile' : (lang == 'ku' ? 'هەژماری من' : 'حسابي'),
+          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 18),
         ),
+        actions: [
+          IconButton(
+            icon: DarbIcon(DarbIconType.settings, color: textColor),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        children: [
+          // Header / Editorial Profile
+          Center(
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: DarbColors.primaryYellow.withOpacity(0.2),
+                  child: const Text('YK', style: TextStyle(color: DarbColors.primaryYellow, fontSize: 24, fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: 12),
+                Text('Yahya Qaseem', style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                const Text('Top Driver • 4,500 pts', style: TextStyle(color: DarbColors.primaryYellow, fontSize: 14, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+          
+          // Stats Group
+          Text(lang == 'en' ? 'STATISTICS' : 'الإحصائيات', style: const TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              color: surfaceColor,
+              child: Column(
+                children: [
+                  _buildListTile(DarbIconType.history, 'Reports Submitted', '12', textColor, isDark),
+                  _buildDivider(isDark),
+                  _buildListTile(DarbIconType.verified, 'Helpful Answers', '45', textColor, isDark),
+                  _buildDivider(isDark),
+                  _buildListTile(DarbIconType.route, 'Distance Driven', '1,200 km', textColor, isDark),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Settings Group
+          Text(lang == 'en' ? 'PREFERENCES' : 'التفضيلات', style: const TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              color: surfaceColor,
+              child: Column(
+                children: [
+                  _buildListTile(DarbIconType.home, lang == 'en' ? 'Home Address' : 'عنوان المنزل', null, textColor, isDark),
+                  _buildDivider(isDark),
+                  _buildListTile(DarbIconType.work, lang == 'en' ? 'Work Address' : 'عنوان العمل', null, textColor, isDark),
+                  _buildDivider(isDark),
+                  _buildThemeToggle(context, appState, textColor, isDark),
+                  _buildDivider(isDark),
+                  _buildListTile(DarbIconType.trafficFlow, lang == 'en' ? 'Navigation Settings' : 'إعدادات الملاحة', null, textColor, isDark),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildStatColumn(String label, String value, Color color) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: DarbTypography.numeric.copyWith(fontSize: 24, color: color),
-        ),
-        const SizedBox(height: 4),
-        Text(label, style: DarbTypography.caption),
-      ],
-    );
-  }
-
-  Widget _buildLanguageOption(BuildContext context, String label, String code, AppState appState) {
-    final isSelected = appState.currentLanguage == code;
+  Widget _buildListTile(DarbIconType icon, String title, String? value, Color textColor, bool isDark) {
     return ListTile(
-      title: Text(label, textAlign: TextAlign.center, style: DarbTypography.section.copyWith(
-        color: isSelected ? DarbColors.primaryYellow : DarbColors.textPrimary,
-      )),
-      trailing: isSelected ? const DarbIcon(DarbIconType.verified, color: DarbColors.primaryYellow) : null,
-      onTap: () {
-        appState.setLanguage(code);
-        Navigator.pop(context);
-      },
+      leading: DarbIcon(icon, color: DarbColors.primaryYellow, size: 22),
+      title: Text(title, style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w500)),
+      trailing: value != null 
+          ? Text(value, style: const TextStyle(color: Color(0xFF64748B), fontSize: 15))
+          : const Icon(Icons.chevron_right, color: Color(0xFF64748B), size: 20),
+    );
+  }
+
+  Widget _buildThemeToggle(BuildContext context, AppState appState, Color textColor, bool isDark) {
+    return ListTile(
+      leading: const Icon(Icons.dark_mode_rounded, color: DarbColors.primaryYellow, size: 22),
+      title: Text('الوضع الليلي', style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w500)),
+      trailing: Switch.adaptive(
+        value: appState.isDarkMode,
+        activeColor: DarbColors.primaryYellow,
+        onChanged: (val) => appState.toggleTheme(),
+      ),
+    );
+  }
+
+  Widget _buildDivider(bool isDark) {
+    return Container(
+      height: 0.5,
+      margin: const EdgeInsets.only(left: 54),
+      color: isDark ? Colors.white12 : Colors.black12,
     );
   }
 }

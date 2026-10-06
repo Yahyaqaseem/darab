@@ -17,66 +17,43 @@ class DarbBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       decoration: BoxDecoration(
-        color: isDark ? DarbColors.surface : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        border: Border(top: BorderSide(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0), width: 1)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(0, DarbIconType.home, 'الخريطة'),
-            _buildNavItem(1, DarbIconType.quickReport, 'البلاغات'),
-            _buildNavItem(2, DarbIconType.fuel, 'الوقود'),
-            _buildNavItem(3, DarbIconType.workshop, 'الخدمات'),
-            _buildNavItem(4, DarbIconType.profile, 'حسابي'),
-          ],
-        ),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom, top: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildItem(0, DarbIconType.home, 'الخريطة', context),
+          _buildItem(1, DarbIconType.quickReport, 'البلاغات', context),
+          _buildItem(2, DarbIconType.fuel, 'الوقود', context),
+          _buildItem(3, DarbIconType.workshop, 'الخدمات', context),
+          _buildItem(4, DarbIconType.profile, 'حسابي', context),
+        ],
       ),
     );
   }
 
-  Widget _buildNavItem(int index, DarbIconType icon, String label) {
+  Widget _buildItem(int index, DarbIconType icon, String label, BuildContext context) {
     final isSelected = currentIndex == index;
-    final color = isSelected
-        ? DarbColors.primaryYellow
-        : (isDark ? DarbColors.textSecondary : DarbColors.textDisabled);
-
+    final color = isSelected ? DarbColors.primaryYellow : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8));
+    
     return GestureDetector(
-      onTap: () => onTabSelected(index),
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? DarbColors.primaryYellow.withOpacity(0.15)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
+      onTap: () => onTabSelected(index),
+      child: SizedBox(
+        width: MediaQuery.of(context).size.width / 5,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DarbIcon(
-              icon,
-              size: 24,
-              color: color,
-            ),
+            DarbIcon(icon, color: color, size: 24),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 10,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: color,
               ),
             ),

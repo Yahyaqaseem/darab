@@ -130,31 +130,92 @@ class DarbOptimizedMarkerLayer extends StatelessWidget {
           }
         }
 
-        // 2. Process Fuel Stations (Only visible when zoom >= 12.5)
-        if (zoom >= 12.5) {
-          final isPill = zoom >= 14.5;
-          for (final s in appState.fuelStations) {
-            if (s.latitude >= minLat &&
-                s.latitude <= maxLat &&
-                s.longitude >= minLng &&
-                s.longitude <= maxLng) {
+                // 2. Process Fuel Stations with Zoom-based Clustering
+        final visibleFuel = appState.fuelStations.where((s) {
+          return s.latitude >= minLat &&
+              s.latitude <= maxLat &&
+              s.longitude >= minLng &&
+              s.longitude <= maxLng;
+        }).toList();
+
+        if (zoom < 12.0) {
+          // CLUSTER STATIONS
+          final fuelGridSize = 0.05;
+          final Map<String, List<FuelStationModel>> fuelGrid = {};
+          
+          for (final s in visibleFuel) {
+            final cellX = (s.longitude / fuelGridSize).floor();
+            final cellY = (s.latitude / fuelGridSize).floor();
+            final cellKey = '_';
+            if (!fuelGrid.containsKey(cellKey)) {
+              fuelGrid[cellKey] = [];
+            }
+            fuelGrid[cellKey]!.add(s);
+          }
+
+          fuelGrid.forEach((cellKey, clusterStations) {
+            if (clusterStations.length == 1) {
+              final s = clusterStations.first;
               markers.add(Marker(
-                key: ValueKey('fuel_${s.id}'),
+                key: ValueKey('fuel_'),
                 point: LatLng(s.latitude, s.longitude),
-                width: isPill ? 90 : 36,
+                width: 36,
                 height: 36,
                 alignment: Alignment.center,
-                child: DarbFuelMarker(
-                  station: s,
-                  currentZoom: zoom,
-                  onTap: () {
-                    if (onOpenSheet != null) {
-                      onOpenSheet!(const FuelScreen(), isDark);
-                    }
-                  },
+                child: DarbFuelMarker(station: s, currentZoom: zoom),
+              ));
+            } else {
+              double avgLat = 0;
+              double avgLng = 0;
+              for (final s in clusterStations) {
+                avgLat += s.latitude;
+                avgLng += s.longitude;
+              }
+              avgLat /= clusterStations.length;
+              avgLng /= clusterStations.length;
+
+              markers.add(Marker(
+                key: ValueKey('fuel_cluster_'),
+                point: LatLng(avgLat, avgLng),
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F172A),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: DarbColors.primaryYellow, width: 2),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '',
+                      style: const TextStyle(color: DarbColors.primaryYellow, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
                 ),
               ));
             }
+          });
+        } else {
+          // HIGH ZOOM: Show all individual stations
+          final isPill = zoom >= 14.5;
+          for (final s in visibleFuel) {
+            markers.add(Marker(
+              key: ValueKey('fuel_'),
+              point: LatLng(s.latitude, s.longitude),
+              width: isPill ? 90 : 36,
+              height: 36,
+              alignment: Alignment.center,
+              child: DarbFuelMarker(
+                station: s,
+                currentZoom: zoom,
+                onTap: () {
+                  if (onOpenSheet != null) {
+                    onOpenSheet!(const FuelScreen(), isDark);
+                  }
+                },
+              ),
+            ));
           }
         }
 

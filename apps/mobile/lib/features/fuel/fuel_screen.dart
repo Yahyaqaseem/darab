@@ -1,252 +1,92 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/app_state.dart';
+import '../../core/models/models.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/darb_icons.dart';
-import '../../shared_widgets/darb_card.dart';
-import '../../shared_widgets/darb_button.dart';
-import 'update_fuel_sheet.dart';
-import '../navigation/navigation_screen.dart';
 
-class FuelScreen extends StatefulWidget {
+class FuelScreen extends StatelessWidget {
   const FuelScreen({super.key});
-
-  @override
-  State<FuelScreen> createState() => _FuelScreenState();
-}
-
-class _FuelScreenState extends State<FuelScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final appState = Provider.of<AppState>(context, listen: false);
-      if (appState.fuelStations.isEmpty) {
-        appState.loadNearbyData();
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     final stations = appState.fuelStations;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
+    final surfaceColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: Text('محطات الوقود والأسعار', style: DarbTypography.title),
+        backgroundColor: bgColor,
+        title: Text('محطات الوقود', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 18)),
         actions: [
           IconButton(
-            icon: const DarbIcon(DarbIconType.refresh, size: 24, color: DarbColors.primaryYellow),
-            onPressed: () => appState.loadNearbyData(),
+            icon: const DarbIcon(DarbIconType.search, size: 20),
+            color: textColor,
+            onPressed: () {},
           ),
         ],
       ),
       body: stations.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const DarbIcon(DarbIconType.fuel, size: 54, color: DarbColors.primaryYellow),
-                  const SizedBox(height: DarbSpacing.md),
-                  Text('جاري جلب المحطات القريبة...', style: DarbTypography.body.copyWith(color: DarbColors.textSecondary)),
-                  const SizedBox(height: DarbSpacing.lg),
-                  DarbButton(
-                    text: 'تحديث المحطات',
-                    icon: DarbIconType.refresh,
-                    isFullWidth: false,
-                    onPressed: () => appState.loadNearbyData(),
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.md),
+          ? Center(child: Text('جاري تحميل المحطات...', style: TextStyle(color: textColor)))
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: stations.length,
-              itemBuilder: (ctx, idx) {
-                final s = stations[idx];
-                final updatedAgoMins = DateTime.now().difference(s.priceUpdatedAt).inMinutes;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: DarbSpacing.md),
-                  child: DarbCard(
-                    padding: const EdgeInsets.all(DarbSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(DarbSpacing.sm),
-                              decoration: BoxDecoration(
-                                color: DarbColors.primaryYellow.withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const DarbIcon(DarbIconType.fuel, color: DarbColors.primaryYellow, size: 26),
-                            ),
-                            const SizedBox(width: DarbSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          s.nameAr,
-                                          style: DarbTypography.section,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      if (s.isVerified) ...[
-                                        const SizedBox(width: DarbSpacing.xs),
-                                        const DarbIcon(DarbIconType.verified, color: DarbColors.primaryYellow, size: 18),
-                                      ],
-                                    ],
-                                  ),
-                                  Text(
-                                    s.address,
-                                    style: DarbTypography.caption,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (s.distanceKm != null) ...[
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.sm, vertical: DarbSpacing.xs),
-                                decoration: BoxDecoration(
-                                  color: DarbColors.surface,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: DarbColors.border.withOpacity(0.3)),
-                                ),
-                                child: Text(
-                                  ' كم',
-                                  style: DarbTypography.caption.copyWith(color: DarbColors.textPrimary),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: DarbSpacing.lg),
-
-                        // Fuel Prices Row
-                        Row(
-                          children: [
-                            Expanded(child: _buildPricePill('عادي', '', DarbColors.primaryYellow)),
-                            const SizedBox(width: DarbSpacing.sm),
-                            Expanded(child: _buildPricePill('محسن', '', DarbColors.warningOrange)),
-                            const SizedBox(width: DarbSpacing.sm),
-                            Expanded(child: _buildPricePill('ديزل', '', DarbColors.textSecondary)),
-                          ],
-                        ),
-                        const SizedBox(height: DarbSpacing.md),
-
-                        // Availability & Crowd Status
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: s.isPetrolAvailable ? DarbColors.primaryYellow : DarbColors.dangerRed,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: DarbSpacing.xs),
-                                Text(
-                                  s.isPetrolAvailable ? 'متوفر' : 'غير متوفر',
-                                  style: DarbTypography.caption.copyWith(
-                                    color: s.isPetrolAvailable ? DarbColors.primaryYellow : DarbColors.dangerRed,
-                                  ),
-                                ),
-                                Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: DarbSpacing.sm),
-                                  width: 4,
-                                  height: 4,
-                                  decoration: const BoxDecoration(
-                                    color: DarbColors.textDisabled,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                Text(
-                                  s.crowdText,
-                                  style: DarbTypography.caption.copyWith(color: s.crowdColor),
-                                ),
-                              ],
-                            ),
-                            Text(
-                              updatedAgoMins > 0 ? 'قبل  دقيقة' : 'الآن',
-                              style: DarbTypography.caption,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: DarbSpacing.lg),
-
-                        // Action Buttons
-                        Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: DarbButton(
-                                text: 'ابدأ الملاحة',
-                                icon: DarbIconType.route,
-                                size: DarbButtonSize.small,
-                                isFullWidth: true,
-                                onPressed: () {
-                                  Navigator.push(context, MaterialPageRoute(builder: (_) => NavigationScreen(
-                                    destinationName: s.nameAr,
-                                    destLat: s.latitude,
-                                    destLng: s.longitude,
-                                  )));
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: DarbSpacing.sm),
-                            Expanded(
-                              flex: 1,
-                              child: DarbButton(
-                                text: 'تحديث',
-                                variant: DarbButtonVariant.secondary,
-                                size: DarbButtonSize.small,
-                                isFullWidth: true,
-                                onPressed: () => UpdateFuelSheet.show(context, s),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final s = stations[index];
+                return _buildStationItem(s, surfaceColor, textColor, isDark);
               },
             ),
     );
   }
 
-  Widget _buildPricePill(String title, String price, Color color) {
+  Widget _buildStationItem(FuelStationModel station, Color surfaceColor, Color textColor, bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: DarbSpacing.sm),
       decoration: BoxDecoration(
-        color: DarbColors.background,
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: DarbColors.border.withOpacity(0.5)),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
       ),
-      child: Column(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(title, style: DarbTypography.caption),
-          const SizedBox(height: 2),
-          Text(
-            price,
-            style: DarbTypography.numeric.copyWith(color: color, fontSize: 16),
+          // Icon
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: DarbColors.primaryYellow.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const DarbIcon(DarbIconType.fuel, color: DarbColors.primaryYellow, size: 24),
+          ),
+          const SizedBox(width: 16),
+          // Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(station.nameAr, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 4),
+                Text('m • ', style: const TextStyle(color: Color(0xFF64748B), fontSize: 13)),
+              ],
+            ),
+          ),
+          // Price Focus
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                station.petrolPrice != null ? ' IQD' : 'غير مسعر',
+                style: TextStyle(color: DarbColors.primaryYellow, fontWeight: FontWeight.w800, fontSize: 18),
+              ),
+              const SizedBox(height: 2),
+              const Text('عادي', style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+            ],
           ),
         ],
       ),
