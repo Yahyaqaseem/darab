@@ -2,9 +2,18 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 
 class DarbCard extends StatefulWidget {
-  
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final VoidCallback? onTap;
+  final bool isInteractive;
 
-  
+  const DarbCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(DarbSpacing.lg),
+    this.onTap,
+    this.isInteractive = false,
+  });
 
   @override
   State<DarbCard> createState() => _DarbCardState();
@@ -33,51 +42,53 @@ class _DarbCardState extends State<DarbCard> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
-  final Widget child;
-  final EdgeInsetsGeometry? padding;
-  final EdgeInsetsGeometry? margin;
-  final VoidCallback? onTap;
-  final Color? backgroundColor;
-  final Color? borderColor;
-  final double borderRadius;
-  final bool hasShadow;
-
-  
-
   @override
   Widget build(BuildContext context) {
-    final bgColor = backgroundColor ?? DarbColors.surface;
-    final bColor = borderColor ?? DarbColors.border.withOpacity(0.3);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final card = Container(
-      margin: margin,
+    final cardContent = Container(
+      padding: widget.padding ?? EdgeInsets.zero,
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: bColor, width: 1.0),
-        boxShadow: hasShadow
-            ? [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                )
-              ]
-            : null,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(borderRadius),
-          child: Padding(
-            padding: widget.padding ?? EdgeInsets.zero,
-            child: widget.child,
-          ),
+        color: isDark ? DarbColors.card : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? DarbColors.border.withOpacity(0.5) : const Color(0xFFE2E8F0),
+          width: 1,
         ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+        ],
       ),
+      child: widget.child,
     );
 
-    return card;
+    if (widget.isInteractive && widget.onTap != null) {
+      return ScaleTransition(
+        scale: _scaleAnimation,
+        child: Material(
+          color: Colors.transparent,
+          child: GestureDetector(
+            onTapDown: (_) => _controller.forward(),
+            onTapUp: (_) {
+              _controller.reverse();
+              widget.onTap?.call();
+            },
+            onTapCancel: () => _controller.reverse(),
+            child: InkWell(
+              onTap: () {},
+              borderRadius: BorderRadius.circular(16),
+              child: cardContent,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return cardContent;
   }
 }
