@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../core/models/models.dart';
 import '../core/providers/app_state.dart';
 import '../core/theme/darb_icons.dart';
+import '../core/theme/app_theme.dart';
 import '../../features/fuel/fuel_screen.dart';
 
 /// High-Performance Viewport-Culled and Clustered Marker Layer
