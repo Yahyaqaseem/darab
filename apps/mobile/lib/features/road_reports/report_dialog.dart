@@ -112,7 +112,7 @@ class _ReportDialogState extends State<ReportDialog> with SingleTickerProviderSt
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const DarbIcon(DarbIconType.voice, color: DarbColors.primaryYellow, size: 28),
+                const DarbIcon(DarbIconType.roadCall, color: DarbColors.primaryYellow, size: 28),
                 const SizedBox(width: 12),
                 Text(
                   lang == 'ku' ? 'بانگەوازی ڕێگا' : (lang == 'en' ? 'Road Call' : 'نداء الطريق'),
