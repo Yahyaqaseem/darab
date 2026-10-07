@@ -32,6 +32,9 @@ jobs:
       - name: Build Unsigned / Ad-Hoc IPA
         working-directory: apps/mobile
         run: |
+          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          
           flutter build ios --release --no-codesign
           
           mkdir -p build/ios/iphoneos/Payload
