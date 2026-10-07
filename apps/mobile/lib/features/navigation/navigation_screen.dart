@@ -176,7 +176,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
   
   Future<void> _drawDestinationMarker() async {
-    if (_mapController == null || !_mapController!.isMapReady) return;
+    if (_mapController == null) return;
     if (_destinationMarker != null) {
       await _mapController!.removeSymbol(_destinationMarker!);
     }
@@ -189,7 +189,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   Future<void> _drawRoute() async {
-    if (_mapController == null || !_mapController!.isMapReady || _routePoints.isEmpty) return;
+    if (_mapController == null || _routePoints.isEmpty) return;
     
     if (_routeLineShadow != null) await _mapController!.removeLine(_routeLineShadow!);
     if (_routeLine != null) await _mapController!.removeLine(_routeLine!);
