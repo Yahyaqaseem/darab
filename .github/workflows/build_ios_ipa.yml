@@ -33,30 +33,6 @@ jobs:
       - name: Build Unsigned / Ad-Hoc IPA
         working-directory: apps/mobile
         run: |
-          # Intercept the `pod` command to guarantee the Podfile is correctly patched EXACTLY when Flutter calls it
-          mkdir -p bin
-          cat << 'EOF' > bin/pod
-          #!/bin/bash
-          REAL_POD=$(which -a pod | grep -v "/bin/pod" | head -n 1)
-          if [ "$1" = "install" ]; then
-            # We might be in 'apps/mobile' or 'apps/mobile/ios'
-            PODFILE_PATH="Podfile"
-            [ -f "ios/Podfile" ] && PODFILE_PATH="ios/Podfile"
-            
-            if [ -f "$PODFILE_PATH" ] && ! grep -q "flutter-maplibre-podspecs" "$PODFILE_PATH"; then
-              echo "source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'" | cat - "$PODFILE_PATH" > temp && mv temp "$PODFILE_PATH"
-              echo "source 'https://cdn.cocoapods.org/'" | cat - "$PODFILE_PATH" > temp && mv temp "$PODFILE_PATH"
-              sed -i.bak -E "s/^#? ?platform :ios.*/platform :ios, '14.0'/g" "$PODFILE_PATH" || true
-            fi
-            "$REAL_POD" install --repo-update
-          else
-            "$REAL_POD" "$@"
-          fi
-          EOF
-          chmod +x bin/pod
-          export PATH="$PWD/bin:$PATH"
-          
-          # Now run flutter build, which will call our intercepted `pod` command
           flutter build ipa --no-codesign --release
           
           mkdir -p build/ios/ipa/Payload
