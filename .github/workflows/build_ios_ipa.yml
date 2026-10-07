@@ -30,6 +30,20 @@ jobs:
         working-directory: apps/mobile
         run: flutter pub get
 
+      - name: Prepare iOS Build and CocoaPods
+        working-directory: apps/mobile
+        run: |
+          # Generate Podfile and config without building
+          flutter build ios --config-only --no-codesign
+          
+          cd ios
+          # Uncomment and set platform to 14.0 to prevent maplibre_gl compatibility errors
+          cat Podfile | sed -E "s/^#? ?platform :ios.*/platform :ios, '14.0'/g" > Podfile.tmp
+          mv Podfile.tmp Podfile
+          
+          # Force a full repo update and install
+          pod install --repo-update
+
       - name: Build Unsigned / Ad-Hoc IPA
         working-directory: apps/mobile
         run: |
