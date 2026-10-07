@@ -16,6 +16,7 @@ import '../../core/theme/darb_icons.dart';
 import '../../shared_widgets/darb_card.dart';
 import '../../shared_widgets/darb_button.dart';
 import '../../core/utils/chevron_generator.dart';
+import '../../core/utils/route_simulator.dart';
 
 class NavigationScreen extends StatefulWidget {
   final String destinationName;
@@ -46,6 +47,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   Line? _routeLine;
   Line? _routeLineShadow;
   Line? _routeLineHighlight;
+  RouteSimulator? _simulator;
 
   @override
   void initState() {
@@ -68,6 +70,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   void dispose() {
     _isFollowingUserNotifier.dispose();
     _appState?.userLocationNotifier.removeListener(_onUserLocationChanged);
+    _simulator?.stop();
     super.dispose();
   }
 
@@ -248,6 +251,42 @@ class _NavigationScreenState extends State<NavigationScreen> {
         duration: const Duration(milliseconds: 1200),
       );
     }
+  }
+
+
+
+  void _startSimulation() {
+    _isFollowingUserNotifier.value = true;
+    setState(() {
+      _isRouteSelecting = false;
+    });
+    
+    final appState = Provider.of<AppState>(context, listen: false);
+    final routes = _routesData?['routes'] as List? ?? [];
+    if (routes.isNotEmpty) {
+      final selected = routes[_selectedRouteIndex.clamp(0, routes.length - 1)];
+      appState.selectRoutePreview(selected, widget.destinationName, widget.destLat, widget.destLng);
+    }
+    
+    appState.startNavigation();
+    
+    _simulator?.stop();
+    _simulator = RouteSimulator(
+      routePoints: _routePoints,
+      speedKmh: 65.0, // Simulate 65 km/h
+      onUpdate: (loc, bearing, speed) {
+        if (!mounted) return;
+        // Mock the user's location via AppState
+        appState.userLocationNotifier.value = loc;
+        appState.userHeadingNotifier.value = bearing;
+        appState.userSpeedNotifier.value = speed;
+      },
+      onFinish: () {
+        if (mounted) _finishTrip();
+      },
+    );
+    
+    _simulator!.start();
   }
 
   Future<void> _finishTrip() async {
@@ -605,19 +644,31 @@ class _NavigationScreenState extends State<NavigationScreen> {
                                         ],
                                       ),
                                       const SizedBox(height: 20),
-                                      if (_isRouteSelecting)
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: DarbColors.primaryYellow,
-                                            foregroundColor: DarbColors.textInversePrimary,
-                                            elevation: 0,
-                                            minimumSize: const Size.fromHeight(54),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                      if (_isRouteSelecting) ...[
+                                          ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: DarbColors.primaryYellow,
+                                              foregroundColor: DarbColors.textInversePrimary,
+                                              elevation: 0,
+                                              minimumSize: const Size.fromHeight(54),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                            ),
+                                            onPressed: _startDrive,
+                                            child: const Text('ابدأ الملاحة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                                           ),
-                                          onPressed: _startDrive,
-                                          child: const Text('ابدأ الملاحة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-                                        )
-                                      else
+                                          const SizedBox(height: 12),
+                                          OutlinedButton.icon(
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor: DarbColors.successGreen,
+                                              side: BorderSide(color: DarbColors.successGreen.withOpacity(0.5)),
+                                              minimumSize: const Size.fromHeight(48),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                            ),
+                                            icon: const Icon(Icons.play_circle_fill),
+                                            label: const Text('محاكاة القيادة (تجربة)', style: TextStyle(fontWeight: FontWeight.bold)),
+                                            onPressed: _startSimulation,
+                                          ),
+                                        ] else 
                                         ElevatedButton(
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: isDark ? DarbColors.background : const Color(0xFFF1F5F9),
