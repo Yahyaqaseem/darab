@@ -4,15 +4,20 @@ import 'package:provider/provider.dart';
 import 'core/providers/app_state.dart';
 import 'core/theme/app_theme.dart';
 import 'features/home/home_screen.dart';
+import 'package:device_preview/device_preview.dart';
+import 'package:flutter/foundation.dart';
 import 'features/splash/splash_screen.dart';
 import 'features/auth/login_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppState(),
-      child: const DarbApp(),
+    DevicePreview(
+      enabled: kIsWeb, // Only enable DevicePreview on the web
+      builder: (context) => ChangeNotifierProvider(
+        create: (_) => AppState(),
+        child: const DarbApp(),
+      ),
     ),
   );
 }
@@ -27,6 +32,8 @@ class DarbApp extends StatelessWidget {
     final appState = Provider.of<AppState>(context);
 
     return MaterialApp(
+      useInheritedMediaQuery: true,
+      builder: DevicePreview.appBuilder,
       title: 'دَرْب — DARB',
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
