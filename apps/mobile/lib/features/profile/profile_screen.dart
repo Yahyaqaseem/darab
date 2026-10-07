@@ -145,14 +145,8 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildThemeToggle(BuildContext context, AppState appState, Color textColor, bool isDark) {
     return ListTile(
-      onTap: onTap ?? () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('سيتم تفعيل هذه الخاصية في التحديث القادم!', style: TextStyle(fontFamily: 'Cairo')),
-            backgroundColor: DarbColors.primaryYellow,
-            behavior: SnackBarBehavior.floating,
-          )
-        );
+      onTap: () {
+        appState.toggleTheme();
       },
       leading: const Icon(Icons.dark_mode_rounded, color: DarbColors.textSecondary, size: 22),
       title: Text('الوضع الليلي', style: DarbTypography.body.copyWith(color: textColor, fontWeight: FontWeight.w600)),
