@@ -71,22 +71,10 @@ class PremiumChevronWidget extends StatelessWidget {
     return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(
-        painter: _ChevronPainter(size),
+      child: Image.asset(
+        'assets/icons/car_marker.png',
+        fit: BoxFit.contain,
       ),
     );
   }
-}
-
-class _ChevronPainter extends CustomPainter {
-  final double size;
-  _ChevronPainter(this.size);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    ChevronGenerator._drawChevron(canvas, this.size);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -93,7 +93,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
     final speed = _appState!.userSpeedNotifier.value;
     final targetZoom = _calculateDynamicZoom(speed);
 
-    _mapController!.animateCamera(
+    _mapController!.moveCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
           target: LatLng(userPos.latitude, userPos.longitude),
@@ -101,8 +101,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
           tilt: 60.0, // TRUE 3D PITCH
           bearing: speed > 2.0 ? bearing : 0.0,
         )
-      ),
-      duration: const Duration(milliseconds: 1000),
+      )
     );
   }
 
@@ -217,7 +216,6 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   void _startDrive() {
-    _isFollowingUserNotifier.value = true;
     setState(() {
       _isRouteSelecting = false;
     });
@@ -237,25 +235,31 @@ class _NavigationScreenState extends State<NavigationScreen> {
         CameraUpdate.newCameraPosition(
           CameraPosition(
             target: LatLng(userPos.latitude, userPos.longitude),
-            zoom: 17.0,
+            zoom: 17.5,
             tilt: 60.0, // TRUE 3D PITCH
             bearing: appState.userHeadingNotifier.value,
           )
         ),
-        duration: const Duration(milliseconds: 1200),
+        duration: const Duration(milliseconds: 1500),
       );
     }
+    
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        _isFollowingUserNotifier.value = true;
+      }
+    });
   }
 
 
 
   void _startSimulation() {
-    _isFollowingUserNotifier.value = true;
     setState(() {
       _isRouteSelecting = false;
     });
     
     final appState = Provider.of<AppState>(context, listen: false);
+    final userPos = appState.userLocationNotifier.value;
     final routes = _routesData?['routes'] as List? ?? [];
     if (routes.isNotEmpty) {
       final selected = routes[_selectedRouteIndex.clamp(0, routes.length - 1)];
@@ -264,23 +268,41 @@ class _NavigationScreenState extends State<NavigationScreen> {
     
     appState.startNavigation();
     
-    _simulator?.stop();
-    _simulator = RouteSimulator(
-      routePoints: _routePoints,
-      speedKmh: 65.0, // Simulate 65 km/h
-      onUpdate: (loc, bearing, speed) {
-        if (!mounted) return;
-        // Mock the user's location via AppState
-        appState.userLocationNotifier.value = ll2.LatLng(loc.latitude, loc.longitude);
-        appState.userHeadingNotifier.value = bearing;
-        appState.userSpeedNotifier.value = speed;
-      },
-      onFinish: () {
-        if (mounted) _finishTrip();
-      },
-    );
+    if (_mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(userPos.latitude, userPos.longitude),
+            zoom: 17.5,
+            tilt: 60.0, // TRUE 3D PITCH
+            bearing: appState.userHeadingNotifier.value,
+          )
+        ),
+        duration: const Duration(milliseconds: 1500),
+      );
+    }
     
-    _simulator!.start();
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (!mounted) return;
+      _isFollowingUserNotifier.value = true;
+      _simulator?.stop();
+      _simulator = RouteSimulator(
+        routePoints: _routePoints,
+        speedKmh: 65.0, // Simulate 65 km/h
+        onUpdate: (loc, bearing, speed) {
+          if (!mounted) return;
+          // Mock the user's location via AppState
+          appState.userLocationNotifier.value = ll2.LatLng(loc.latitude, loc.longitude);
+          appState.userHeadingNotifier.value = bearing;
+          appState.userSpeedNotifier.value = speed;
+        },
+        onFinish: () {
+          if (mounted) _finishTrip();
+        },
+      );
+      
+      _simulator!.start();
+    });
   }
 
   Future<void> _finishTrip() async {

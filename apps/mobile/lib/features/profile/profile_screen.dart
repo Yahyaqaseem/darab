@@ -1,4 +1,5 @@
 import '../search/destination_search_screen.dart';
+import 'location_picker_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/app_state.dart';
@@ -101,11 +102,11 @@ class ProfileScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         _buildListTile(context, DarbIconType.home, lang == 'en' ? 'Home Address' : 'عنوان المنزل', null, textColor, isDark, onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const DestinationSearchScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => LocationPickerScreen(title: lang == 'en' ? 'Set Home' : 'تحديد المنزل')));
                         }),
                         _buildDivider(isDark),
                         _buildListTile(context, DarbIconType.work, lang == 'en' ? 'Work Address' : 'عنوان العمل', null, textColor, isDark, onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const DestinationSearchScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => LocationPickerScreen(title: lang == 'en' ? 'Set Work' : 'تحديد العمل')));
                         }),
                         _buildDivider(isDark),
                         _buildThemeToggle(context, appState, textColor, isDark),
