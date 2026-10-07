@@ -227,6 +227,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
     final appState = Provider.of<AppState>(context, listen: false);
     final userPos = appState.userLocationNotifier.value;
     
+    final routes = _routesData?['routes'] as List? ?? [];
+    if (routes.isNotEmpty) {
+      final selected = routes[_selectedRouteIndex.clamp(0, routes.length - 1)];
+      appState.selectRoutePreview(selected, widget.destinationName, widget.destLat, widget.destLng);
+    }
+    
     appState.startNavigation();
     
     if (_mapController != null) {

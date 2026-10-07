@@ -80,18 +80,15 @@ class _DarbCardState extends State<DarbCard> with SingleTickerProviderStateMixin
         scale: _scaleAnimation,
         child: Material(
           color: Colors.transparent,
-          child: GestureDetector(
+          child: InkWell(
             onTapDown: (_) => _controller.forward(),
-            onTapUp: (_) {
+            onTapCancel: () => _controller.reverse(),
+            onTap: () {
               _controller.reverse();
               widget.onTap?.call();
             },
-            onTapCancel: () => _controller.reverse(),
-            child: InkWell(
-              onTap: () {},
-              borderRadius: BorderRadius.circular(widget.borderRadius),
-              child: cardContent,
-            ),
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            child: cardContent,
           ),
         ),
       );
