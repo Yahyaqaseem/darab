@@ -498,8 +498,9 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                   );
                 },
               ),
-            ),
+            ],
           ),
+        ),
 
           // Recenter Floating Button (Shown when user moves map)
           ValueListenableBuilder<bool>(
