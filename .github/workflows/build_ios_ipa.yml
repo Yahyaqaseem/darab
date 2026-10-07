@@ -29,36 +29,24 @@ jobs:
         working-directory: apps/mobile
         run: flutter pub get
 
+
       - name: Build Unsigned / Ad-Hoc IPA
         working-directory: apps/mobile
         run: |
-          # Generate Podfile and config
-          flutter build ios --config-only --no-codesign || true
+          # Clean build to avoid artifact corruption
+          flutter clean
+          flutter pub get
           
-          # Force Manual Provisioning
-          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          # Build the iOS app bundle natively without code signing
+          # We add || true just in case Flutter throws the Development Team warning at the very end,
+          # but the Runner.app itself is already fully compiled and linked!
+          flutter build ios --release --no-codesign || true
           
-          # Force completely disable signing for the Runner project
-          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          
-          # Flutter builds the xcarchive successfully, but fails at the export step because we have no team.
-          # We add || true to catch the export failure, so we can manually extract the built .app!
-          flutter build ipa --release --no-codesign || flutter build ios --release --no-codesign || true
-          
-          echo "Locating the generated Runner.app..."
-          APP_PATH=$(find build/ios ios/build -name "Runner.app" -type d | head -n 1)
-          
-          echo "Found app at: $APP_PATH"
-          
+          echo "Packaging Runner.app into Payload..."
           mkdir -p build/ios/ipa/Payload
-          if [ -n "$APP_PATH" ]; then
-            cp -R "$APP_PATH" build/ios/ipa/Payload/
-          else
-            echo "ERROR: Runner.app not found! Xcode completely refused to build it."
-            exit 1
-          fi
+          
+          # Use the freshly built Runner.app
+          cp -R build/ios/iphoneos/Runner.app build/ios/ipa/Payload/
           
           cd build/ios/ipa && zip -ry DARB.ipa Payload
 
