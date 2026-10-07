@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -448,88 +449,91 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   Row(
                     children: [
-                      // SOS Button
+                      // SOS Button (Keep Solid Red for safety)
                       GestureDetector(
                         onTap: () {
                           Navigator.push(context, MaterialPageRoute(builder: (_) => const EmergencyServicesScreen()));
                         },
                         child: Container(
-                          width: 44,
-                          height: 44,
+                          width: 46,
+                          height: 46,
                           decoration: BoxDecoration(
                             color: DarbColors.dangerRed,
                             shape: BoxShape.circle,
                             boxShadow: [
-                              BoxShadow(color: DarbColors.dangerRed.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4)),
+                              BoxShadow(color: DarbColors.dangerRed.withOpacity(0.4), blurRadius: 12, offset: const Offset(0, 4)),
                             ],
                           ),
                           alignment: Alignment.center,
-                          child: const Text('SOS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14)),
+                          child: const Text('SOS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Search Bar
+                      // Search Bar (Glassmorphism)
                       Expanded(
                         child: GestureDetector(
                           onTap: () {
                             Navigator.push(context, MaterialPageRoute(builder: (_) => const DestinationSearchScreen()));
                           },
-                          child: Container(
-                            height: 48,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: isDark ? DarbColors.surface : Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                              border: Border.all(
-                                color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
-                              ),
-                            ),
-                            child: Directionality(
-                              textDirection: (lang == 'ar' || lang == 'ku') ? TextDirection.rtl : TextDirection.ltr,
-                              child: Row(
-                                children: [
-                                  const DarbIcon(DarbIconType.search, color: DarbColors.textSecondary, size: 20),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      lang == 'ku' ? 'بۆ کوێ؟' : (lang == 'ar' ? 'إلى أين؟' : 'Where to?'),
-                                      style: DarbTypography.body.copyWith(
-                                        color: DarbColors.textSecondary,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                              child: Container(
+                                height: 48,
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: isDark ? const Color(0xFF07101F).withOpacity(0.65) : Colors.white.withOpacity(0.75),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: isDark ? Colors.white.withOpacity(0.15) : Colors.black.withOpacity(0.1),
+                                    width: 1,
                                   ),
-                                ],
+                                ),
+                                child: Directionality(
+                                  textDirection: (lang == 'ar' || lang == 'ku') ? TextDirection.rtl : TextDirection.ltr,
+                                  child: Row(
+                                    children: [
+                                      const DarbIcon(DarbIconType.search, color: DarbColors.textSecondary, size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          lang == 'ku' ? 'بۆ کوێ؟' : (lang == 'ar' ? 'إلى أين؟' : 'Where to?'),
+                                          style: DarbTypography.body.copyWith(
+                                            color: isDark ? Colors.white70 : DarbColors.textSecondary,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Menu
+                      // Menu (Glassmorphism)
                       GestureDetector(
                         onTap: () => _openMenuSheet(context, isDark, lang),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: isDark ? DarbColors.surface : Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4)),
-                            ],
-                            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                            child: Container(
+                              width: 46,
+                              height: 46,
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF07101F).withOpacity(0.65) : Colors.white.withOpacity(0.75),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: isDark ? Colors.white.withOpacity(0.15) : Colors.black.withOpacity(0.1), width: 1),
+                              ),
+                              alignment: Alignment.center,
+                              child: DarbIcon(DarbIconType.menu, color: isDark ? Colors.white : Colors.black87, size: 20),
+                            ),
                           ),
-                          alignment: Alignment.center,
-                          child: DarbIcon(DarbIconType.menu, color: isDark ? Colors.white : Colors.black87, size: 22),
                         ),
                       ),
                     ],
@@ -558,19 +562,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Road Call (نداء الطريق)
+                // Road Call (نداء الطريق) - Keep prominent but refined
                 GestureDetector(
                   onTap: () {
                     NidaaDialog.show(context);
                   },
                   child: Container(
-                    width: 52,
-                    height: 52,
+                    width: 54,
+                    height: 54,
                     decoration: BoxDecoration(
                       color: DarbColors.primaryYellow,
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: DarbColors.primaryYellow.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4)),
+                        BoxShadow(color: DarbColors.primaryYellow.withOpacity(0.4), blurRadius: 14, offset: const Offset(0, 4)),
                       ],
                     ),
                     alignment: Alignment.center,
@@ -578,7 +582,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Recenter
+                // Recenter (Glassmorphism)
                 GestureDetector(
                   onTap: () {
                     if (_isMapReady) {
@@ -586,19 +590,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       _animatedMapMove(curPos, 16.0);
                     }
                   },
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: isDark ? DarbColors.surface : Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 4)),
-                      ],
-                      border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF07101F).withOpacity(0.65) : Colors.white.withOpacity(0.75),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: isDark ? Colors.white.withOpacity(0.15) : Colors.black.withOpacity(0.1), width: 1),
+                        ),
+                        alignment: Alignment.center,
+                        child: DarbIcon(DarbIconType.myLocation, color: isDark ? Colors.white : Colors.black87, size: 22),
+                      ),
                     ),
-                    alignment: Alignment.center,
-                    child: DarbIcon(DarbIconType.myLocation, color: isDark ? Colors.white : Colors.black87, size: 22),
                   ),
                 ),
               ],

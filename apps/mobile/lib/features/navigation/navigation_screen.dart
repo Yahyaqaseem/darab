@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -329,19 +330,30 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
       body: Stack(
         children: [
           // LAYER 1: Full-Screen Live Map (ALWAYS VISIBLE!)
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: LatLng(userLat, userLng),
-              initialZoom: 15.0,
-              interactionOptions: const InteractionOptions(
-                flags: InteractiveFlag.drag |
-                    InteractiveFlag.pinchZoom |
-                    InteractiveFlag.doubleTapZoom |
-                    InteractiveFlag.flingAnimation,
-              ),
-              onPositionChanged: (pos, hasGesture) {
-                if (hasGesture) {
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 700),
+            curve: Curves.easeInOutCubic,
+            transform: _isRouteSelecting
+                ? Matrix4.identity()
+                : (Matrix4.identity()
+                  ..setEntry(3, 2, 0.0015) // Perspective depth
+                  ..rotateX(1.05) // ~60 degree tilt
+                  ..scale(1.6) // Scale up to fill the sky gap
+                  ..translate(0.0, 140.0)), // Push down so user is near bottom
+            transformAlignment: Alignment.bottomCenter,
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: LatLng(userLat, userLng),
+                initialZoom: 15.0,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.drag |
+                      InteractiveFlag.pinchZoom |
+                      InteractiveFlag.doubleTapZoom |
+                      InteractiveFlag.flingAnimation,
+                ),
+                onPositionChanged: (pos, hasGesture) {
+                  if (hasGesture) {
                   _resumePrefetchTimer?.cancel();
                   DarbTilePrefetcher.pausePrefetch();
                   _cameraNavController.stop();
@@ -486,7 +498,7 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                   );
                 },
               ),
-            ],
+            ),
           ),
 
           // Recenter Floating Button (Shown when user moves map)
@@ -512,24 +524,29 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                       _animatedMapMove(targetPos, targetZoom);
                       _isFollowingUserNotifier.value = true;
                     },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: (isDark ? const Color(0xFF0F172A) : Colors.white).withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 3))],
-                        border: Border.all(color: DarbIconColors.emerald, width: 1.5),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const DarbIcon(DarbIconType.recenter, color: DarbIconColors.emerald, size: 18),
-                          const SizedBox(width: 8),
-                          Text(
-                            AppStrings.tr('recenter', lang),
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: DarbIconColors.emerald),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF07101F).withOpacity(0.7) : Colors.white.withOpacity(0.85),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: DarbIconColors.emerald, width: 1.5),
                           ),
-                        ],
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const DarbIcon(DarbIconType.recenter, color: DarbIconColors.emerald, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                AppStrings.tr('recenter', lang),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: DarbIconColors.emerald),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -548,34 +565,42 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                     // Back button
                     DarbIconButton(
                       icon: DarbIconType.back,
-                      size: 44,
+                      size: 48,
                       onTap: _finishTrip,
                     ),
                     const SizedBox(width: 12),
                     // Destination banner
                     Expanded(
-                      child: DarbCard(
-                        padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.md),
-                        backgroundColor: (isDark ? DarbColors.surface : Colors.white).withOpacity(0.92),
-                        hasShadow: true,
-                        borderRadius: 20,
-                        child: Row(
-                          children: [
-                            DarbIcon(
-                              _isRouteSelecting ? DarbIconType.route : DarbIconType.recenter,
-                              color: DarbColors.primaryYellow,
-                              size: 20,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: DarbSpacing.lg, vertical: DarbSpacing.md),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF07101F).withOpacity(0.65) : Colors.white.withOpacity(0.85),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: isDark ? Colors.white.withOpacity(0.15) : Colors.black.withOpacity(0.05)),
                             ),
-                            const SizedBox(width: DarbSpacing.sm),
-                            Expanded(
-                              child: Text(
-                                widget.destinationName,
-                                style: DarbTypography.section,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                            child: Row(
+                              children: [
+                                DarbIcon(
+                                  _isRouteSelecting ? DarbIconType.route : DarbIconType.recenter,
+                                  color: DarbColors.primaryYellow,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: DarbSpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    widget.destinationName,
+                                    style: DarbTypography.section,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -629,19 +654,24 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
             ),
           ],
 
-          // LAYER 4: Bottom Panel (Waze-style card!)
+          // LAYER 4: Bottom Panel (Glassmorphism!)
           Align(
             alignment: Alignment.bottomCenter,
             child: SafeArea(
               child: RepaintBoundary(
                 child: Padding(
                   padding: const EdgeInsets.all(DarbSpacing.lg),
-                  child: DarbCard(
-                    padding: const EdgeInsets.all(DarbSpacing.xl),
-                    backgroundColor: (isDark ? DarbColors.surface : Colors.white).withOpacity(0.96),
-                    hasShadow: true,
-                    borderRadius: 24,
-                    borderColor: DarbColors.border.withOpacity(0.2),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                      child: Container(
+                        padding: const EdgeInsets.all(DarbSpacing.xl),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF07101F).withOpacity(0.65) : Colors.white.withOpacity(0.85),
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(color: isDark ? Colors.white.withOpacity(0.15) : Colors.black.withOpacity(0.05)),
+                        ),
                   child: _isLoading
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -775,10 +805,12 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                             );
                           },
                         ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
           ),
         ],
       ),

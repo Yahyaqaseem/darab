@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 import '../core/theme/darb_icons.dart';
@@ -16,21 +17,31 @@ class DarbBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? DarbColors.background : Colors.white,
-        border: Border(top: BorderSide(color: isDark ? Colors.white10 : Colors.black12, width: 1)),
-      ),
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 8, top: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildItem(0, DarbIconType.home, 'الخريطة', context),
-          _buildItem(1, DarbIconType.quickReport, 'البلاغات', context),
-          _buildItem(2, DarbIconType.fuel, 'الوقود', context),
-          _buildItem(3, DarbIconType.workshop, 'الخدمات', context),
-          _buildItem(4, DarbIconType.profile, 'حسابي', context),
-        ],
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom > 0 ? MediaQuery.of(context).padding.bottom : 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(32),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF07101F).withOpacity(0.65) : Colors.white.withOpacity(0.75),
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: isDark ? Colors.white.withOpacity(0.15) : Colors.black.withOpacity(0.1), width: 1),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildItem(0, DarbIconType.home, 'الخريطة', context),
+                _buildItem(1, DarbIconType.quickReport, 'البلاغات', context),
+                _buildItem(2, DarbIconType.fuel, 'الوقود', context),
+                _buildItem(3, DarbIconType.workshop, 'الخدمات', context),
+                _buildItem(4, DarbIconType.profile, 'حسابي', context),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
