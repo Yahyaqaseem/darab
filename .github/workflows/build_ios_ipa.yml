@@ -33,47 +33,41 @@ jobs:
       - name: Build Unsigned / Ad-Hoc IPA
         working-directory: apps/mobile
         run: |
+          # Clean build to start fresh
+          flutter clean
           flutter pub get
           
-          # 1. Run Flutter build to generate the Dart AOT (App.framework) and Flutter.framework
-          # It will fail at the very end because of the Team ID, but the frameworks will be built!
-          flutter build ios --release --no-codesign || true
+          # Flutter creates a complete, fully-linked .xcarchive but fails at the export step.
+          # We catch the failure with || true, preserving the perfect .xcarchive.
+          flutter build ipa --release --no-codesign || true
           
-          # 2. Force Xcode to build the raw Runner.app stub (this creates the 3MB shell)
-          cd ios
-          xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build || true
-          cd ..
+          echo "Scanning for generated xcarchive..."
+          ARCHIVE_PATH=$(find build/ios -name "*.xcarchive" -type d | head -n 1)
           
-          # 3. Locate the generated stub app
-          APP_PATH=$(find ios/build build/ios -name "Runner.app" -type d | head -n 1)
-          
-          if [ -z "$APP_PATH" ]; then
-            echo "ERROR: Could not generate the Runner.app stub."
+          if [ -z "$ARCHIVE_PATH" ]; then
+            echo "ERROR: No xcarchive found! Xcode failed to build the app entirely."
             exit 1
           fi
           
-          echo "Found stub app at $APP_PATH. Manually assembling Frameworks..."
+          echo "Archive found at $ARCHIVE_PATH. Locating Runner.app inside..."
+          APP_PATH=$(find "$ARCHIVE_PATH" -name "Runner.app" -type d | head -n 1)
           
-          # 4. Inject missing Frameworks manually!
-          mkdir -p "$APP_PATH/Frameworks"
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: Runner.app not found inside the archive!"
+            exit 1
+          fi
           
-          # Copy Flutter Engine and Dart AOT
-          find build/ios ios -name "App.framework" -type d -exec cp -R {} "$APP_PATH/Frameworks/" \; || true
-          find build/ios ios -name "Flutter.framework" -type d -exec cp -R {} "$APP_PATH/Frameworks/" \; || true
+          echo "Found full Runner.app at $APP_PATH. Packaging using rsync to preserve symlinks..."
           
-          # Copy all compiled CocoaPods frameworks (MapLibre, etc)
-          find ios/build -path "*/Release-iphoneos/*.framework" -type d -exec cp -R {} "$APP_PATH/Frameworks/" \; || true
-          
-          # Clean up any accidental self-copies
-          rm -rf "$APP_PATH/Frameworks/Runner.app" || true
-          
-          echo "Assembly complete! Packaging into IPA..."
-          
-          # 5. Package into Payload
           mkdir -p build/ios/ipa/Payload
-          cp -R "$APP_PATH" build/ios/ipa/Payload/
           
-          cd build/ios/ipa && zip -ry DARB.ipa Payload
+          # Use rsync -a to strictly preserve all symlinks, permissions, and structure
+          # This is critical for Sideloadly to parse the frameworks correctly.
+          rsync -a "$APP_PATH/" build/ios/ipa/Payload/Runner.app/
+          
+          cd build/ios/ipa
+          # Zip with -y to preserve symlinks inside the zip file
+          zip -ry DARB.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
