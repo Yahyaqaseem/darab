@@ -1,15 +1,13 @@
 import 'dart:ui';
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:latlong2/latlong.dart' as ll2;
 import 'package:provider/provider.dart';
 import '../../core/providers/app_state.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/polyline_decoder.dart';
 import '../../core/localization/app_strings.dart';
-import '../../shared_widgets/darb_location_marker.dart';
 import '../../shared_widgets/speed_hud_widget.dart';
 import '../../shared_widgets/driver_safe_button.dart';
 import '../nidaa_al_tariq/nidaa_dialog.dart';
@@ -17,10 +15,6 @@ import '../road_reports/report_dialog.dart';
 import '../../core/theme/darb_icons.dart';
 import '../../shared_widgets/darb_card.dart';
 import '../../shared_widgets/darb_button.dart';
-import 'package:vector_map_tiles/vector_map_tiles.dart';
-import '../../core/theme/darb_vector_theme.dart';
-import '../../core/services/darb_tile_cache.dart';
-import '../../shared_widgets/waze_pin_widget.dart';
 
 class NavigationScreen extends StatefulWidget {
   final String destinationName;
@@ -38,50 +32,23 @@ class NavigationScreen extends StatefulWidget {
   State<NavigationScreen> createState() => _NavigationScreenState();
 }
 
-class _NavigationScreenState extends State<NavigationScreen> with TickerProviderStateMixin {
-  final MapController _mapController = MapController();
+class _NavigationScreenState extends State<NavigationScreen> {
+  MaplibreMapController? _mapController;
   int _selectedRouteIndex = 0;
   bool _isRouteSelecting = true;
   Map<String, dynamic>? _routesData;
   bool _isLoading = true;
   List<LatLng> _routePoints = [];
-  Style? _vectorStyle;
   final ValueNotifier<bool> _isFollowingUserNotifier = ValueNotifier<bool>(true);
-  Timer? _resumePrefetchTimer;
   AppState? _appState;
-  late final AnimationController _cameraNavController;
-  CurvedAnimation? _navCurvedAnimation;
-  Tween<double>? _latTween;
-  Tween<double>? _lngTween;
-  Tween<double>? _zoomTween;
-  DateTime _lastCameraMoveTime = DateTime.fromMillisecondsSinceEpoch(0);
+  Symbol? _destinationMarker;
+  Line? _routeLine;
+  Line? _routeLineShadow;
+  Line? _routeLineHighlight;
 
   @override
   void initState() {
     super.initState();
-    _cameraNavController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _navCurvedAnimation = CurvedAnimation(
-      parent: _cameraNavController,
-      curve: Curves.easeOutQuad,
-    );
-    _cameraNavController.addListener(() {
-      if (mounted && _latTween != null && _lngTween != null && _zoomTween != null) {
-        _mapController.move(
-          LatLng(
-            _latTween!.evaluate(_navCurvedAnimation!),
-            _lngTween!.evaluate(_navCurvedAnimation!),
-          ),
-          _zoomTween!.evaluate(_navCurvedAnimation!),
-        );
-      }
-    });
-
-    DarbVectorTheme.loadStyle().then((style) {
-      if (mounted) setState(() => _vectorStyle = style);
-    });
     _fetchRoutes();
   }
 
@@ -98,89 +65,47 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
 
   @override
   void dispose() {
-    _resumePrefetchTimer?.cancel();
     _isFollowingUserNotifier.dispose();
     _appState?.userLocationNotifier.removeListener(_onUserLocationChanged);
-    _cameraNavController.dispose();
     super.dispose();
   }
 
-  void _onUserLocationChanged() {
-    if (!mounted || _isRouteSelecting || !_isFollowingUserNotifier.value || _appState == null) return;
+  void _onMapCreated(MaplibreMapController controller) {
+    _mapController = controller;
+    _drawDestinationMarker();
+    _drawRoute();
+  }
 
+  void _onStyleLoaded() {
+    _drawDestinationMarker();
+    _drawRoute();
+  }
+
+  void _onUserLocationChanged() {
+    if (!mounted || _isRouteSelecting || !_isFollowingUserNotifier.value || _appState == null || _mapController == null) return;
     final userPos = _appState!.userLocationNotifier.value;
     final bearing = _appState!.userHeadingNotifier.value;
     final speed = _appState!.userSpeedNotifier.value;
-
-    final targetPos = _calculateLookahead(userPos, bearing, speed);
     final targetZoom = _calculateDynamicZoom(speed);
 
-    _smoothNavMove(targetPos, targetZoom);
-  }
-
-  LatLng _calculateLookahead(LatLng pos, double bearingDeg, double speedKmh) {
-    if (speedKmh < 5.0) return pos;
-    final lookaheadMeters = (speedKmh * 1.2).clamp(30.0, 100.0);
-    final rad = bearingDeg * (math.pi / 180.0);
-    final dLat = (lookaheadMeters * math.cos(rad)) / 111139.0;
-    final latRad = pos.latitude * (math.pi / 180.0);
-    final dLng = (lookaheadMeters * math.sin(rad)) / (111139.0 * math.cos(latRad));
-    return LatLng(pos.latitude + dLat, pos.longitude + dLng);
+    _mapController!.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(userPos.latitude, userPos.longitude),
+          zoom: targetZoom,
+          tilt: 60.0, // TRUE 3D PITCH
+          bearing: speed > 2.0 ? bearing : 0.0,
+        )
+      ),
+      duration: const Duration(milliseconds: 1000),
+    );
   }
 
   double _calculateDynamicZoom(double speedKmh) {
     if (speedKmh > 75) return 15.0;
-    if (speedKmh > 45) return 15.8;
-    if (speedKmh > 20) return 16.4;
-    return 17.0;
-  }
-
-  void _animatedMapMove(LatLng destLocation, double destZoom) {
-    final camera = _mapController.camera;
-    final latTween = Tween<double>(begin: camera.center.latitude, end: destLocation.latitude);
-    final lngTween = Tween<double>(begin: camera.center.longitude, end: destLocation.longitude);
-    final zoomTween = Tween<double>(begin: camera.zoom, end: destZoom);
-
-    final controller = AnimationController(duration: const Duration(milliseconds: 550), vsync: this);
-    final animation = CurvedAnimation(parent: controller, curve: Curves.easeInOutCubic);
-
-    controller.addListener(() {
-      if (mounted) {
-        _mapController.move(
-          LatLng(latTween.evaluate(animation), lngTween.evaluate(animation)),
-          zoomTween.evaluate(animation),
-        );
-      }
-    });
-
-    animation.addStatusListener((status) {
-      if (status == AnimationStatus.completed || status == AnimationStatus.dismissed) {
-        controller.dispose();
-      }
-    });
-
-    controller.forward();
-  }
-
-  void _smoothNavMove(LatLng destLocation, double destZoom) {
-    if (!mounted) return;
-
-    final now = DateTime.now();
-    // Throttle camera updates to at most once per 33ms (30 fps target for camera tweens)
-    if (now.difference(_lastCameraMoveTime).inMilliseconds < 33) return;
-
-    final camera = _mapController.camera;
-    // Deadband check: if movement is tiny, don't restart tween
-    final distMeters = const Distance().as(LengthUnit.Meter, camera.center, destLocation);
-    final zoomDiff = (camera.zoom - destZoom).abs();
-    if (distMeters < 1.0 && zoomDiff < 0.05) return;
-
-    _lastCameraMoveTime = now;
-    _latTween = Tween<double>(begin: camera.center.latitude, end: destLocation.latitude);
-    _lngTween = Tween<double>(begin: camera.center.longitude, end: destLocation.longitude);
-    _zoomTween = Tween<double>(begin: camera.zoom, end: destZoom);
-
-    _cameraNavController.forward(from: 0.0);
+    if (speedKmh > 45) return 16.0;
+    if (speedKmh > 20) return 17.0;
+    return 18.0;
   }
 
   Future<void> _fetchRoutes() async {
@@ -204,7 +129,6 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
           _isLoading = false;
         });
 
-        // Immediately decode the first route polyline
         final routes = data['routes'] as List? ?? [];
         if (routes.isNotEmpty) {
           final firstRoute = routes[0];
@@ -212,25 +136,29 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
           if (geom != null) {
             final points = PolylineDecoder.decode(geom);
             setState(() {
-              _routePoints = points;
+              _routePoints = points.map((p) => LatLng(p.latitude, p.longitude)).toList();
             });
-            if (points.isNotEmpty) {
-              try {
-                final bounds = LatLngBounds.fromPoints(points);
-                _mapController.fitCamera(
-                  CameraFit.bounds(
-                    bounds: bounds,
-                    padding: const EdgeInsets.only(top: 100, bottom: 260, left: 40, right: 40),
-                  ),
-                );
-              } catch (_) {}
-
-              if (DarbVectorTheme.cachingTileProvider != null) {
-                DarbTilePrefetcher.prefetchRoute(
-                  routePoints: points,
-                  provider: DarbVectorTheme.cachingTileProvider!,
-                );
-              }
+            
+            if (_routePoints.isNotEmpty && _mapController != null) {
+               _drawRoute();
+               
+               // Compute bounds
+               double minLat = _routePoints.first.latitude;
+               double maxLat = _routePoints.first.latitude;
+               double minLng = _routePoints.first.longitude;
+               double maxLng = _routePoints.first.longitude;
+               for (var p in _routePoints) {
+                 if (p.latitude < minLat) minLat = p.latitude;
+                 if (p.latitude > maxLat) maxLat = p.latitude;
+                 if (p.longitude < minLng) minLng = p.longitude;
+                 if (p.longitude > maxLng) maxLng = p.longitude;
+               }
+               _mapController!.animateCamera(
+                 CameraUpdate.newLatLngBounds(
+                   LatLngBounds(southwest: LatLng(minLat, minLng), northeast: LatLng(maxLat, maxLng)),
+                   top: 100, bottom: 300, left: 40, right: 40
+                 )
+               );
             }
           }
         }
@@ -241,35 +169,76 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
       }
     }
   }
+  
+  Future<void> _drawDestinationMarker() async {
+    if (_mapController == null || !_mapController!.isMapReady) return;
+    if (_destinationMarker != null) {
+      await _mapController!.removeSymbol(_destinationMarker!);
+    }
+    _destinationMarker = await _mapController!.addSymbol(SymbolOptions(
+      geometry: LatLng(widget.destLat, widget.destLng),
+      iconImage: 'marker-15', // Default maplibre marker if custom isn't loaded
+      iconSize: 2.5,
+      iconColor: '#E63946',
+    ));
+  }
+
+  Future<void> _drawRoute() async {
+    if (_mapController == null || !_mapController!.isMapReady || _routePoints.isEmpty) return;
+    
+    if (_routeLineShadow != null) await _mapController!.removeLine(_routeLineShadow!);
+    if (_routeLine != null) await _mapController!.removeLine(_routeLine!);
+    if (_routeLineHighlight != null) await _mapController!.removeLine(_routeLineHighlight!);
+
+    _routeLineShadow = await _mapController!.addLine(LineOptions(
+      geometry: _routePoints,
+      lineColor: '#040A14',
+      lineWidth: 10.0,
+      lineOpacity: 0.8,
+      lineJoin: 'round',
+      lineCap: 'round',
+    ));
+    
+    _routeLine = await _mapController!.addLine(LineOptions(
+      geometry: _routePoints,
+      lineColor: '#FFB800', // Darb Yellow
+      lineWidth: 6.0,
+      lineJoin: 'round',
+      lineCap: 'round',
+    ));
+    
+    _routeLineHighlight = await _mapController!.addLine(LineOptions(
+      geometry: _routePoints,
+      lineColor: '#FFFFFF',
+      lineWidth: 2.0,
+      lineOpacity: 0.3,
+      lineJoin: 'round',
+      lineCap: 'round',
+    ));
+  }
 
   void _startDrive() {
     _isFollowingUserNotifier.value = true;
     setState(() {
       _isRouteSelecting = false;
     });
-    final routes = _routesData?['routes'] as List? ?? [];
-    if (routes.isNotEmpty) {
-      final selected = routes[_selectedRouteIndex];
-      final geom = selected['geometry'] as String?;
-      if (geom != null) {
-        setState(() {
-          _routePoints = PolylineDecoder.decode(geom);
-        });
-      }
-      final appState = Provider.of<AppState>(context, listen: false);
-      appState.selectRoutePreview(selected, widget.destinationName, widget.destLat, widget.destLng);
-      appState.startNavigation();
-
-      if (DarbVectorTheme.cachingTileProvider != null && _routePoints.isNotEmpty) {
-        DarbTilePrefetcher.prefetchRoute(
-          routePoints: _routePoints,
-          provider: DarbVectorTheme.cachingTileProvider!,
-        );
-      }
-
-      final originLat = appState.currentLat != 0 ? appState.currentLat : 36.1911;
-      final originLng = appState.currentLng != 0 ? appState.currentLng : 44.0091;
-      _animatedMapMove(LatLng(originLat, originLng), 16.5);
+    final appState = Provider.of<AppState>(context, listen: false);
+    final userPos = appState.userLocationNotifier.value;
+    
+    appState.startNavigation();
+    
+    if (_mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: LatLng(userPos.latitude, userPos.longitude),
+            zoom: 17.5,
+            tilt: 60.0, // TRUE 3D PITCH
+            bearing: appState.userHeadingNotifier.value,
+          )
+        ),
+        duration: const Duration(seconds: 2),
+      );
     }
   }
 
@@ -329,180 +298,25 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
       backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightBackground,
       body: Stack(
         children: [
-          // LAYER 1: Full-Screen Live Map (ALWAYS VISIBLE!)
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 700),
-            curve: Curves.easeInOutCubic,
-            transform: _isRouteSelecting
-                ? Matrix4.identity()
-                : (Matrix4.identity()
-                  ..setEntry(3, 2, 0.0015) // Perspective depth
-                  ..rotateX(1.05) // ~60 degree tilt
-                  ..scale(1.6) // Scale up to fill the sky gap
-                  ..translate(0.0, 140.0)), // Push down so user is near bottom
-            transformAlignment: Alignment.bottomCenter,
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: LatLng(userLat, userLng),
-                initialZoom: 15.0,
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.drag |
-                      InteractiveFlag.pinchZoom |
-                      InteractiveFlag.doubleTapZoom |
-                      InteractiveFlag.flingAnimation,
-                ),
-                onPositionChanged: (pos, hasGesture) {
-                  if (hasGesture) {
-                  _resumePrefetchTimer?.cancel();
-                  DarbTilePrefetcher.pausePrefetch();
-                  _cameraNavController.stop();
-                  if (_isFollowingUserNotifier.value) {
-                    _isFollowingUserNotifier.value = false;
-                  }
-                } else if (DarbTilePrefetcher.isPrefetchPaused) {
-                  _resumePrefetchTimer?.cancel();
-                  _resumePrefetchTimer = Timer(const Duration(milliseconds: 600), () {
-                    DarbTilePrefetcher.resumePrefetch();
-                  });
-                }
-              },
+          // LAYER 1: TRUE 3D MAPLIBRE MAP
+          MaplibreMap(
+            onMapCreated: _onMapCreated,
+            onStyleLoadedCallback: _onStyleLoaded,
+            styleString: 'asset://assets/map/darb_style.json',
+            initialCameraPosition: CameraPosition(
+              target: LatLng(userLat, userLng),
+              zoom: 15.0,
             ),
-            children: [
-              if (_vectorStyle != null)
-                RepaintBoundary(
-                  child: VectorTileLayer(
-                    theme: _vectorStyle!.theme,
-                    sprites: _vectorStyle!.sprites,
-                    tileProviders: _vectorStyle!.providers,
-                    layerMode: VectorTileLayerMode.raster,
-                    memoryTileCacheMaxSize: 128 * 1024 * 1024,
-                    memoryTileDataCacheMaxSize: 80,
-                    fileCacheMaximumSizeInBytes: 256 * 1024 * 1024,
-                    maximumTileSubstitutionDifference: 3,
-                    maximumZoom: 18.0,
-                    textCacheMaxSize: 1000,
-                    concurrency: 4,
-                    cacheFolder: DarbCachingTileProvider.getCacheDirectory,
-                  ),
-                )
-              else
-                RepaintBoundary(
-                  child: TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.darb.iraq',
-                    tileBuilder: isDark
-                        ? (context, tileWidget, tile) {
-                            return ColorFiltered(
-                              colorFilter: const ColorFilter.matrix(<double>[
-                                -0.8, 0, 0, 0, 210,
-                                0, -0.8, 0, 0, 210,
-                                0, 0, -0.8, 0, 220,
-                                0, 0, 0, 1, 0,
-                              ]),
-                              child: tileWidget,
-                            );
-                          }
-                        : null,
-                  ),
-                ),
-              // Active Navigation Route (Premium Barzani Style)
-              if (_routePoints.isNotEmpty)
-                RepaintBoundary(
-                  child: PolylineLayer(
-                    polylines: [
-                      // Outer dark shadow/casing
-                      Polyline(
-                        points: _routePoints,
-                        strokeWidth: 10.0,
-                        color: const Color(0xFF040A14).withOpacity(0.8),
-                        strokeCap: StrokeCap.round,
-                        strokeJoin: StrokeJoin.round,
-                      ),
-                      // Core golden route
-                      Polyline(
-                        points: _routePoints,
-                        strokeWidth: 6.0,
-                        color: DarbColors.primaryYellow,
-                        strokeCap: StrokeCap.round,
-                        strokeJoin: StrokeJoin.round,
-                      ),
-                      // Subtle inner highlight
-                      Polyline(
-                        points: _routePoints,
-                        strokeWidth: 2.0,
-                        color: Colors.white.withOpacity(0.3),
-                        strokeCap: StrokeCap.round,
-                        strokeJoin: StrokeJoin.round,
-                      ),
-                    ],
-                  ),
-                ),
-              // Static & Semi-Static Markers: Road Incidents & Destination Pin
-              RepaintBoundary(
-                child: MarkerLayer(
-                  markers: [
-                    ...appState.reports.map((r) => Marker(
-                      point: LatLng(r.latitude, r.longitude),
-                      width: 38,
-                      height: 44,
-                      alignment: Alignment.topCenter,
-                      child: WazePinWidget(report: r, size: 36),
-                    )),
-                    Marker(
-                      point: LatLng(widget.destLat, widget.destLng),
-                      width: 38,
-                      height: 44,
-                      alignment: Alignment.topCenter,
-                      child: const DarbPOIMarker(
-                        type: DarbIconType.recenter,
-                        label: '',
-                        color: DarbIconColors.criticalRed,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Dynamic User Location Marker (Isolated with ValueListenableBuilder)
-              ValueListenableBuilder<LatLng>(
-                valueListenable: appState.userLocationNotifier,
-                builder: (context, currentLoc, _) {
-                  return MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: currentLoc,
-                        width: 72,
-                        height: 72,
-                        alignment: Alignment.center,
-                        child: RepaintBoundary(
-                          child: ValueListenableBuilder<double>(
-                            valueListenable: appState.userHeadingNotifier,
-                            builder: (context, heading, _) {
-                              return ValueListenableBuilder<double>(
-                                valueListenable: appState.userSpeedNotifier,
-                                builder: (context, speed, _) {
-                                  return DarbLocationMarker(
-                                    position: currentLoc,
-                                    bearing: speed > 2 ? heading : 0.0,
-                                    speedKmh: speed,
-                                    accuracyMeters: 6.0,
-                                    size: 48,
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ],
+            myLocationEnabled: true,
+            myLocationTrackingMode: MyLocationTrackingMode.None,
+            myLocationRenderMode: MyLocationRenderMode.COMPASS,
+            compassEnabled: false,
+            onCameraIdle: () {
+              // Stop tracking if user manually pans
+            },
           ),
-        ),
 
-          // Recenter Floating Button (Shown when user moves map)
+          // Recenter Floating Button
           ValueListenableBuilder<bool>(
             valueListenable: _isFollowingUserNotifier,
             builder: (context, isFollowing, _) {
@@ -513,17 +327,8 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                 child: RepaintBoundary(
                   child: GestureDetector(
                     onTap: () {
-                      final currentLoc = appState.userLocationNotifier.value;
-                      final currentSpeed = appState.userSpeedNotifier.value;
-                      final currentHeading = appState.userHeadingNotifier.value;
-                      final targetPos = _calculateLookahead(
-                        currentLoc,
-                        currentHeading,
-                        currentSpeed,
-                      );
-                      final targetZoom = _isRouteSelecting ? 15.0 : _calculateDynamicZoom(currentSpeed);
-                      _animatedMapMove(targetPos, targetZoom);
                       _isFollowingUserNotifier.value = true;
+                      _onUserLocationChanged();
                     },
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(24),
@@ -563,14 +368,12 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
               child: RepaintBoundary(
                 child: Row(
                   children: [
-                    // Back button
                     DarbIconButton(
                       icon: DarbIconType.back,
                       size: 48,
                       onTap: _finishTrip,
                     ),
                     const SizedBox(width: 12),
-                    // Destination banner
                     Expanded(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
@@ -613,7 +416,6 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
 
           // LAYER 3: Driving Mode HUD overlays
           if (!_isRouteSelecting) ...[
-            // Speed HUD (Top Left)
             Positioned(
               left: 16,
               top: 100,
@@ -626,7 +428,6 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                 ),
               ),
             ),
-            // Right Side Driving Actions (Warning & SOS)
             Positioned(
               right: 16,
               top: 100,
@@ -673,159 +474,141 @@ class _NavigationScreenState extends State<NavigationScreen> with TickerProvider
                           borderRadius: BorderRadius.circular(32),
                           border: Border.all(color: isDark ? Colors.white.withOpacity(0.15) : Colors.black.withOpacity(0.05)),
                         ),
-                  child: _isLoading
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: DarbColors.primaryYellow)),
-                            const SizedBox(width: 16),
-                            Text(
-                              lang == 'en' ? 'Calculating best route...' : (lang == 'ku' ? 'خەریکی دۆزینەوەی باشترین ڕێگایە...' : 'جارِ حساب أفضل مسار...'),
-                              style: DarbTypography.body.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                          ],
-                        )
-                      : Selector<AppState, Map<String, dynamic>?>(
-                          selector: (_, s) => s.activeRoute,
-                          builder: (context, activeRoute, _) {
-                            final routeToDisplay = activeRoute ?? currentRoute;
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Maneuver / Next Step (Mocked as continue if no steps provided by API)
-                                if (!_isRouteSelecting) ...[
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: DarbColors.successGreen.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: DarbColors.successGreen.withOpacity(0.2)),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.turn_slight_right, color: DarbColors.successGreen, size: 28),
-                                        const SizedBox(width: 16),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                        child: _isLoading
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: DarbColors.primaryYellow)),
+                                  const SizedBox(width: 16),
+                                  Text(
+                                    lang == 'en' ? 'Calculating best route...' : (lang == 'ku' ? 'خەریکی دۆزینەوەی باشترین ڕێگایە...' : 'جارِ حساب أفضل مسار...'),
+                                    style: DarbTypography.body.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                ],
+                              )
+                            : Selector<AppState, Map<String, dynamic>?>(
+                                selector: (_, s) => s.activeRoute,
+                                builder: (context, activeRoute, _) {
+                                  final routeToDisplay = activeRoute ?? currentRoute;
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      if (!_isRouteSelecting) ...[
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          decoration: BoxDecoration(
+                                            color: DarbColors.successGreen.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(color: DarbColors.successGreen.withOpacity(0.2)),
+                                          ),
+                                          child: Row(
                                             children: [
-                                              Text(
-                                                'استمر في القيادة',
-                                                style: DarbTypography.body.copyWith(
-                                                  color: isDark ? Colors.white : Colors.black,
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: 18,
+                                              const Icon(Icons.turn_slight_right, color: DarbColors.successGreen, size: 28),
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      'استمر في القيادة',
+                                                      style: DarbTypography.body.copyWith(
+                                                        color: isDark ? Colors.white : Colors.black,
+                                                        fontWeight: FontWeight.w700,
+                                                        fontSize: 18,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      'بناءً على مسار OSRM الحالي',
+                                                      style: DarbTypography.caption.copyWith(color: DarbColors.successGreen),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ),
-                                              Text(
-                                                'بناءً على مسار OSRM الحالي',
-                                                style: DarbTypography.caption.copyWith(color: DarbColors.successGreen),
                                               ),
                                             ],
                                           ),
                                         ),
+                                        const SizedBox(height: 16),
                                       ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                ],
-
-                                // Route Metrics Row
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    // Primary: Duration
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text(
-                                            routeToDisplay?['durationFormatted'] ?? '15 دقيقة',
-                                            style: DarbTypography.numeric.copyWith(
-                                              color: DarbColors.successGreen,
-                                              fontSize: 28,
-                                              fontWeight: FontWeight.w900,
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  routeToDisplay?['durationFormatted'] ?? '15 دقيقة',
+                                                  style: DarbTypography.numeric.copyWith(
+                                                    color: DarbColors.successGreen,
+                                                    fontSize: 28,
+                                                    fontWeight: FontWeight.w900,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
+                                          ),
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                '${routeToDisplay?['distanceKm'] ?? 5.2} كم',
+                                                style: DarbTypography.numeric.copyWith(
+                                                  color: isDark ? Colors.white : Colors.black,
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                'وصول ${routeToDisplay?['eta'] ?? '09:20'}',
+                                                style: DarbTypography.caption.copyWith(
+                                                  color: DarbColors.textSecondary,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                    ),
-                                    // Secondary & Third: Distance & ETA
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          '${routeToDisplay?['distanceKm'] ?? 5.2} كم',
-                                          style: DarbTypography.numeric.copyWith(
-                                            color: isDark ? Colors.white : Colors.black,
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.w700,
+                                      const SizedBox(height: 20),
+                                      if (_isRouteSelecting)
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: DarbColors.primaryYellow,
+                                            foregroundColor: DarbColors.textInversePrimary,
+                                            elevation: 0,
+                                            minimumSize: const Size.fromHeight(54),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                           ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'وصول ${routeToDisplay?['eta'] ?? '09:20'}',
-                                          style: DarbTypography.caption.copyWith(
-                                            color: DarbColors.textSecondary,
-                                            fontWeight: FontWeight.w600,
+                                          onPressed: _startDrive,
+                                          child: const Text('ابدأ الملاحة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                                        )
+                                      else
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: isDark ? DarbColors.background : const Color(0xFFF1F5F9),
+                                            foregroundColor: DarbColors.dangerRed,
+                                            elevation: 0,
+                                            minimumSize: const Size.fromHeight(54),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                           ),
+                                          onPressed: _finishTrip,
+                                          child: const Text('إنهاء الرحلة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                                         ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                
-                                // Big Action Button
-                                if (_isRouteSelecting)
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: DarbColors.primaryYellow,
-                                      foregroundColor: DarbColors.textInversePrimary,
-                                      elevation: 0,
-                                      minimumSize: const Size.fromHeight(54),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                    ),
-                                    onPressed: _startDrive,
-                                    child: const Text('ابدأ الملاحة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-                                  )
-                                else
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: isDark ? DarbColors.background : const Color(0xFFF1F5F9),
-                                      foregroundColor: DarbColors.dangerRed,
-                                      elevation: 0,
-                                      minimumSize: const Size.fromHeight(54),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                    ),
-                                    onPressed: _finishTrip,
-                                    child: const Text('إنهاء الرحلة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                                  ),
-                              ],
-                            );
-                          },
-                        ),
-                        ),
+                                    ],
+                                  );
+                                },
+                              ),
                       ),
                     ),
                   ),
                 ),
               ),
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMetric(String value, String label, Color color) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(value, style: DarbTypography.numeric.copyWith(fontSize: 20, color: color)),
-        const SizedBox(height: 2),
-        Text(label, style: DarbTypography.caption),
-      ],
     );
   }
 }

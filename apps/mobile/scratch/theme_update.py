@@ -57,9 +57,14 @@ for layer in style.get('layers', []):
     # Buildings
     elif source_layer == 'building':
         if type_ == 'fill':
-            update_paint(layer, 'fill-color', BUILDING_COLOR)
-            update_paint(layer, 'fill-opacity', 0.7)
-            update_paint(layer, 'fill-outline-color', BG_COLOR)
+            layer['type'] = 'fill-extrusion'
+            update_paint(layer, 'fill-extrusion-color', BUILDING_COLOR)
+            update_paint(layer, 'fill-extrusion-opacity', 0.8)
+            update_paint(layer, 'fill-extrusion-height', ["get", "render_height"])
+            update_paint(layer, 'fill-extrusion-base', ["get", "render_min_height"])
+            if 'fill-color' in layer['paint']: del layer['paint']['fill-color']
+            if 'fill-opacity' in layer['paint']: del layer['paint']['fill-opacity']
+            if 'fill-outline-color' in layer['paint']: del layer['paint']['fill-outline-color']
 
     # Roads (Transportation)
     elif source_layer == 'transportation':

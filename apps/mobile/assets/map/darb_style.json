@@ -275,7 +275,7 @@
     },
     {
       "id": "building",
-      "type": "fill",
+      "type": "fill-extrusion",
       "source": "openmaptiles",
       "source-layer": "building",
       "minzoom": 12,
@@ -292,10 +292,17 @@
         false
       ],
       "paint": {
-        "fill-color": "#09121F",
-        "fill-outline-color": "#07101F",
         "fill-antialias": true,
-        "fill-opacity": 0.7
+        "fill-extrusion-color": "#09121F",
+        "fill-extrusion-opacity": 0.8,
+        "fill-extrusion-height": [
+          "get",
+          "render_height"
+        ],
+        "fill-extrusion-base": [
+          "get",
+          "render_min_height"
+        ]
       }
     },
     {
