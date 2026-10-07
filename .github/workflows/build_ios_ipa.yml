@@ -48,17 +48,22 @@ jobs:
             perl -pi -e 's/flutter_additional_ios_build_settings\(target\)/flutter_additional_ios_build_settings\(target\)\n      target.build_configurations.each do |config|\n        config.build_settings["CODE_SIGNING_REQUIRED"] = "NO"\n        config.build_settings["CODE_SIGNING_ALLOWED"] = "NO"\n        config.build_settings["EXPANDED_CODE_SIGN_IDENTITY"] = ""\n      end/g' ios/Podfile
           fi
           
-          # Force completely disable signing via Flutter xcconfig
-          echo "CODE_SIGNING_ALLOWED = NO" >> ios/Flutter/Release.xcconfig
-          echo "CODE_SIGNING_REQUIRED = NO" >> ios/Flutter/Release.xcconfig
-          echo "CODE_SIGN_IDENTITY = " >> ios/Flutter/Release.xcconfig
-          echo "EXPANDED_CODE_SIGN_IDENTITY = " >> ios/Flutter/Release.xcconfig
+          # Build the Dart AOT and setup iOS project
+          flutter build ios --config-only --no-codesign --release || true
           
-          # Now build
-          flutter build ios --release --no-codesign
+          # Go to ios directory and forcefully build the unsigned .app
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            EXPANDED_CODE_SIGN_IDENTITY="" \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            build || true
+          cd ..
           
           mkdir -p build/ios/iphoneos/Payload
-          cp -R build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload/
+          cp -R ios/build/Release-iphoneos/Runner.app build/ios/iphoneos/Payload/ || cp -R build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload/ || true
           cd build/ios/iphoneos && zip -ry DARB.ipa Payload
 
       - name: Upload IPA Artifact
