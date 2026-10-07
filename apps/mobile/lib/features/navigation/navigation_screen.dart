@@ -271,7 +271,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
       onUpdate: (loc, bearing, speed) {
         if (!mounted) return;
         // Mock the user's location via AppState
-        appState.userLocationNotifier.value = loc;
+        appState.userLocationNotifier.value = ll2.LatLng(loc.latitude, loc.longitude);
         appState.userHeadingNotifier.value = bearing;
         appState.userSpeedNotifier.value = speed;
       },
