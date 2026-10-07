@@ -1,4 +1,8 @@
-import 'dart:ui';
+import re
+
+file_path = r'C:\Users\Yahya\Downloads\darab\apps\mobile\lib\shared_widgets\speed_hud_widget.dart'
+
+new_code = """import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 
@@ -111,3 +115,9 @@ class SpeedHudWidget extends StatelessWidget {
     );
   }
 }
+"""
+
+with open(file_path, 'w', encoding='utf-8') as f:
+    f.write(new_code)
+
+print("Speed HUD Widget updated successfully!")
