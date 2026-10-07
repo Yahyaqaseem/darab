@@ -15,6 +15,7 @@ import '../road_reports/report_dialog.dart';
 import '../../core/theme/darb_icons.dart';
 import '../../shared_widgets/darb_card.dart';
 import '../../shared_widgets/darb_button.dart';
+import '../../core/utils/chevron_generator.dart';
 
 class NavigationScreen extends StatefulWidget {
   final String destinationName;
@@ -76,7 +77,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
     _drawRoute();
   }
 
-  void _onStyleLoaded() {
+  Future<void> _onStyleLoaded() async {
+    if (_mapController == null) return;
     _drawDestinationMarker();
     _drawRoute();
   }
@@ -105,7 +107,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
     if (speedKmh > 75) return 15.0;
     if (speedKmh > 45) return 16.0;
     if (speedKmh > 20) return 17.0;
-    return 18.0;
+    return 17.5;
   }
 
   Future<void> _fetchRoutes() async {
@@ -232,12 +234,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
         CameraUpdate.newCameraPosition(
           CameraPosition(
             target: LatLng(userPos.latitude, userPos.longitude),
-            zoom: 17.5,
+            zoom: 17.0,
             tilt: 60.0, // TRUE 3D PITCH
             bearing: appState.userHeadingNotifier.value,
           )
         ),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(milliseconds: 1200),
       );
     }
   }
@@ -313,6 +315,31 @@ class _NavigationScreenState extends State<NavigationScreen> {
             compassEnabled: false,
             onCameraIdle: () {
               // Stop tracking if user manually pans
+            },
+          ),
+
+          // LAYER 1.5: THE PREMIUM 3D CHEVRON (Only visible when tracking user)
+          ValueListenableBuilder<bool>(
+            valueListenable: _isFollowingUserNotifier,
+            builder: (context, isFollowing, _) {
+              if (!isFollowing || _isRouteSelecting) return const SizedBox.shrink();
+              return Positioned(
+                left: 0,
+                right: 0,
+                // Center slightly below optical center to match 60-degree pitch
+                bottom: MediaQuery.of(context).size.height * 0.35, 
+                child: Center(
+                  child: IgnorePointer(
+                    child: Transform(
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.001)
+                        ..rotateX(1.0), // Pitch the chevron flat to match the map
+                      alignment: Alignment.center,
+                      child: const PremiumChevronWidget(size: 100.0),
+                    ),
+                  ),
+                ),
+              );
             },
           ),
 

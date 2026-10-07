@@ -60,8 +60,8 @@ for layer in style.get('layers', []):
             layer['type'] = 'fill-extrusion'
             update_paint(layer, 'fill-extrusion-color', BUILDING_COLOR)
             update_paint(layer, 'fill-extrusion-opacity', 0.8)
-            update_paint(layer, 'fill-extrusion-height', ["get", "render_height"])
-            update_paint(layer, 'fill-extrusion-base', ["get", "render_min_height"])
+            update_paint(layer, 'fill-extrusion-height', ["coalesce", ["get", "render_height"], ["get", "height"], 40])
+            update_paint(layer, 'fill-extrusion-base', ["coalesce", ["get", "render_min_height"], ["get", "min_height"], 0])
             if 'fill-color' in layer['paint']: del layer['paint']['fill-color']
             if 'fill-opacity' in layer['paint']: del layer['paint']['fill-opacity']
             if 'fill-outline-color' in layer['paint']: del layer['paint']['fill-outline-color']
