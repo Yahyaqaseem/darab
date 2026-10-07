@@ -349,8 +349,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
               zoom: 15.0,
             ),
             myLocationEnabled: true,
-            myLocationTrackingMode: MyLocationTrackingMode.None,
-            myLocationRenderMode: MyLocationRenderMode.COMPASS,
+            myLocationTrackingMode: MyLocationTrackingMode.none,
+            myLocationRenderMode: MyLocationRenderMode.compass,
             compassEnabled: false,
             onCameraIdle: () {
               // Stop tracking if user manually pans
