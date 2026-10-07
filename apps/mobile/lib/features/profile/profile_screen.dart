@@ -1,3 +1,4 @@
+import '../search/destination_search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/providers/app_state.dart';
@@ -76,11 +77,11 @@ class ProfileScreen extends StatelessWidget {
                     color: surfaceColor,
                     child: Column(
                       children: [
-                        _buildListTile(DarbIconType.history, 'البلاغات المرسلة', '12', textColor, isDark),
+                        _buildListTile(context, DarbIconType.history, 'البلاغات المرسلة', '12', textColor, isDark),
                         _buildDivider(isDark),
-                        _buildListTile(DarbIconType.verified, 'الإجابات الموثوقة', '45', textColor, isDark),
+                        _buildListTile(context, DarbIconType.verified, 'الإجابات الموثوقة', '45', textColor, isDark),
                         _buildDivider(isDark),
-                        _buildListTile(DarbIconType.route, 'المسافة المقطوعة', '1,200 km', textColor, isDark),
+                        _buildListTile(context, DarbIconType.route, 'المسافة المقطوعة', '1,200 km', textColor, isDark),
                       ],
                     ),
                   ),
@@ -99,13 +100,17 @@ class ProfileScreen extends StatelessWidget {
                     color: surfaceColor,
                     child: Column(
                       children: [
-                        _buildListTile(DarbIconType.home, lang == 'en' ? 'Home Address' : 'عنوان المنزل', null, textColor, isDark),
+                        _buildListTile(context, DarbIconType.home, lang == 'en' ? 'Home Address' : 'عنوان المنزل', null, textColor, isDark, onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const DestinationSearchScreen()));
+                        }),
                         _buildDivider(isDark),
-                        _buildListTile(DarbIconType.work, lang == 'en' ? 'Work Address' : 'عنوان العمل', null, textColor, isDark),
+                        _buildListTile(context, DarbIconType.work, lang == 'en' ? 'Work Address' : 'عنوان العمل', null, textColor, isDark, onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const DestinationSearchScreen()));
+                        }),
                         _buildDivider(isDark),
                         _buildThemeToggle(context, appState, textColor, isDark),
                         _buildDivider(isDark),
-                        _buildListTile(DarbIconType.trafficFlow, lang == 'en' ? 'Navigation Settings' : 'إعدادات الملاحة', null, textColor, isDark),
+                        _buildListTile(context, DarbIconType.trafficFlow, lang == 'en' ? 'Navigation Settings' : 'إعدادات الملاحة', null, textColor, isDark),
                       ],
                     ),
                   ),
@@ -119,8 +124,17 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildListTile(DarbIconType icon, String title, String? value, Color textColor, bool isDark) {
+  Widget _buildListTile(BuildContext context, DarbIconType icon, String title, String? value, Color textColor, bool isDark, {VoidCallback? onTap}) {
     return ListTile(
+      onTap: onTap ?? () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('سيتم تفعيل هذه الخاصية في التحديث القادم!', style: TextStyle(fontFamily: 'Cairo')),
+            backgroundColor: DarbColors.primaryYellow,
+            behavior: SnackBarBehavior.floating,
+          )
+        );
+      },
       leading: DarbIcon(icon, color: DarbColors.textSecondary, size: 22),
       title: Text(title, style: DarbTypography.body.copyWith(color: textColor, fontWeight: FontWeight.w600)),
       trailing: value != null 
@@ -131,6 +145,15 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildThemeToggle(BuildContext context, AppState appState, Color textColor, bool isDark) {
     return ListTile(
+      onTap: onTap ?? () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('سيتم تفعيل هذه الخاصية في التحديث القادم!', style: TextStyle(fontFamily: 'Cairo')),
+            backgroundColor: DarbColors.primaryYellow,
+            behavior: SnackBarBehavior.floating,
+          )
+        );
+      },
       leading: const Icon(Icons.dark_mode_rounded, color: DarbColors.textSecondary, size: 22),
       title: Text('الوضع الليلي', style: DarbTypography.body.copyWith(color: textColor, fontWeight: FontWeight.w600)),
       trailing: Switch.adaptive(
