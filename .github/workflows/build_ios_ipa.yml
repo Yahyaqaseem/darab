@@ -39,7 +39,12 @@ jobs:
           cd ios
           # Uncomment and set platform to 14.0 to prevent maplibre_gl compatibility errors
           cat Podfile | sed -E "s/^#? ?platform :ios.*/platform :ios, '14.0'/g" > Podfile.tmp
-          mv Podfile.tmp Podfile
+          
+          # Inject custom MapLibre podspec source at the very top of the Podfile
+          echo "source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'" > Podfile.new
+          echo "source 'https://cdn.cocoapods.org/'" >> Podfile.new
+          cat Podfile.tmp >> Podfile.new
+          mv Podfile.new Podfile
           
           # Force a full repo update and install
           pod install --repo-update
