@@ -194,17 +194,17 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
     _routeLineShadow = await _mapController!.addLine(LineOptions(
       geometry: _routePoints,
-      lineColor: '#040A14',
-      lineWidth: 10.0,
-      lineOpacity: 0.8,
+      lineColor: '#0A1A3A', // Deep blue shadow
+      lineWidth: 12.0,
+      lineOpacity: 0.9,
       lineJoin: 'round',
       lineCap: 'round',
     ));
     
     _routeLine = await _mapController!.addLine(LineOptions(
       geometry: _routePoints,
-      lineColor: '#FFB800', // Darb Yellow
-      lineWidth: 6.0,
+      lineColor: '#00D1FF', // Electric Cyan Blue!
+      lineWidth: 7.0,
       lineJoin: 'round',
       lineCap: 'round',
     ));
@@ -212,8 +212,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
     _routeLineHighlight = await _mapController!.addLine(LineOptions(
       geometry: _routePoints,
       lineColor: '#FFFFFF',
-      lineWidth: 2.0,
-      lineOpacity: 0.3,
+      lineWidth: 2.5,
+      lineOpacity: 0.8,
       lineJoin: 'round',
       lineCap: 'round',
     ));
