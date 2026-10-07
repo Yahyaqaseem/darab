@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:provider/provider.dart';
@@ -97,7 +98,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                   ),
                   child: Text(
                     widget.title,
-                    style: DarbTypography.h3,
+                    style: DarbTypography.title,
                     textAlign: TextAlign.center,
                   ),
                 ),
