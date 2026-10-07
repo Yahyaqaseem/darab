@@ -45,7 +45,7 @@ jobs:
           
           # Inject completely disabled signing for all CocoaPods
           if [ -f "ios/Podfile" ]; then
-            sed -i '' 's/flutter_additional_ios_build_settings(target)/flutter_additional_ios_build_settings(target)\n      target.build_configurations.each do |config|\n        config.build_settings["CODE_SIGNING_REQUIRED"] = "NO"\n        config.build_settings["CODE_SIGNING_ALLOWED"] = "NO"\n        config.build_settings["EXPANDED_CODE_SIGN_IDENTITY"] = ""\n      end/g' ios/Podfile
+            perl -pi -e 's/flutter_additional_ios_build_settings\(target\)/flutter_additional_ios_build_settings\(target\)\n      target.build_configurations.each do |config|\n        config.build_settings["CODE_SIGNING_REQUIRED"] = "NO"\n        config.build_settings["CODE_SIGNING_ALLOWED"] = "NO"\n        config.build_settings["EXPANDED_CODE_SIGN_IDENTITY"] = ""\n      end/g' ios/Podfile
           fi
           
           # Now build
