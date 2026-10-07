@@ -33,20 +33,45 @@ jobs:
       - name: Build Unsigned / Ad-Hoc IPA
         working-directory: apps/mobile
         run: |
-          # Clean build to avoid artifact corruption
-          flutter clean
           flutter pub get
           
-          # Build the iOS app bundle natively without code signing
-          # We add || true just in case Flutter throws the Development Team warning at the very end,
-          # but the Runner.app itself is already fully compiled and linked!
+          # 1. Run Flutter build to generate the Dart AOT (App.framework) and Flutter.framework
+          # It will fail at the very end because of the Team ID, but the frameworks will be built!
           flutter build ios --release --no-codesign || true
           
-          echo "Packaging Runner.app into Payload..."
-          mkdir -p build/ios/ipa/Payload
+          # 2. Force Xcode to build the raw Runner.app stub (this creates the 3MB shell)
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build || true
+          cd ..
           
-          # Use the freshly built Runner.app
-          cp -R build/ios/iphoneos/Runner.app build/ios/ipa/Payload/
+          # 3. Locate the generated stub app
+          APP_PATH=$(find ios/build build/ios -name "Runner.app" -type d | head -n 1)
+          
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: Could not generate the Runner.app stub."
+            exit 1
+          fi
+          
+          echo "Found stub app at $APP_PATH. Manually assembling Frameworks..."
+          
+          # 4. Inject missing Frameworks manually!
+          mkdir -p "$APP_PATH/Frameworks"
+          
+          # Copy Flutter Engine and Dart AOT
+          find build/ios ios -name "App.framework" -type d -exec cp -R {} "$APP_PATH/Frameworks/" \; || true
+          find build/ios ios -name "Flutter.framework" -type d -exec cp -R {} "$APP_PATH/Frameworks/" \; || true
+          
+          # Copy all compiled CocoaPods frameworks (MapLibre, etc)
+          find ios/build -path "*/Release-iphoneos/*.framework" -type d -exec cp -R {} "$APP_PATH/Frameworks/" \; || true
+          
+          # Clean up any accidental self-copies
+          rm -rf "$APP_PATH/Frameworks/Runner.app" || true
+          
+          echo "Assembly complete! Packaging into IPA..."
+          
+          # 5. Package into Payload
+          mkdir -p build/ios/ipa/Payload
+          cp -R "$APP_PATH" build/ios/ipa/Payload/
           
           cd build/ios/ipa && zip -ry DARB.ipa Payload
 
