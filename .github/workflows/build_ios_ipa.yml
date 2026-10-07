@@ -43,31 +43,18 @@ jobs:
           sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
           
-          # Inject completely disabled signing for all CocoaPods
-          if [ -f "ios/Podfile" ]; then
-            perl -pi -e 's/flutter_additional_ios_build_settings\(target\)/flutter_additional_ios_build_settings\(target\)\n      target.build_configurations.each do |config|\n        config.build_settings["CODE_SIGNING_REQUIRED"] = "NO"\n        config.build_settings["CODE_SIGNING_ALLOWED"] = "NO"\n        config.build_settings["EXPANDED_CODE_SIGN_IDENTITY"] = ""\n      end/g' ios/Podfile
-          fi
+          # Flutter builds the xcarchive successfully, but fails at the export step because we have no team.
+          # We add || true to catch the export failure, so we can manually extract the built .app!
+          flutter build ipa --release --no-codesign || true
           
-          # Build the Dart AOT and setup iOS project
-          flutter build ios --config-only --no-codesign --release || true
+          echo "Extracting Runner.app from the generated xcarchive..."
+          mkdir -p build/ios/ipa/Payload
+          cp -R build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app build/ios/ipa/Payload/
           
-          # Go to ios directory and forcefully build the unsigned .app
-          cd ios
-          xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release -sdk iphoneos \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            EXPANDED_CODE_SIGN_IDENTITY="" \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            build || true
-          cd ..
-          
-          mkdir -p build/ios/iphoneos/Payload
-          cp -R ios/build/Release-iphoneos/Runner.app build/ios/iphoneos/Payload/ || cp -R build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload/ || true
-          cd build/ios/iphoneos && zip -ry DARB.ipa Payload
+          cd build/ios/ipa && zip -ry DARB.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: DARB-iOS-Release-IPA
-          path: apps/mobile/build/ios/iphoneos/DARB.ipa
+          path: apps/mobile/build/ios/ipa/DARB.ipa
